@@ -10,6 +10,8 @@ import UserCreationBranceMapping from "../Pages/Setup&Admin/UserCreation&BranceM
 import MakerCheckerConfiguration from "../Pages/Setup&Admin/Maker-Cheker-Configration";
 import FinancialYearSetupControl from "../Pages/Setup&Admin/FinancialYearSetup&Control";
 import LoanSchemeConfiguration from "../Pages/Customer&Loan/LoanSchemeConfrigration";
+import CustomerRegistration from "../Pages/Customer&Loan/CustomerRegistration";
+import LoanApplication from "../Pages/Customer&Loan/LoanApplication";
 
 export const routes = [
 
@@ -23,6 +25,8 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/makerCheckerConfig`, Component: <MakerCheckerConfiguration /> },
   { path: `${process.env.PUBLIC_URL}/financialYearSetup`, Component: <FinancialYearSetupControl /> },
   { path: `${process.env.PUBLIC_URL}/loanSchemeConfig`, Component: <LoanSchemeConfiguration /> },
+  { path: `${process.env.PUBLIC_URL}/customerRegistration`, Component: <CustomerRegistration /> },
+  { path: `${process.env.PUBLIC_URL}/loanApplication`, Component: <LoanApplication /> },
 
   // Masters
   { path: `${process.env.PUBLIC_URL}/adminMaster`, Component: <PageList_AdminMaster /> },

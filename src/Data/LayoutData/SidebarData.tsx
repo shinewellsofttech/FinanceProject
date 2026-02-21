@@ -94,6 +94,22 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
+      {
+        id: 2,
+        title: "Customer Registration",
+        path: `${process.env.PUBLIC_URL}/customerRegistration`,
+        icon: "UserPlus",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 3,
+        title: "Loan Application",
+        path: `${process.env.PUBLIC_URL}/loanApplication`,
+        icon: "FilePlus",
+        type: "link",
+        bookmark: true,
+      },
     ],
   },
   {
