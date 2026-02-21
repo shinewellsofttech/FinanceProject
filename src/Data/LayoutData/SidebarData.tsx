@@ -1,0 +1,120 @@
+import { MenuItem } from "../../Types/Layout/SidebarType";
+
+export const MenuList: MenuItem[] = [
+  {
+    title: "Setup & Admin",
+    Items: [
+      {
+        id: 1,
+        title: "Head Office",
+        path: `${process.env.PUBLIC_URL}/hoCreation`,
+        icon: "Home",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 2,
+        title: "Regional Office",
+        path: `${process.env.PUBLIC_URL}/regionalOfficeCreation`,
+        icon: "Home",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 3,
+        title: "Branch Office",
+        path: `${process.env.PUBLIC_URL}/branchOfficeCreation`,
+        icon: "Home",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 4,
+        title: "User Role",
+        path: `${process.env.PUBLIC_URL}/userRoleCreation`,
+        icon: "User",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 5,
+        title: "Permission Matrix",
+        path: `${process.env.PUBLIC_URL}/permissionMetrixs`,
+        icon: "Unlock",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 6,
+        title: "User Creation",
+        path: `${process.env.PUBLIC_URL}/userCreation`,
+        icon: "Users",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 7,
+        title: "Maker-Checker",
+        path: `${process.env.PUBLIC_URL}/makerCheckerConfig`,
+        icon: "CheckSquare",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 8,
+        title: "Financial Year Setup",
+        path: `${process.env.PUBLIC_URL}/financialYearSetup`,
+        icon: "Calendar",
+        type: "link",
+        bookmark: true,
+      },
+    ],
+  },
+  {
+    title: "Masters",
+    Items: [
+      {
+        id: 1,
+        title: "Admin Master",
+        path: `${process.env.PUBLIC_URL}/adminMaster`,
+        icon: "User",
+        type: "link",
+        bookmark: true,
+      },
+    ],
+  },
+  {
+    title: "Customer & Loan",
+    Items: [
+      {
+        id: 1,
+        title: "Loan Scheme Config",
+        path: `${process.env.PUBLIC_URL}/loanSchemeConfig`,
+        icon: "FileText",
+        type: "link",
+        bookmark: true,
+      },
+    ],
+  },
+  {
+    title: "Tools",
+    Items: [
+      {
+        id: 1,
+        title: "User Rights",
+        path: `${process.env.PUBLIC_URL}/userRights`,
+        icon: "Shield",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 2,
+        title: "Change Password",
+        path: `${process.env.PUBLIC_URL}/changePassword`,
+        icon: "Lock",
+        type: "link",
+        bookmark: true,
+      },
+    ],
+  },
+];
