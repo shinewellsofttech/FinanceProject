@@ -30,7 +30,7 @@ const PageList_StateMaster = () => {
   const loadData = useCallback(() => {
     setState((prev) => ({ ...prev, isProgress: true }));
     Fn_FillListData(dispatch, setState, "dataList", LIST_API_URL).catch((error) => {
-      console.error("Failed to load state list:", error);
+      console.warn("Failed to load state list:", error);
       setState((prev) => ({ ...prev, isProgress: false }));
     });
   }, [dispatch]);
@@ -45,6 +45,7 @@ const PageList_StateMaster = () => {
 
   const handleEdit = (id: number | string) => {
     if (!id) return;
+    console.log(id);
     navigate("/addEditStateMaster", { state: { Id: id } });
   };
 
