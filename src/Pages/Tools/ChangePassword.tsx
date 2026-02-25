@@ -138,9 +138,9 @@ const ChangePassword = () => {
               <Card>
                 <CardHeaderCommon title="Change Password" tagClass="card-title mb-0" />
                 <CardBody>
-                  <Row className="gy-3">
-                    <Col md="6">
-                      <FormGroup>
+                  <Row className="gy-0">
+                    <Col md="4">
+                      <FormGroup className="mb-0">
                         <Label>User Master <span className="text-danger">*</span></Label>
                         <Input
                           type="select"
@@ -158,8 +158,8 @@ const ChangePassword = () => {
                         </Input>
                       </FormGroup>
                     </Col>
-                    <Col md="6">
-                      <FormGroup>
+                    <Col md="4">
+                      <FormGroup className="mb-0">
                         <Label>Company <span className="text-danger">*</span></Label>
                         <Input
                           type="select"
@@ -179,8 +179,8 @@ const ChangePassword = () => {
                         </Input>
                       </FormGroup>
                     </Col>
-                    <Col md="6">
-                      <FormGroup>
+                    <Col md="4">
+                      <FormGroup className="mb-0">
                         <Label>Old Password <span className="text-danger">*</span></Label>
                         <div className="input-group">
                           <Input
@@ -200,8 +200,8 @@ const ChangePassword = () => {
                         </div>
                       </FormGroup>
                     </Col>
-                    <Col md="6">
-                      <FormGroup>
+                    <Col md="4">
+                      <FormGroup className="mb-0">
                         <Label>New Password <span className="text-danger">*</span></Label>
                         <div className="input-group">
                           <Input
@@ -223,8 +223,8 @@ const ChangePassword = () => {
                         </div>
                       </FormGroup>
                     </Col>
-                    <Col md="6">
-                      <FormGroup>
+                    <Col md="4">
+                      <FormGroup className="mb-0">
                         <Label>Confirm New Password <span className="text-danger">*</span></Label>
                         <div className="input-group">
                           <Input

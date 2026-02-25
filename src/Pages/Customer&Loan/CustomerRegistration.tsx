@@ -224,12 +224,6 @@ const CustomerRegistration = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Customer Registration" parent="Customer & Loan" />
@@ -266,26 +260,24 @@ const CustomerRegistration = () => {
                                         >
                                             {({ values, handleChange, handleBlur, errors, touched, setFieldValue, isSubmitting }: FormikProps<CustomerFormValues>) => (
                                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
-                                                    <Row className="gy-2">
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                    <Row className="gy-0">
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Full Name <span className="text-danger">*</span></Label>
                                                                 <Input type="text" name="FullName" placeholder="As per Aadhaar/PAN" value={values.FullName} onChange={handleChange} onBlur={handleBlur} invalid={touched.FullName && !!errors.FullName} innerRef={nameRef} />
                                                                 <ErrorMessage name="FullName" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in Loan Agreement, NOC, all official documents" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Date of Birth <span className="text-danger">*</span></Label>
                                                                 <Input type="date" name="DOB" value={values.DOB} onChange={handleChange} onBlur={handleBlur} invalid={touched.DOB && !!errors.DOB} />
                                                                 <ErrorMessage name="DOB" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Age validation must be 18+. Used in insurance eligibility" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Gender <span className="text-danger">*</span></Label>
                                                                 <Input type="select" name="Gender" value={values.Gender} onChange={handleChange} onBlur={handleBlur} invalid={touched.Gender && !!errors.Gender}>
                                                                     <option value="">-- Select --</option>
@@ -301,66 +293,61 @@ const CustomerRegistration = () => {
                                                                 <ErrorMessage name="Gender" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Mobile Number <span className="text-danger">*</span></Label>
                                                                 <Input type="text" name="MobileNumber" placeholder="10-digit mobile" value={values.MobileNumber} onChange={handleChange} onBlur={handleBlur} invalid={touched.MobileNumber && !!errors.MobileNumber} />
                                                                 <ErrorMessage name="MobileNumber" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used for OTP verification, SMS/EMI reminders, collection alerts" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Alternate Mobile</Label>
                                                                 <Input type="text" name="AlternateMobile" placeholder="Optional" value={values.AlternateMobile} onChange={handleChange} onBlur={handleBlur} invalid={touched.AlternateMobile && !!errors.AlternateMobile} />
                                                                 <ErrorMessage name="AlternateMobile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Email Address</Label>
                                                                 <Input type="email" name="EmailAddress" placeholder="customer@email.com" value={values.EmailAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.EmailAddress && !!errors.EmailAddress} />
                                                                 <ErrorMessage name="EmailAddress" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used for Digital statement delivery" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Aadhaar Number <span className="text-danger">*</span></Label>
                                                                 <Input type="text" name="AadhaarNumber" placeholder="XXXX-XXXX-XXXX" value={values.AadhaarNumber} onChange={handleChange} onBlur={handleBlur} invalid={touched.AadhaarNumber && !!errors.AadhaarNumber} />
                                                                 <ErrorMessage name="AadhaarNumber" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in KYC verification, e-sign, fingerprint auth. Mask last 8-digits in display" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>PAN Number <span className="text-danger">*</span></Label>
                                                                 <Input type="text" name="PANNumber" placeholder="ABCDE1234F" value={values.PANNumber} onChange={handleChange} onBlur={handleBlur} invalid={touched.PANNumber && !!errors.PANNumber} />
                                                                 <ErrorMessage name="PANNumber" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in CKYC, Credit Bureau check, TDS deduction" />
                                                             </FormGroup>
                                                         </Col>
 
                                                         <Col md="12">
-                                                            <FormGroup>
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Current Address <span className="text-danger">*</span></Label>
                                                                 <Input type="textarea" name="CurrentAddress" placeholder="House No, Street, Area" value={values.CurrentAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.CurrentAddress && !!errors.CurrentAddress} />
                                                                 <ErrorMessage name="CurrentAddress" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in Loan Agreement, collection/sheet routing (Door to Doc)" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>City <span className="text-danger">*</span></Label>
                                                                 <Input type="text" name="City" value={values.City} onChange={handleChange} onBlur={handleBlur} invalid={touched.City && !!errors.City} />
                                                                 <ErrorMessage name="City" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>State <span className="text-danger">*</span></Label>
                                                                 <Input type="select" name="State" value={values.State} onChange={handleChange} onBlur={handleBlur} invalid={touched.State && !!errors.State}>
                                                                     <option value="">-- Select --</option>
@@ -371,24 +358,23 @@ const CustomerRegistration = () => {
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>PIN Code <span className="text-danger">*</span></Label>
                                                                 <Input type="text" name="PINCode" value={values.PINCode} onChange={handleChange} onBlur={handleBlur} invalid={touched.PINCode && !!errors.PINCode} />
                                                                 <ErrorMessage name="PINCode" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>GPS Location</Label>
                                                                 <Input type="text" name="GPSLocation" placeholder="Lat, Long (auto-capture or manual)" value={values.GPSLocation} onChange={handleChange} onBlur={handleBlur} invalid={touched.GPSLocation && !!errors.GPSLocation} />
                                                                 <ErrorMessage name="GPSLocation" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Captured at time of KYC visit. Used in issue sheet routing." />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Occupation / Business Type <span className="text-danger">*</span></Label>
                                                                 <Input type="select" name="Occupation" value={values.Occupation} onChange={handleChange} onBlur={handleBlur} invalid={touched.Occupation && !!errors.Occupation}>
                                                                     <option value="">-- Select --</option>
@@ -399,72 +385,65 @@ const CustomerRegistration = () => {
                                                                 <ErrorMessage name="Occupation" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Years in Business / Employed</Label>
                                                                 <Input type="text" name="YearsInBusiness" placeholder="e.g. 5" value={values.YearsInBusiness} onChange={handleChange} onBlur={handleBlur} invalid={touched.YearsInBusiness && !!errors.YearsInBusiness} />
                                                                 <ErrorMessage name="YearsInBusiness" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in Eligibility Grid assessment" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Monthly Income (₹) <span className="text-danger">*</span></Label>
                                                                 <Input type="number" name="MonthlyIncome" placeholder="e.g. 25000" value={values.MonthlyIncome} onChange={handleChange} onBlur={handleBlur} invalid={touched.MonthlyIncome && !!errors.MonthlyIncome} />
                                                                 <ErrorMessage name="MonthlyIncome" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in FOIR calculation, loan eligibility check" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Business Address</Label>
                                                                 <Input type="textarea" name="BusinessAddress" placeholder="Business / workplace address" value={values.BusinessAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.BusinessAddress && !!errors.BusinessAddress} />
                                                                 <ErrorMessage name="BusinessAddress" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="GPS Location also captured for business address" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Customer Photo <span className="text-danger">*</span></Label>
                                                                 <Input type="file" name="CustomerPhoto" onChange={(e) => setFieldValue('CustomerPhoto', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.CustomerPhoto && !!errors.CustomerPhoto} />
                                                                 <ErrorMessage name="CustomerPhoto" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Printed on loan application form & loan card" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>ITR Available?</Label>
                                                                 <Input type="select" name="ITRAvailable" value={values.ITRAvailable} onChange={handleChange} onBlur={handleBlur} invalid={touched.ITRAvailable && !!errors.ITRAvailable}>
                                                                     <option value="No">No</option>
                                                                     <option value="Yes">Yes</option>
                                                                 </Input>
                                                                 <ErrorMessage name="ITRAvailable" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="If Yes: upload in KYC section. Used in income verification" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Field Unit / Centre (MFI only)</Label>
                                                                 <Input type="select" name="FieldUnitCentre" value={values.FieldUnitCentre} onChange={handleChange} onBlur={handleBlur} invalid={touched.FieldUnitCentre && !!errors.FieldUnitCentre}>
                                                                     <option value="">-- Select Centre --</option>
                                                                     {dropdowns.fieldUnits.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
                                                                 <ErrorMessage name="FieldUnitCentre" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Only visible when MFI loan type is active. Links member to centre." />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Member Group (MFI only)</Label>
                                                                 <Input type="select" name="MemberGroup" value={values.MemberGroup} onChange={handleChange} onBlur={handleBlur} invalid={touched.MemberGroup && !!errors.MemberGroup}>
                                                                     <option value="">-- Select Group --</option>
                                                                     {dropdowns.memberGroups.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
                                                                 <ErrorMessage name="MemberGroup" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Member Group links to Field Unit. Required for group lending & collection" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -560,9 +539,9 @@ const CustomerRegistration = () => {
                                         >
                                             {({ values, handleChange, handleBlur, errors, touched, setFieldValue, isSubmitting }: FormikProps<KYCFormValues>) => (
                                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
-                                                    <Row className="gy-2">
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                    <Row className="gy-0">
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>ID Proof Type <span className="text-danger">*</span></Label>
                                                                 <Input type="select" name="IDProofType" value={values.IDProofType} onChange={handleChange} onBlur={handleBlur} invalid={touched.IDProofType && !!errors.IDProofType}>
                                                                     <option value="">-- Select --</option>
@@ -573,24 +552,23 @@ const CustomerRegistration = () => {
                                                                 <ErrorMessage name="IDProofType" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>ID Proof Upload <span className="text-danger">*</span></Label>
                                                                 <Input type="file" name="IDProofUpload" onChange={(e) => setFieldValue('IDProofUpload', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofUpload && !!errors.IDProofUpload} />
                                                                 <ErrorMessage name="IDProofUpload" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Both front & back required for Aadhaar/Voter ID" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>ID Proof Back Side</Label>
                                                                 <Input type="file" name="IDProofBackSide" onChange={(e) => setFieldValue('IDProofBackSide', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofBackSide && !!errors.IDProofBackSide} />
                                                                 <ErrorMessage name="IDProofBackSide" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Address Proof Type <span className="text-danger">*</span></Label>
                                                                 <Input type="select" name="AddressProofType" value={values.AddressProofType} onChange={handleChange} onBlur={handleBlur} invalid={touched.AddressProofType && !!errors.AddressProofType}>
                                                                     <option value="">-- Select --</option>
@@ -602,36 +580,33 @@ const CustomerRegistration = () => {
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Address Proof Upload <span className="text-danger">*</span></Label>
                                                                 <Input type="file" name="AddressProofUpload" onChange={(e) => setFieldValue('AddressProofUpload', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.AddressProofUpload && !!errors.AddressProofUpload} />
                                                                 <ErrorMessage name="AddressProofUpload" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Photograph <span className="text-danger">*</span></Label>
                                                                 <Input type="file" name="Photograph" onChange={(e) => setFieldValue('Photograph', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.Photograph && !!errors.Photograph} />
                                                                 <ErrorMessage name="Photograph" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Live photo preferred. Used in loan application form print." />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>Signature Upload <span className="text-danger">*</span></Label>
                                                                 <Input type="file" name="SignatureUpload" onChange={(e) => setFieldValue('SignatureUpload', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.SignatureUpload && !!errors.SignatureUpload} />
                                                                 <ErrorMessage name="SignatureUpload" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Used in: Loan agreement, E-Sign fallback" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="6">
-                                                            <FormGroup>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
                                                                 <Label>ITR / Income Proof</Label>
                                                                 <Input type="file" name="ITRIncomeProof" onChange={(e) => setFieldValue('ITRIncomeProof', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.ITRIncomeProof && !!errors.ITRIncomeProof} />
                                                                 <ErrorMessage name="ITRIncomeProof" component="div" className="text-danger small mt-1" />
-                                                                <HelperText text="Upload if ITR Available = Yes in registration" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -640,59 +615,53 @@ const CustomerRegistration = () => {
                                                             <Card className="border border-info bg-light-info mb-0 shadow-sm">
                                                                 <CardBody>
                                                                     <h6 className="mb-3 text-info"><i className="fa fa-search me-2"></i> Verification Actions</h6>
-                                                                    <Row className="gy-2">
-                                                                        <Col md="6">
-                                                                            <FormGroup>
+                                                                    <Row className="gy-0">
+                                                                        <Col md="4">
+                                                                            <FormGroup className="mb-0">
                                                                                 <Label>CKYC Status</Label>
                                                                                 <Input type="select" name="CKYCStatus" value={values.CKYCStatus} onChange={handleChange} onBlur={handleBlur}>
                                                                                     <option value="Not Checked">Not Checked</option>
                                                                                     <option value="Checked">Checked</option>
                                                                                 </Input>
-                                                                                <HelperText text="API call to CKYC Registry. Store KYC_ID returned." />
                                                                             </FormGroup>
                                                                         </Col>
-                                                                        <Col md="6">
-                                                                            <FormGroup>
+                                                                        <Col md="4">
+                                                                            <FormGroup className="mb-0">
                                                                                 <Label>Credit Bureau</Label>
                                                                                 <Input type="select" name="CreditBureau" value={values.CreditBureau} onChange={handleChange} onBlur={handleBlur}>
                                                                                     <option value="Not Fetched">Not Fetched</option>
                                                                                     <option value="Fetched">Fetched</option>
                                                                                 </Input>
-                                                                                <HelperText text="CIBIL / Experian API. Store score + report PDF." />
                                                                             </FormGroup>
                                                                         </Col>
-                                                                        <Col md="6">
-                                                                            <FormGroup>
+                                                                        <Col md="4">
+                                                                            <FormGroup className="mb-0">
                                                                                 <Label>Credit Score (Auto-fetched)</Label>
                                                                                 <Input type="text" name="CreditScore" placeholder="e.g. 750" value={values.CreditScore} onChange={handleChange} onBlur={handleBlur} />
-                                                                                <HelperText text="Displayed in Loan Eligibility check" />
                                                                             </FormGroup>
                                                                         </Col>
-                                                                        <Col md="6">
-                                                                            <FormGroup>
+                                                                        <Col md="4">
+                                                                            <FormGroup className="mb-0">
                                                                                 <Label>Internal Risk Grade (Auto)</Label>
                                                                                 <Input type="text" name="InternalRiskGrade" placeholder="A / B / C / D" value={values.InternalRiskGrade} onChange={handleChange} onBlur={handleBlur} />
-                                                                                <HelperText text="System-generated based on score + income + DPD history" />
                                                                             </FormGroup>
                                                                         </Col>
-                                                                        <Col md="6">
-                                                                            <FormGroup>
+                                                                        <Col md="4">
+                                                                            <FormGroup className="mb-0">
                                                                                 <Label>Fingerprint Auth (Optional)</Label>
                                                                                 <Input type="select" name="FingerprintAuth" value={values.FingerprintAuth} onChange={handleChange} onBlur={handleBlur}>
                                                                                     <option value="Not Required">Not Required</option>
                                                                                     <option value="Required">Required</option>
                                                                                 </Input>
-                                                                                <HelperText text="Biometric device integration. Optional as per customer requirement." />
                                                                             </FormGroup>
                                                                         </Col>
-                                                                        <Col md="6">
-                                                                            <FormGroup>
+                                                                        <Col md="4">
+                                                                            <FormGroup className="mb-0">
                                                                                 <Label>Aadhaar E-Sign</Label>
                                                                                 <Input type="select" name="AadhaarESign" value={values.AadhaarESign} onChange={handleChange} onBlur={handleBlur}>
                                                                                     <option value="Pending">Pending</option>
                                                                                     <option value="Completed">Completed</option>
                                                                                 </Input>
-                                                                                <HelperText text="E-Sign via NSDL/UIDAI Gateway. Store signed PDF reference." />
                                                                             </FormGroup>
                                                                         </Col>
                                                                     </Row>

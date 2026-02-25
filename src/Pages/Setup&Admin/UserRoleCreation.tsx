@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, ErrorMessage } from "formik";
 import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
-import { Fn_FillListData, Fn_AddEditData, Fn_DisplayData } from "../../store/Functions";
+import { Fn_AddEditData, Fn_DisplayData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
 import * as Yup from "yup";
@@ -14,8 +14,6 @@ import { Btn } from "../../AbstractElements";
 
 interface FormValues {
     RoleName: string;
-    RoleType: string;
-    ApprovalLevel: string;
     TransactionApprovalLimit: string;
     CanViewBlackData: string;
     Description: string;
@@ -23,17 +21,11 @@ interface FormValues {
 
 const initialValues: FormValues = {
     RoleName: "",
-    RoleType: "",
-    ApprovalLevel: "",
     TransactionApprovalLimit: "",
     CanViewBlackData: "No",
     Description: "",
 };
 
-interface DropdownState {
-    roleTypes: Array<{ Id?: number; Name?: string }>;
-    approvalLevels: Array<{ Id?: number; Name?: string }>;
-}
 
 interface RoleState {
     id: number;
@@ -53,16 +45,8 @@ const UserRoleCreation = () => {
         isProgress: false,
     });
 
-    const [dropdowns, setDropdowns] = useState<DropdownState>({
-        roleTypes: [],
-        approvalLevels: [],
-    });
 
     const isEditMode = roleState.id > 0;
-
-    // TODO: Confirm correct API URLs
-    const ROLE_TYPE_API_URL = `${API_WEB_URLS.MASTER}/0/token/RoleTypeMaster/Id/0`;
-    const APPROVAL_LEVEL_API_URL = `${API_WEB_URLS.MASTER}/0/token/ApprovalLevelMaster/Id/0`;
 
     const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id`;
     const API_URL_SAVE = `UserRoleMaster/0/token`;
@@ -71,8 +55,6 @@ const UserRoleCreation = () => {
         () =>
             Yup.object({
                 RoleName: Yup.string().trim().required("Role Name is required"),
-                RoleType: Yup.string().trim().required("Role Type is required"),
-                ApprovalLevel: Yup.string().trim().required("Approval Level is required"),
                 TransactionApprovalLimit: Yup.number().typeError("Must be a number").min(0, "Cannot be negative"),
                 CanViewBlackData: Yup.string().trim().required("Selection is required"),
                 Description: Yup.string().trim(),
@@ -83,13 +65,6 @@ const UserRoleCreation = () => {
     useEffect(() => {
         roleNameRef.current?.focus();
     }, []);
-
-    useEffect(() => {
-        Fn_FillListData(dispatch, setDropdowns, "roleTypes", ROLE_TYPE_API_URL)
-            .catch((err) => console.error("Failed to fetch role types:", err));
-        Fn_FillListData(dispatch, setDropdowns, "approvalLevels", APPROVAL_LEVEL_API_URL)
-            .catch((err) => console.error("Failed to fetch approval levels:", err));
-    }, [dispatch, ROLE_TYPE_API_URL, APPROVAL_LEVEL_API_URL]);
 
     useEffect(() => {
         const locationState = location.state as { Id?: number } | undefined;
@@ -115,8 +90,6 @@ const UserRoleCreation = () => {
     const initialFormValues: FormValues = {
         ...initialValues,
         RoleName: toStringOrEmpty(roleState.formData.RoleName),
-        RoleType: toStringOrEmpty(roleState.formData.RoleType),
-        ApprovalLevel: toStringOrEmpty(roleState.formData.ApprovalLevel),
         TransactionApprovalLimit: toStringOrEmpty(roleState.formData.TransactionApprovalLimit),
         CanViewBlackData: toStringOrEmpty(roleState.formData.CanViewBlackData) || "No",
         Description: toStringOrEmpty(roleState.formData.Description),
@@ -128,8 +101,6 @@ const UserRoleCreation = () => {
 
             formData.append("Id", String(roleState.id ?? 0));
             formData.append("RoleName", values.RoleName || "");
-            formData.append("RoleType", values.RoleType || "");
-            formData.append("ApprovalLevel", values.ApprovalLevel || "");
             formData.append("TransactionApprovalLimit", values.TransactionApprovalLimit || "0");
             formData.append("CanViewBlackData", values.CanViewBlackData || "No");
             formData.append("Description", values.Description || "");
@@ -156,12 +127,6 @@ const UserRoleCreation = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="User Role Creation" parent="Setup & Admin" />
@@ -178,9 +143,9 @@ const UserRoleCreation = () => {
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Role Name <span className="text-danger">*</span>
                                                         </Label>
@@ -195,64 +160,10 @@ const UserRoleCreation = () => {
                                                             innerRef={roleNameRef}
                                                         />
                                                         <ErrorMessage name="RoleName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: User assignment, approval-level matrix, access control" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
-                                                        <Label>
-                                                            Role Type <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="RoleType"
-                                                            value={values.RoleType}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.RoleType && !!errors.RoleType}
-                                                        >
-                                                            <option value="">-- Select Type --</option>
-                                                            {/* Mock option until API is ready */}
-                                                            {dropdowns.roleTypes.length === 0 && <option value="Type1">Operational</option>}
-                                                            {dropdowns.roleTypes.map((typeOption) => (
-                                                                <option key={typeOption?.Id} value={typeOption?.Id ?? ""}>
-                                                                    {typeOption?.Name || `Type ${typeOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="RoleType" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Default permission template applied based on this type" />
-                                                    </FormGroup>
-                                                </Col>
-
-                                                <Col md="6">
-                                                    <FormGroup>
-                                                        <Label>
-                                                            Approval Level <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="ApprovalLevel"
-                                                            value={values.ApprovalLevel}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.ApprovalLevel && !!errors.ApprovalLevel}
-                                                        >
-                                                            <option value="">-- Select Level --</option>
-                                                            {/* Mock option until API is ready */}
-                                                            {dropdowns.approvalLevels.length === 0 && <option value="Level1">Level 1</option>}
-                                                            {dropdowns.approvalLevels.map((lvlOption) => (
-                                                                <option key={lvlOption?.Id} value={lvlOption?.Id ?? ""}>
-                                                                    {lvlOption?.Name || `Level ${lvlOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="ApprovalLevel" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Loan approval workflow, maker-checker enforcement" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Transaction Approval Limit (₹)
                                                         </Label>
@@ -266,12 +177,11 @@ const UserRoleCreation = () => {
                                                             invalid={touched.TransactionApprovalLimit && !!errors.TransactionApprovalLimit}
                                                         />
                                                         <ErrorMessage name="TransactionApprovalLimit" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Transactions above this amount require higher-level approval" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Can View Black Data?
                                                         </Label>
@@ -287,13 +197,12 @@ const UserRoleCreation = () => {
                                                             <option value="No">No (Show White data only)</option>
                                                         </Input>
                                                         <ErrorMessage name="CanViewBlackData" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Black = hidden/special financial entries visible only to authorized roles" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6"></Col>
+                                                <Col md="4"></Col>
 
                                                 <Col md="12">
-                                                    <FormGroup>
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Description
                                                         </Label>
@@ -308,7 +217,6 @@ const UserRoleCreation = () => {
                                                             invalid={touched.Description && !!errors.Description}
                                                         />
                                                         <ErrorMessage name="Description" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Internal documentation for developers and administrators" />
                                                     </FormGroup>
                                                 </Col>
                                             </Row>
@@ -320,7 +228,7 @@ const UserRoleCreation = () => {
                                                         <h6 className="mb-0 text-primary">Reference: Default Role Templates</h6>
                                                     </div>
                                                     <CardBody className="bg-light bg-opacity-50">
-                                                        <Row className="g-3">
+                                                        <Row className="gy-0">
                                                             <Col md="4">
                                                                 <Card className="h-100 shadow-sm border mb-0">
                                                                     <CardBody className="p-3">

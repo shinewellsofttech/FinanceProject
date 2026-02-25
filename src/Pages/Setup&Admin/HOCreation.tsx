@@ -20,6 +20,7 @@ interface FormValues {
     RBIRegistration: string;
     PANNumber: string;
     RegisteredAddress: string;
+    F_CountryMaster: string;
     F_CityMaster: string;
     F_StateMaster: string;
     PINCode: string;
@@ -38,6 +39,7 @@ const initialValues: FormValues = {
     RBIRegistration: "",
     PANNumber: "",
     RegisteredAddress: "",
+    F_CountryMaster: "",
     F_CityMaster: "",
     F_StateMaster: "",
     PINCode: "",
@@ -49,6 +51,7 @@ const initialValues: FormValues = {
 };
 
 interface DropdownState {
+    countries: Array<{ Id?: number; Name?: string }>;
     states: Array<{ Id?: number; Name?: string }>;
     cities: Array<{ Id?: number; Name?: string }>;
 }
@@ -72,12 +75,14 @@ const HOCreation = () => {
     });
 
     const [dropdowns, setDropdowns] = useState<DropdownState>({
+        countries: [],
         states: [],
         cities: [],
     });
 
     const isEditMode = hoState.id > 0;
 
+    const COUNTRY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CountryMaster}/Id/0`;
     const STATE_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.StateMaster}/Id/0`;
     const CITY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CityMaster}/Id/0`;
     const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/HeadOfficeMaster/Id`;
@@ -92,6 +97,7 @@ const HOCreation = () => {
                 RBIRegistration: Yup.string().trim().required("RBI Registration is required"),
                 PANNumber: Yup.string().trim().required("PAN Number is required"),
                 RegisteredAddress: Yup.string().trim().required("Registered Address is required"),
+                F_CountryMaster: Yup.string().trim().required("Country is required"),
                 F_CityMaster: Yup.string().trim().required("City is required"),
                 F_StateMaster: Yup.string().trim().required("State is required"),
                 PINCode: Yup.string().trim().required("PIN Code is required"),
@@ -108,6 +114,8 @@ const HOCreation = () => {
     }, []);
 
     useEffect(() => {
+        Fn_FillListData(dispatch, setDropdowns, "countries", COUNTRY_API_URL)
+            .catch((err) => console.error("Failed to fetch countries:", err));
         Fn_FillListData(dispatch, setDropdowns, "states", STATE_API_URL)
             .catch((err) => console.error("Failed to fetch states:", err));
         Fn_FillListData(dispatch, setDropdowns, "cities", CITY_API_URL)
@@ -144,6 +152,7 @@ const HOCreation = () => {
         RBIRegistration: toStringOrEmpty(hoState.formData.RBIRegistration),
         PANNumber: toStringOrEmpty(hoState.formData.PANNumber),
         RegisteredAddress: toStringOrEmpty(hoState.formData.RegisteredAddress),
+        F_CountryMaster: toStringOrEmpty(hoState.formData.F_CountryMaster),
         F_CityMaster: toStringOrEmpty(hoState.formData.F_CityMaster),
         F_StateMaster: toStringOrEmpty(hoState.formData.F_StateMaster),
         PINCode: toStringOrEmpty(hoState.formData.PINCode),
@@ -185,6 +194,7 @@ const HOCreation = () => {
             formData.append("RBIRegistration", values.RBIRegistration || "");
             formData.append("PANNumber", values.PANNumber || "");
             formData.append("RegisteredAddress", values.RegisteredAddress || "");
+            formData.append("F_CountryMaster", values.F_CountryMaster || "");
             formData.append("F_CityMaster", values.F_CityMaster || "");
             formData.append("F_StateMaster", values.F_StateMaster || "");
             formData.append("PINCode", values.PINCode || "");
@@ -219,13 +229,6 @@ const HOCreation = () => {
         }
     };
 
-    // Helper component for the helper text
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Head Office Creation" parent="Setup & Admin" />
@@ -243,9 +246,9 @@ const HOCreation = () => {
                                     <Card>
                                         <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} Head Office Information`} tagClass="card-title mb-0" />
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             HO Name <span className="text-danger">*</span>
                                                         </Label>
@@ -260,11 +263,10 @@ const HOCreation = () => {
                                                             innerRef={hoNameRef}
                                                         />
                                                         <ErrorMessage name="HOName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Reports headers, letterheads, all system-generated documents" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Short Code / Alias <span className="text-danger">*</span>
                                                         </Label>
@@ -278,12 +280,11 @@ const HOCreation = () => {
                                                             invalid={touched.ShortCode && !!errors.ShortCode}
                                                         />
                                                         <ErrorMessage name="ShortCode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Auto-generating Branch Codes, Account Numbers, Voucher IDs" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             GST Number <span className="text-danger">*</span>
                                                         </Label>
@@ -297,11 +298,10 @@ const HOCreation = () => {
                                                             invalid={touched.GSTNumber && !!errors.GSTNumber}
                                                         />
                                                         <ErrorMessage name="GSTNumber" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Invoices, GST reports, compliance documents" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             CIN (Company Identification No.) <span className="text-danger">*</span>
                                                         </Label>
@@ -315,12 +315,11 @@ const HOCreation = () => {
                                                             invalid={touched.CIN && !!errors.CIN}
                                                         />
                                                         <ErrorMessage name="CIN" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: RBI compliance reports (NBS-1, NBS-2), audit documents" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             RBI Registration / NBFC License No. <span className="text-danger">*</span>
                                                         </Label>
@@ -334,11 +333,10 @@ const HOCreation = () => {
                                                             invalid={touched.RBIRegistration && !!errors.RBIRegistration}
                                                         />
                                                         <ErrorMessage name="RBIRegistration" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Loan Agreement footers, RBI submissions" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             PAN Number <span className="text-danger">*</span>
                                                         </Label>
@@ -352,12 +350,11 @@ const HOCreation = () => {
                                                             invalid={touched.PANNumber && !!errors.PANNumber}
                                                         />
                                                         <ErrorMessage name="PANNumber" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: TDS computation, income tax filings" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="12">
-                                                    <FormGroup>
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Registered Address <span className="text-danger">*</span>
                                                         </Label>
@@ -372,12 +369,57 @@ const HOCreation = () => {
                                                             invalid={touched.RegisteredAddress && !!errors.RegisteredAddress}
                                                         />
                                                         <ErrorMessage name="RegisteredAddress" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: NOC letters, loan agreements, regulatory filings" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>
+                                                            Country <span className="text-danger">*</span>
+                                                        </Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_CountryMaster"
+                                                            value={values.F_CountryMaster}
+                                                            onChange={handleChange}
+                                                            onBlur={handleBlur}
+                                                            invalid={touched.F_CountryMaster && !!errors.F_CountryMaster}
+                                                        >
+                                                            <option value="">-- Select Country --</option>
+                                                            {dropdowns.countries.map((countryOption) => (
+                                                                <option key={countryOption?.Id} value={countryOption?.Id ?? ""}>
+                                                                    {countryOption?.Name || `Country ${countryOption?.Id ?? ""}`}
+                                                                </option>
+                                                            ))}
+                                                        </Input>
+                                                        <ErrorMessage name="F_CountryMaster" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>
+                                                            State <span className="text-danger">*</span>
+                                                        </Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_StateMaster"
+                                                            value={values.F_StateMaster}
+                                                            onChange={(e) => handleStateChange(e, handleChange, setFieldValue)}
+                                                            onBlur={handleBlur}
+                                                            invalid={touched.F_StateMaster && !!errors.F_StateMaster}
+                                                        >
+                                                            <option value="">-- Select State --</option>
+                                                            {dropdowns.states.map((stateOption) => (
+                                                                <option key={stateOption?.Id} value={stateOption?.Id ?? ""}>
+                                                                    {stateOption?.Name || `State ${stateOption?.Id ?? ""}`}
+                                                                </option>
+                                                            ))}
+                                                        </Input>
+                                                        <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             City <span className="text-danger">*</span>
                                                         </Label>
@@ -398,36 +440,11 @@ const HOCreation = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Address on official documents" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
-                                                        <Label>
-                                                            State <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="F_StateMaster"
-                                                            value={values.F_StateMaster}
-                                                            onChange={(e) => handleStateChange(e, handleChange, setFieldValue)}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.F_StateMaster && !!errors.F_StateMaster}
-                                                        >
-                                                            <option value="">-- Select State --</option>
-                                                            {dropdowns.states.map((stateOption) => (
-                                                                <option key={stateOption?.Id} value={stateOption?.Id ?? ""}>
-                                                                    {stateOption?.Name || `State ${stateOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: GST state code, regional mapping" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             PIN Code <span className="text-danger">*</span>
                                                         </Label>
@@ -441,11 +458,10 @@ const HOCreation = () => {
                                                             invalid={touched.PINCode && !!errors.PINCode}
                                                         />
                                                         <ErrorMessage name="PINCode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Address validation, geo-mapping" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Contact Number <span className="text-danger">*</span>
                                                         </Label>
@@ -459,12 +475,11 @@ const HOCreation = () => {
                                                             invalid={touched.ContactNumber && !!errors.ContactNumber}
                                                         />
                                                         <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: SMS gateway config, official communication" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Email Address <span className="text-danger">*</span>
                                                         </Label>
@@ -478,11 +493,10 @@ const HOCreation = () => {
                                                             invalid={touched.EmailAddress && !!errors.EmailAddress}
                                                         />
                                                         <ErrorMessage name="EmailAddress" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Email alerts, scheduled MIS reports, notifications" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Website
                                                         </Label>
@@ -496,12 +510,11 @@ const HOCreation = () => {
                                                             invalid={touched.Website && !!errors.Website}
                                                         />
                                                         <ErrorMessage name="Website" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Optional - Used in: Loan Agreement footer" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Logo Upload <span className="text-danger">*</span>
                                                         </Label>
@@ -515,11 +528,10 @@ const HOCreation = () => {
                                                             invalid={touched.LogoUpload && !!errors.LogoUpload}
                                                         />
                                                         <ErrorMessage name="LogoUpload" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: All printed reports, certificates, loan documents" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             HO Establishment Date <span className="text-danger">*</span>
                                                         </Label>
@@ -532,7 +544,6 @@ const HOCreation = () => {
                                                             invalid={touched.HOEstablishmentDate && !!errors.HOEstablishmentDate}
                                                         />
                                                         <ErrorMessage name="HOEstablishmentDate" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Company profile reports, audit documents" />
                                                     </FormGroup>
                                                 </Col>
 

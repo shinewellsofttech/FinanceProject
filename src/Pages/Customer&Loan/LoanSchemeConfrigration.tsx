@@ -206,12 +206,6 @@ const LoanSchemeConfiguration = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Loan Scheme Configuration" parent="Customer & Loan" />
@@ -228,26 +222,24 @@ const LoanSchemeConfiguration = () => {
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Scheme Name <span className="text-danger">*</span></Label>
                                                         <Input type="text" name="SchemeName" placeholder="e.g. Monthly Personal Loan" value={values.SchemeName} onChange={handleChange} onBlur={handleBlur} invalid={touched.SchemeName && !!errors.SchemeName} innerRef={nameRef} />
                                                         <ErrorMessage name="SchemeName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Displayed in Loan Application dropdown, reports headers" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Scheme Code <span className="text-danger">*</span></Label>
                                                         <Input type="text" name="SchemeCode" placeholder="e.g. PLM-01" value={values.SchemeCode} onChange={handleChange} onBlur={handleBlur} invalid={touched.SchemeCode && !!errors.SchemeCode} />
                                                         <ErrorMessage name="SchemeCode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in Loan Account Number generation" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Loan Type <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="LoanType" value={values.LoanType} onChange={handleChange} onBlur={handleBlur} invalid={touched.LoanType && !!errors.LoanType}>
                                                             <option value="">-- Select --</option>
@@ -257,11 +249,10 @@ const LoanSchemeConfiguration = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="LoanType" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Drives UI fields shown in Loan Application. Gold Loan adds Ornament section." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>EMI Frequency <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="EMIFrequency" value={values.EMIFrequency} onChange={handleChange} onBlur={handleBlur} invalid={touched.EMIFrequency && !!errors.EMIFrequency}>
                                                             <option value="">-- Select --</option>
@@ -271,12 +262,11 @@ const LoanSchemeConfiguration = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="EMIFrequency" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Drives EMI schedule due dates and NPA DPD counting" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Interest Type <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="InterestType" value={values.InterestType} onChange={handleChange} onBlur={handleBlur} invalid={touched.InterestType && !!errors.InterestType}>
                                                             <option value="">-- Select --</option>
@@ -286,11 +276,10 @@ const LoanSchemeConfiguration = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="InterestType" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Flat: interest on original principal. Reducing: on outstanding principal." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Interest Calculation Basis <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="InterestCalculationBasis" value={values.InterestCalculationBasis} onChange={handleChange} onBlur={handleBlur} invalid={touched.InterestCalculationBasis && !!errors.InterestCalculationBasis}>
                                                             <option value="">-- Select --</option>
@@ -300,20 +289,18 @@ const LoanSchemeConfiguration = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="InterestCalculationBasis" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="'On Tenure End' → Interest Provision entry required monthly in GL" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Interest Rate (% per annum) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="InterestRate" value={values.InterestRate} onChange={handleChange} onBlur={handleBlur} invalid={touched.InterestRate && !!errors.InterestRate} />
                                                         <ErrorMessage name="InterestRate" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Base rate. Can be overridden in child table with effective dates." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Allow Interest Rate Change Mid-Tenure?</Label>
                                                         <Input type="select" name="AllowInterestRateChange" value={values.AllowInterestRateChange} onChange={handleChange} onBlur={handleBlur} invalid={touched.AllowInterestRateChange && !!errors.AllowInterestRateChange}>
                                                             <option value="">-- Select --</option>
@@ -323,83 +310,74 @@ const LoanSchemeConfiguration = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="AllowInterestRateChange" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="If Yes: show date-wise rate entry grid. Affects ongoing EMI recalculation." />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Min Loan Amount (₹) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="MinLoanAmount" value={values.MinLoanAmount} onChange={handleChange} onBlur={handleBlur} invalid={touched.MinLoanAmount && !!errors.MinLoanAmount} />
                                                         <ErrorMessage name="MinLoanAmount" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Validated during Loan Application eligibility check" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Max Loan Amount (₹) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="MaxLoanAmount" value={values.MaxLoanAmount} onChange={handleChange} onBlur={handleBlur} invalid={touched.MaxLoanAmount && !!errors.MaxLoanAmount} />
                                                         <ErrorMessage name="MaxLoanAmount" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Validated during Loan Application eligibility check" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Min Tenure (Months) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="MinTenure" value={values.MinTenure} onChange={handleChange} onBlur={handleBlur} invalid={touched.MinTenure && !!errors.MinTenure} />
                                                         <ErrorMessage name="MinTenure" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Validated during Loan Application eligibility check" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Max Tenure (Months) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="MaxTenure" value={values.MaxTenure} onChange={handleChange} onBlur={handleBlur} invalid={touched.MaxTenure && !!errors.MaxTenure} />
                                                         <ErrorMessage name="MaxTenure" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Validated during Loan Application eligibility check" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Processing Fee (%) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="ProcessingFee" value={values.ProcessingFee} onChange={handleChange} onBlur={handleBlur} invalid={touched.ProcessingFee && !!errors.ProcessingFee} />
                                                         <ErrorMessage name="ProcessingFee" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Deducted from disbursement amount. Goes to: Processing Fee Income GL" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Prepayment Charges (%)</Label>
                                                         <Input type="number" name="PrepaymentCharges" value={values.PrepaymentCharges} onChange={handleChange} onBlur={handleBlur} invalid={touched.PrepaymentCharges && !!errors.PrepaymentCharges} />
                                                         <ErrorMessage name="PrepaymentCharges" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Applied during Foreclosure form calculation" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Penal Interest (% per day on overdue)</Label>
                                                         <Input type="number" name="PenalInterest" value={values.PenalInterest} onChange={handleChange} onBlur={handleBlur} invalid={touched.PenalInterest && !!errors.PenalInterest} />
                                                         <ErrorMessage name="PenalInterest" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in Overdue Tracker. Goes to: Penal Income GL" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Insurance Required? <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="InsuranceRequired" value={values.InsuranceRequired} onChange={handleChange} onBlur={handleBlur} invalid={touched.InsuranceRequired && !!errors.InsuranceRequired}>
                                                             <option value="Yes">Yes</option>
                                                             <option value="No">No</option>
                                                         </Input>
                                                         <ErrorMessage name="InsuranceRequired" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="If Yes: Insurance module must be integrated separately" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>Available Tenures (Multi-select)</Label>
                                                         <Input
                                                             type="select"
@@ -427,15 +405,13 @@ const LoanSchemeConfiguration = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="AvailableTenures" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="These options appear in Loan Application tenure dropdown" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>LTV % (For Gold Loan only)</Label>
                                                         <Input type="number" name="LTV" value={values.LTV} onChange={handleChange} onBlur={handleBlur} invalid={touched.LTV && !!errors.LTV} />
                                                         <ErrorMessage name="LTV" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Loan-to-Value ratio. Max loan = Assessed Gold Value × LTV%" />
                                                     </FormGroup>
                                                 </Col>
 

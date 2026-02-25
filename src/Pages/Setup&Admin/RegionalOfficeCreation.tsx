@@ -160,12 +160,6 @@ const RegionalOfficeCreation = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Regional Office Creation" parent="Setup & Admin" />
@@ -183,9 +177,9 @@ const RegionalOfficeCreation = () => {
                                     <Card>
                                         <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} Regional Office`} tagClass="card-title mb-0" />
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Regional Office Name <span className="text-danger">*</span>
                                                         </Label>
@@ -200,11 +194,10 @@ const RegionalOfficeCreation = () => {
                                                             innerRef={roNameRef}
                                                         />
                                                         <ErrorMessage name="RegionalOfficeName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Branch hierarchy display, regional MIS reports" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Region Code <span className="text-danger">*</span>
                                                         </Label>
@@ -218,12 +211,11 @@ const RegionalOfficeCreation = () => {
                                                             invalid={touched.RegionCode && !!errors.RegionCode}
                                                         />
                                                         <ErrorMessage name="RegionCode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Auto-generating Branch codes (NZ01BR001)" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Reporting Head Office <span className="text-danger">*</span>
                                                         </Label>
@@ -245,11 +237,10 @@ const RegionalOfficeCreation = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="ReportingHO" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Links Region to HO; FK: HO_ID" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Region Manager Name
                                                         </Label>
@@ -263,12 +254,11 @@ const RegionalOfficeCreation = () => {
                                                             invalid={touched.RegionManagerName && !!errors.RegionManagerName}
                                                         />
                                                         <ErrorMessage name="RegionManagerName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Regional reports, escalation matrix" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="12">
-                                                    <FormGroup>
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Office Address <span className="text-danger">*</span>
                                                         </Label>
@@ -283,12 +273,11 @@ const RegionalOfficeCreation = () => {
                                                             invalid={touched.OfficeAddress && !!errors.OfficeAddress}
                                                         />
                                                         <ErrorMessage name="OfficeAddress" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Regional reports header" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Contact Number <span className="text-danger">*</span>
                                                         </Label>
@@ -302,11 +291,10 @@ const RegionalOfficeCreation = () => {
                                                             invalid={touched.ContactNumber && !!errors.ContactNumber}
                                                         />
                                                         <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Escalation notifications" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Email <span className="text-danger">*</span>
                                                         </Label>
@@ -320,12 +308,11 @@ const RegionalOfficeCreation = () => {
                                                             invalid={touched.Email && !!errors.Email}
                                                         />
                                                         <ErrorMessage name="Email" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: MIS email delivery" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Status
                                                         </Label>
@@ -341,7 +328,6 @@ const RegionalOfficeCreation = () => {
                                                             <option value="Inactive">Inactive</option>
                                                         </Input>
                                                         <ErrorMessage name="Status" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Inactive region: no new branches can be created under it" />
                                                     </FormGroup>
                                                 </Col>
 

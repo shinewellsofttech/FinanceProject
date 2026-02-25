@@ -15,7 +15,6 @@ interface FormValues {
     FinancialYearName: string;
     StartDate: string;
     EndDate: string;
-    Status: string;
     AutoFreezeAfterAudit: string;
     InterestProvisionFrequency: string;
 }
@@ -24,7 +23,6 @@ const initialValues: FormValues = {
     FinancialYearName: "",
     StartDate: "",
     EndDate: "",
-    Status: "Active",
     AutoFreezeAfterAudit: "Yes",
     InterestProvisionFrequency: "Monthly",
 };
@@ -62,7 +60,6 @@ const FinancialYearSetupControl = () => {
                     Yup.ref('StartDate'),
                     "End Date must be after Start Date"
                 ).required("End Date is required"),
-                Status: Yup.string().trim().required("Status is required"),
                 AutoFreezeAfterAudit: Yup.string().trim(),
                 InterestProvisionFrequency: Yup.string().trim(),
             }),
@@ -99,7 +96,6 @@ const FinancialYearSetupControl = () => {
         FinancialYearName: toStringOrEmpty(fyState.formData.FinancialYearName),
         StartDate: toStringOrEmpty(fyState.formData.StartDate),
         EndDate: toStringOrEmpty(fyState.formData.EndDate),
-        Status: toStringOrEmpty(fyState.formData.Status) || "Active",
         AutoFreezeAfterAudit: toStringOrEmpty(fyState.formData.AutoFreezeAfterAudit) || "Yes",
         InterestProvisionFrequency: toStringOrEmpty(fyState.formData.InterestProvisionFrequency) || "Monthly",
     };
@@ -112,7 +108,6 @@ const FinancialYearSetupControl = () => {
             formData.append("FinancialYearName", values.FinancialYearName || "");
             formData.append("StartDate", values.StartDate || "");
             formData.append("EndDate", values.EndDate || "");
-            formData.append("Status", values.Status || "");
             formData.append("AutoFreezeAfterAudit", values.AutoFreezeAfterAudit || "Yes");
             formData.append("InterestProvisionFrequency", values.InterestProvisionFrequency || "Monthly");
 
@@ -138,12 +133,6 @@ const FinancialYearSetupControl = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Financial Year Setup & Control" parent="Setup & Admin" />
@@ -160,9 +149,9 @@ const FinancialYearSetupControl = () => {
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Financial Year Name <span className="text-danger">*</span>
                                                         </Label>
@@ -177,11 +166,10 @@ const FinancialYearSetupControl = () => {
                                                             innerRef={nameRef}
                                                         />
                                                         <ErrorMessage name="FinancialYearName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Displayed in all reports, GL entries" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Start Date <span className="text-danger">*</span>
                                                         </Label>
@@ -194,12 +182,11 @@ const FinancialYearSetupControl = () => {
                                                             invalid={touched.StartDate && !!errors.StartDate}
                                                         />
                                                         <ErrorMessage name="StartDate" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Typically April 1 for Indian companies. All transactions from this date" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             End Date <span className="text-danger">*</span>
                                                         </Label>
@@ -212,33 +199,11 @@ const FinancialYearSetupControl = () => {
                                                             invalid={touched.EndDate && !!errors.EndDate}
                                                         />
                                                         <ErrorMessage name="EndDate" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Typically March 31. Transactions after this date go to next FY" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
-                                                        <Label>
-                                                            Status <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="Status"
-                                                            value={values.Status}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.Status && !!errors.Status}
-                                                        >
-                                                            <option value="Active">Active</option>
-                                                            <option value="Closed">Closed</option>
-                                                            <option value="Future (Pre-created)">Future (Pre-created)</option>
-                                                        </Input>
-                                                        <ErrorMessage name="Status" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Only Active FY allows new transactions" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Auto-Freeze After Audit?
                                                         </Label>
@@ -254,11 +219,10 @@ const FinancialYearSetupControl = () => {
                                                             <option value="No">No - Allow manual override</option>
                                                         </Input>
                                                         <ErrorMessage name="AutoFreezeAfterAudit" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="After freeze: No edit/delete allowed, only view. Prevents data tampering." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Interest Provision Frequency
                                                         </Label>
@@ -275,7 +239,6 @@ const FinancialYearSetupControl = () => {
                                                             <option value="Yearly">Yearly</option>
                                                         </Input>
                                                         <ErrorMessage name="InterestProvisionFrequency" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used when schemes have 'Interest on Tenure End' — provisions are made periodically" />
                                                     </FormGroup>
                                                 </Col>
                                             </Row>

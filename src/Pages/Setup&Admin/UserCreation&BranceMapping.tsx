@@ -180,12 +180,6 @@ const UserCreationBranceMapping = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="User Creation & Branch Mapping" parent="Setup & Admin" />
@@ -202,9 +196,9 @@ const UserCreationBranceMapping = () => {
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Full Name <span className="text-danger">*</span>
                                                         </Label>
@@ -219,11 +213,10 @@ const UserCreationBranceMapping = () => {
                                                             innerRef={fullNameRef}
                                                         />
                                                         <ErrorMessage name="FullName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Audit logs, maker-checker records, report signatures" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Employee ID
                                                         </Label>
@@ -237,12 +230,11 @@ const UserCreationBranceMapping = () => {
                                                             invalid={touched.EmployeeID && !!errors.EmployeeID}
                                                         />
                                                         <ErrorMessage name="EmployeeID" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Salary management, HR module integration" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Username / Login ID <span className="text-danger">*</span>
                                                         </Label>
@@ -256,11 +248,10 @@ const UserCreationBranceMapping = () => {
                                                             invalid={touched.Username && !!errors.Username}
                                                         />
                                                         <ErrorMessage name="Username" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Primary login identifier — must be unique across system" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Password <span className="text-danger">*</span>
                                                         </Label>
@@ -274,12 +265,11 @@ const UserCreationBranceMapping = () => {
                                                             invalid={touched.Password && !!errors.Password}
                                                         />
                                                         <ErrorMessage name="Password" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Store only hashed (bcrypt). Force change on first login." />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Assign Role <span className="text-danger">*</span>
                                                         </Label>
@@ -300,11 +290,10 @@ const UserCreationBranceMapping = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="AssignRole" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Auto-applies permission template for this role" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Assign Branch <span className="text-danger">*</span>
                                                         </Label>
@@ -325,12 +314,11 @@ const UserCreationBranceMapping = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="AssignBranch" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="User will ONLY see data of this branch" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Mobile Number <span className="text-danger">*</span>
                                                         </Label>
@@ -344,11 +332,10 @@ const UserCreationBranceMapping = () => {
                                                             invalid={touched.MobileNumber && !!errors.MobileNumber}
                                                         />
                                                         <ErrorMessage name="MobileNumber" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: OTP authentication, SMS alerts for approvals" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Email ID <span className="text-danger">*</span>
                                                         </Label>
@@ -362,12 +349,11 @@ const UserCreationBranceMapping = () => {
                                                             invalid={touched.EmailID && !!errors.EmailID}
                                                         />
                                                         <ErrorMessage name="EmailID" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Password reset, scheduled reports delivery" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Date of Joining
                                                         </Label>
@@ -380,11 +366,10 @@ const UserCreationBranceMapping = () => {
                                                             invalid={touched.DateOfJoining && !!errors.DateOfJoining}
                                                         />
                                                         <ErrorMessage name="DateOfJoining" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Salary module, employee reports" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             User Status
                                                         </Label>
@@ -400,7 +385,6 @@ const UserCreationBranceMapping = () => {
                                                             <option value="Inactive">Inactive</option>
                                                         </Input>
                                                         <ErrorMessage name="UserStatus" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Inactive/Suspended users cannot login; existing data remains" />
                                                     </FormGroup>
                                                 </Col>
                                             </Row>

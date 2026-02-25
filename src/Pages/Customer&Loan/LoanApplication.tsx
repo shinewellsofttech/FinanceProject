@@ -1,14 +1,28 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Formik, Form, ErrorMessage } from "formik";
+import { Formik, Form, ErrorMessage, FieldArray } from "formik";
 import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
 import { Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
 import * as Yup from "yup";
-import { Card, CardBody, CardHeader, Col, Container, FormGroup, Input, Label, Row, Alert } from "reactstrap";
+import { Card, CardBody, CardHeader, Col, Container, FormGroup, Input, Label, Row, Alert, Table } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Btn } from "../../AbstractElements";
+
+export interface GoldOrnamentRow {
+    ornamentType: string;
+    grossWt: string;
+    stoneWt: string;
+    netWt: string;
+    purity: string;
+    ratePerGram: string;
+    eligWtDeduction: string;
+    assessedValue: string;
+}
+
+/** Type for FieldArray render prop (push only) - avoids relying on formik internal exports */
+type GoldOrnamentArrayHelpers = { push: (obj: GoldOrnamentRow) => void };
 
 interface LoanAppFormValues {
     CustomerID: string;
@@ -39,7 +53,27 @@ interface LoanAppFormValues {
     IncomeDocumentsFile: any;
     BusinessProofFile: any;
     OtherDocsFile: any;
+
+    // Gold Loan (when Scheme Type = Gold Loan)
+    GoldLTVApplied: string;
+    GoldPacketID: string;
+    GoldMarketRate: string;
+    GoldLockerID: string;
+    GoldPledgeNumber: string;
+    GoldAppraiserName: string;
+    goldOrnaments: GoldOrnamentRow[];
 }
+
+const defaultOrnamentRow: GoldOrnamentRow = {
+    ornamentType: "",
+    grossWt: "",
+    stoneWt: "",
+    netWt: "",
+    purity: "",
+    ratePerGram: "",
+    eligWtDeduction: "",
+    assessedValue: "",
+};
 
 const initialValues: LoanAppFormValues = {
     CustomerID: "",
@@ -67,14 +101,23 @@ const initialValues: LoanAppFormValues = {
     IncomeDocumentsFile: null,
     BusinessProofFile: null,
     OtherDocsFile: null,
+
+    GoldLTVApplied: "75.00",
+    GoldPacketID: "PKT-BR001-0001",
+    GoldMarketRate: "",
+    GoldLockerID: "",
+    GoldPledgeNumber: "PLG-2024-0001",
+    GoldAppraiserName: "",
+    goldOrnaments: [{ ...defaultOrnamentRow }],
 };
 
 interface DropdownState {
-    schemes: Array<{ Id?: number; Name?: string }>;
+    schemes: Array<{ Id?: number; Name?: string; SchemeType?: string }>;
     tenures: Array<{ Id?: number; Name?: string }>;
     purposes: Array<{ Id?: number; Name?: string }>;
     customerBanks: Array<{ Id?: number; Name?: string }>;
     relationships: Array<{ Id?: number; Name?: string }>;
+    lockers: Array<{ Id?: number; Name?: string; LockerId?: string }>;
 }
 
 const LoanApplication = () => {
@@ -86,7 +129,8 @@ const LoanApplication = () => {
         tenures: [],
         purposes: [],
         customerBanks: [],
-        relationships: []
+        relationships: [],
+        lockers: [],
     });
 
     const MASTER_URL = `${API_WEB_URLS.MASTER}/0/token`;
@@ -114,15 +158,14 @@ const LoanApplication = () => {
 
     useEffect(() => {
         customerIdRef.current?.focus();
-        // Set today's date
         const today = new Date().toISOString().split('T')[0];
         initialValues.ApplicationDate = today;
 
-        // Fetch Dropdowns
-        // Real endpoints might differ, using placeholder IDs for now
         Fn_FillListData(dispatch, setDropdowns, "schemes", `${MASTER_URL}/LoanSchemeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "purposes", `${MASTER_URL}/LoanPurposeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "relationships", `${MASTER_URL}/RelationshipMaster/Id/0`);
+        // Locker list for Gold Loan – replace with actual Locker Inventory API when available
+        Fn_FillListData(dispatch, setDropdowns, "lockers", `${MASTER_URL}/LockerMaster/Id/0`).catch(() => {});
     }, [dispatch, MASTER_URL]);
 
     const handleSubmit = async (values: LoanAppFormValues, { setSubmitting, resetForm }: FormikHelpers<LoanAppFormValues>) => {
@@ -140,12 +183,6 @@ const LoanApplication = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem", fontStyle: "italic" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Loan Application" parent="Customer & Loan" />
@@ -162,18 +199,17 @@ const LoanApplication = () => {
                                 >
                                     {({ values, handleChange, handleBlur, errors, touched, setFieldValue, isSubmitting }: FormikProps<LoanAppFormValues>) => (
                                         <Form className="theme-form" onKeyDown={handleEnterToNextField}>
-                                            <Row className="gy-3">
+                                            <Row className="gy-0">
                                                 {/* Primary Application Details */}
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Customer ID / Search <span className="text-danger">*</span></Label>
                                                         <Input type="text" name="CustomerID" placeholder="Search by Customer ID / Name / Mobile" value={values.CustomerID} onChange={handleChange} onBlur={handleBlur} invalid={touched.CustomerID && !!errors.CustomerID} innerRef={customerIdRef} />
                                                         <ErrorMessage name="CustomerID" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Only KYC-Approved customers visible. Auto-fills customer details." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Loan Scheme <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="LoanScheme" value={values.LoanScheme} onChange={handleChange} onBlur={handleBlur} invalid={touched.LoanScheme && !!errors.LoanScheme}>
                                                             <option value="">-- Select Scheme --</option>
@@ -182,20 +218,18 @@ const LoanApplication = () => {
                                                             {dropdowns.schemes.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                         </Input>
                                                         <ErrorMessage name="LoanScheme" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Scheme selection drives: interest rate, tenure options, extra fields (Gold Loan)" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Loan Amount Requested (₹) <span className="text-danger">*</span></Label>
                                                         <Input type="number" name="LoanAmount" placeholder="e.g. 50000" value={values.LoanAmount} onChange={handleChange} onBlur={handleBlur} invalid={touched.LoanAmount && !!errors.LoanAmount} />
                                                         <ErrorMessage name="LoanAmount" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Validated against scheme Min/Max. For Gold: overridden by LTV calculation." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Tenure <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="Tenure" value={values.Tenure} onChange={handleChange} onBlur={handleBlur} invalid={touched.Tenure && !!errors.Tenure}>
                                                             <option value="">-- Select Tenure --</option>
@@ -205,19 +239,18 @@ const LoanApplication = () => {
                                                             {dropdowns.tenures.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                         </Input>
                                                         <ErrorMessage name="Tenure" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Options from scheme config. Drives EMI schedule generation." />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Application Date <span className="text-danger">*</span></Label>
                                                         <Input type="date" name="ApplicationDate" value={values.ApplicationDate} onChange={handleChange} onBlur={handleBlur} invalid={touched.ApplicationDate && !!errors.ApplicationDate} />
                                                         <ErrorMessage name="ApplicationDate" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Purpose of Loan <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="PurposeOfLoan" value={values.PurposeOfLoan} onChange={handleChange} onBlur={handleBlur} invalid={touched.PurposeOfLoan && !!errors.PurposeOfLoan}>
                                                             <option value="">-- Select --</option>
@@ -227,12 +260,11 @@ const LoanApplication = () => {
                                                             {dropdowns.purposes.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                         </Input>
                                                         <ErrorMessage name="PurposeOfLoan" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Loan agreement, RBI portfolio classification" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Disbursement Mode <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="DisbursementMode" value={values.DisbursementMode} onChange={handleChange} onBlur={handleBlur} invalid={touched.DisbursementMode && !!errors.DisbursementMode}>
                                                             <option value="">-- Select --</option>
@@ -240,11 +272,10 @@ const LoanApplication = () => {
                                                             <option value="Cash">Cash</option>
                                                         </Input>
                                                         <ErrorMessage name="DisbursementMode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Cash disbursement restricted by Branch Cash Limit rule" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>Disbursement Bank Account <span className="text-danger">*</span></Label>
                                                         <Input type="select" name="DisbursementBankAccount" value={values.DisbursementBankAccount} onChange={handleChange} onBlur={handleBlur} invalid={touched.DisbursementBankAccount && !!errors.DisbursementBankAccount}>
                                                             <option value="">-- Select Customer Bank --</option>
@@ -252,42 +283,205 @@ const LoanApplication = () => {
                                                             {dropdowns.customerBanks.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                         </Input>
                                                         <ErrorMessage name="DisbursementBankAccount" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="From customer's registered bank accounts" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>NACH / Auto-Debit Setup?</Label>
                                                         <Input type="select" name="NACHSetup" value={values.NACHSetup} onChange={handleChange} onBlur={handleBlur}>
                                                             <option value="No">No</option>
                                                             <option value="Yes">Yes</option>
                                                         </Input>
-                                                        <HelperText text="If Yes: NACH sanction letter generated. Bank mandate registered." />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-1">
                                                         <Label>GPS Location at Application</Label>
                                                         <Input type="text" name="GPSLocation" placeholder="Lat, Long" value={values.GPSLocation} onChange={handleChange} onBlur={handleBlur} />
-                                                        <HelperText text="System auto-captures. Stored for field audit verification." />
                                                     </FormGroup>
                                                 </Col>
+
+                                                {/* Gold Loan Details – shown when Scheme Type = Gold Loan */}
+                                                {(() => {
+                                                    const selectedScheme = dropdowns.schemes.find((s) => String(s.Id) === values.LoanScheme);
+                                                    const schemeName = selectedScheme?.Name ?? "";
+                                                    const isGoldLoan = schemeName.toLowerCase().includes("gold") || values.LoanScheme === "2";
+                                                    if (!isGoldLoan) return null;
+
+                                                    const calcNetWt = (g: string, s: string) => {
+                                                        const gross = parseFloat(g);
+                                                        const stone = parseFloat(s);
+                                                        if (isNaN(gross) || isNaN(stone)) return "";
+                                                        return String(Math.max(0, gross - stone));
+                                                    };
+                                                    const calcAssessedValue = (netWt: string, ratePerGram: string, deduction: string) => {
+                                                        const n = parseFloat(netWt);
+                                                        const r = parseFloat(ratePerGram);
+                                                        const d = parseFloat(deduction) || 0;
+                                                        if (isNaN(n) || isNaN(r) || n < 0) return "";
+                                                        const eligWt = n * (1 - d / 100);
+                                                        return String(Math.round(eligWt * r * 100) / 100);
+                                                    };
+
+                                                    return (
+                                                        <Col md="12" className="mt-4">
+                                                            <Card className="border border-secondary mb-0 shadow-sm">
+                                                                <CardBody>
+                                                                    <p className="small text-muted mb-3">Dev Note: Locker &amp; Packet management. System auto-prints Pledge Receipt and Gold Tag Slip after save; transfer logged in audit trail.</p>
+                                                                    <h6 className="mb-3"><i className="fa fa-diamond me-2"></i> Gold Loan Details</h6>
+                                                                    <Row>
+                                                                        <Col md="6">
+                                                                            <FormGroup className="mb-2">
+                                                                                <Label>LTV % Applied <span className="text-danger">*</span></Label>
+                                                                                <Input type="text" name="GoldLTVApplied" placeholder="e.g. 75" value={values.GoldLTVApplied} onChange={handleChange} onBlur={handleBlur} />
+                                                                            </FormGroup>
+                                                                            <FormGroup className="mb-2">
+                                                                                <Label>Packet ID <span className="text-danger">*</span></Label>
+                                                                                <Input type="text" name="GoldPacketID" value={values.GoldPacketID} readOnly className="bg-light" />
+                                                                            </FormGroup>
+                                                                            <FormGroup className="mb-2">
+                                                                                <Label>Gold Market Rate (₹/gram) <span className="text-danger">*</span></Label>
+                                                                                <Input type="text" name="GoldMarketRate" placeholder="e.g. 6500.00" value={values.GoldMarketRate} onChange={handleChange} onBlur={handleBlur} />
+                                                                            </FormGroup>
+                                                                        </Col>
+                                                                        <Col md="6">
+                                                                            <FormGroup className="mb-2">
+                                                                                <Label>Locker ID <span className="text-danger">*</span></Label>
+                                                                                <Input type="select" name="GoldLockerID" value={values.GoldLockerID} onChange={handleChange} onBlur={handleBlur}>
+                                                                                    <option value="">-- Select Available Locker --</option>
+                                                                                    {dropdowns.lockers.map((lk) => (
+                                                                                        <option key={lk.Id} value={String(lk.Id ?? "")}>{lk.Name ?? lk.LockerId ?? `Locker ${lk.Id}`}</option>
+                                                                                    ))}
+                                                                                </Input>
+                                                                            </FormGroup>
+                                                                            <FormGroup className="mb-2">
+                                                                                <Label>Pledge Number <span className="text-danger">*</span></Label>
+                                                                                <Input type="text" name="GoldPledgeNumber" value={values.GoldPledgeNumber} readOnly className="bg-light" />
+                                                                            </FormGroup>
+                                                                            <FormGroup className="mb-2">
+                                                                                <Label>Appraiser Name <span className="text-danger">*</span></Label>
+                                                                                <Input type="text" name="GoldAppraiserName" placeholder="Name of gold appraiser" value={values.GoldAppraiserName} onChange={handleChange} onBlur={handleBlur} />
+                                                                            </FormGroup>
+                                                                        </Col>
+                                                                    </Row>
+
+                                                                    <Label className="mt-3 mb-2">Ornament Entry (Add Each Ornament Separately)</Label>
+                                                                    <div className="table-responsive">
+                                                                        <Table bordered hover size="sm" className="mb-2">
+                                                                            <thead className="table-light">
+                                                                                <tr>
+                                                                                    <th>Ornament Type</th>
+                                                                                    <th>Gross Wt (g) *</th>
+                                                                                    <th>Stone Wt (g)</th>
+                                                                                    <th>Net Wt (g) *</th>
+                                                                                    <th>Purity (Karat) *</th>
+                                                                                    <th>Rate/g (₹) *</th>
+                                                                                    <th>Elig. Wt Deduction (%)</th>
+                                                                                    <th>Assessed Value (₹) *</th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <FieldArray name="goldOrnaments">
+                                                                                    {({ push, form }: GoldOrnamentArrayHelpers & { form: FormikProps<LoanAppFormValues> }) =>
+                                                                                        (form.values.goldOrnaments as GoldOrnamentRow[]).map((row: GoldOrnamentRow, index: number) => {
+                                                                                            const netWt = row.netWt || calcNetWt(row.grossWt, row.stoneWt);
+                                                                                            const assessedVal = row.assessedValue || calcAssessedValue(netWt, row.ratePerGram, row.eligWtDeduction);
+                                                                                            return (
+                                                                                                <tr key={index}>
+                                                                                                    <td>
+                                                                                                        <Input type="select" name={`goldOrnaments.${index}.ornamentType`} value={row.ornamentType} onChange={(e) => { handleChange(e); const n = calcNetWt(row.grossWt, row.stoneWt); setFieldValue(`goldOrnaments.${index}.netWt`, n); setFieldValue(`goldOrnaments.${index}.assessedValue`, calcAssessedValue(n, row.ratePerGram, row.eligWtDeduction)); }} onBlur={handleBlur}>
+                                                                                                            <option value="">-- Select --</option>
+                                                                                                            <option value="Chain">Chain</option>
+                                                                                                            <option value="Ring">Ring</option>
+                                                                                                            <option value="Bangle">Bangle</option>
+                                                                                                            <option value="Pendant">Pendant</option>
+                                                                                                            <option value="Earring">Earring</option>
+                                                                                                            <option value="Other">Other</option>
+                                                                                                        </Input>
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="number" step="0.01" name={`goldOrnaments.${index}.grossWt`} value={row.grossWt} onChange={(e) => { handleChange(e); const n = calcNetWt(e.target.value, row.stoneWt); setFieldValue(`goldOrnaments.${index}.netWt`, n); setFieldValue(`goldOrnaments.${index}.assessedValue`, calcAssessedValue(n, row.ratePerGram, row.eligWtDeduction)); }} onBlur={handleBlur} />
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="number" step="0.01" name={`goldOrnaments.${index}.stoneWt`} value={row.stoneWt} onChange={(e) => { handleChange(e); const n = calcNetWt(row.grossWt, e.target.value); setFieldValue(`goldOrnaments.${index}.netWt`, n); setFieldValue(`goldOrnaments.${index}.assessedValue`, calcAssessedValue(n, row.ratePerGram, row.eligWtDeduction)); }} onBlur={handleBlur} />
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="text" name={`goldOrnaments.${index}.netWt`} value={netWt} readOnly className="bg-light" />
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="select" name={`goldOrnaments.${index}.purity`} value={row.purity} onChange={(e) => { handleChange(e); setFieldValue(`goldOrnaments.${index}.assessedValue`, calcAssessedValue(netWt, row.ratePerGram, row.eligWtDeduction)); }} onBlur={handleBlur}>
+                                                                                                            <option value="">-- Select --</option>
+                                                                                                            <option value="24K">24K</option>
+                                                                                                            <option value="22K">22K</option>
+                                                                                                            <option value="18K">18K</option>
+                                                                                                            <option value="14K">14K</option>
+                                                                                                        </Input>
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="number" step="0.01" name={`goldOrnaments.${index}.ratePerGram`} value={row.ratePerGram} onChange={(e) => { handleChange(e); setFieldValue(`goldOrnaments.${index}.assessedValue`, calcAssessedValue(netWt, e.target.value, row.eligWtDeduction)); }} onBlur={handleBlur} />
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="number" step="0.01" name={`goldOrnaments.${index}.eligWtDeduction`} value={row.eligWtDeduction} onChange={(e) => { handleChange(e); setFieldValue(`goldOrnaments.${index}.assessedValue`, calcAssessedValue(netWt, row.ratePerGram, e.target.value)); }} onBlur={handleBlur} />
+                                                                                                    </td>
+                                                                                                    <td>
+                                                                                                        <Input type="text" name={`goldOrnaments.${index}.assessedValue`} value={assessedVal} readOnly className="bg-light" />
+                                                                                                    </td>
+                                                                                                </tr>
+                                                                                            );
+                                                                                        })
+                                                                                    }
+                                                                                </FieldArray>
+                                                                            </tbody>
+                                                                        </Table>
+                                                                    </div>
+                                                                    <FieldArray name="goldOrnaments">
+                                                                        {({ push }: GoldOrnamentArrayHelpers) => (
+                                                                            <Btn color="light" type="button" className="mb-3 text-dark border" onClick={() => push({ ...defaultOrnamentRow })}>
+                                                                                <i className="fa fa-plus me-1"></i> Add Row
+                                                                            </Btn>
+                                                                        )}
+                                                                    </FieldArray>
+
+                                                                    <Alert color="success" className="mb-3 py-2 small" style={{ backgroundColor: "#d4edda" }}>
+                                                                        <strong>Auto-calculation formulas:</strong><br />
+                                                                        Net Weight = Gross Weight - Stone Weight<br />
+                                                                        Eligible Weight = Net Weight × (1 - Deduction% / 100)<br />
+                                                                        Assessed Value = Eligible Weight × Rate per gram<br />
+                                                                        Total Eligible Loan Amount = Sum of all Assessed Values × LTV%
+                                                                    </Alert>
+
+                                                                    <div className="d-flex flex-wrap gap-2">
+                                                                        <Btn color="success" type="button" className="text-white">
+                                                                            <i className="fa fa-print me-1"></i> Print Pledge Receipt
+                                                                        </Btn>
+                                                                        <Btn color="info" type="button" className="text-white">
+                                                                            <i className="fa fa-tag me-1"></i> Print Gold Tag Slip
+                                                                        </Btn>
+                                                                        <Btn color="primary" type="button" className="text-white">
+                                                                            <i className="fa fa-save me-1"></i> Save Gold Loan Details
+                                                                        </Btn>
+                                                                    </div>
+                                                                </CardBody>
+                                                            </Card>
+                                                        </Col>
+                                                    );
+                                                })()}
 
                                                 {/* Co-Applicant Details */}
                                                 <Col md="12" className="mt-4">
                                                     <Card className="border border-primary bg-light-primary mb-0 shadow-sm">
                                                         <CardBody>
                                                             <h6 className="mb-3 text-primary"><i className="fa fa-users me-2"></i> Co-Applicant Details (Optional)</h6>
-                                                            <Row className="gy-3">
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                            <Row className="gy-0">
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Co-Applicant Name</Label>
                                                                         <Input type="text" name="CoApplicantName" placeholder="Full name as per KYC" value={values.CoApplicantName} onChange={handleChange} onBlur={handleBlur} />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Relationship with Applicant</Label>
                                                                         <Input type="select" name="Relationship" value={values.Relationship} onChange={handleChange} onBlur={handleBlur}>
                                                                             <option value="">-- Select --</option>
@@ -300,18 +494,17 @@ const LoanApplication = () => {
                                                                         </Input>
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Aadhaar / PAN</Label>
                                                                         <Input type="text" name="CoAppAadhaarPAN" placeholder="Co-applicant Aadhaar or PAN" value={values.CoAppAadhaarPAN} onChange={handleChange} onBlur={handleBlur} />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Monthly Income (₹)</Label>
                                                                         <Input type="number" name="CoAppMonthlyIncome" placeholder="Income of co-applicant" value={values.CoAppMonthlyIncome} onChange={handleChange} onBlur={handleBlur} invalid={touched.CoAppMonthlyIncome && !!errors.CoAppMonthlyIncome} />
                                                                         <ErrorMessage name="CoAppMonthlyIncome" component="div" className="text-danger small mt-1" />
-                                                                        <HelperText text="Added to primary income for FOIR calculation" />
                                                                     </FormGroup>
                                                                 </Col>
                                                             </Row>
@@ -329,28 +522,27 @@ const LoanApplication = () => {
                                                                 <strong>Rule:</strong> A member acting as Guarantor CANNOT take a new loan until the guaranteed loan is closed. Enforce this check at application stage. Guarantor CIBIL must also be checked.
                                                             </Alert>
 
-                                                            <Row className="gy-3">
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                            <Row className="gy-0">
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Guarantor Customer ID</Label>
                                                                         <Input type="text" name="GuarantorCustomerID" placeholder="Search existing customer as guarantor" value={values.GuarantorCustomerID} onChange={handleChange} onBlur={handleBlur} />
-                                                                        <HelperText text="Must be an existing KYC-approved customer in the system" />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Guarantor CIBIL Score (Auto-fetched)</Label>
                                                                         <Input type="text" name="GuarantorCIBILScore" value={values.GuarantorCIBILScore} disabled className="bg-light" />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Guarantor Aadhaar</Label>
                                                                         <Input type="text" name="GuarantorAadhaar" placeholder="Verify guarantor identity" value={values.GuarantorAadhaar} onChange={handleChange} onBlur={handleBlur} />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Guarantor PAN</Label>
                                                                         <Input type="text" name="GuarantorPAN" placeholder="For CIBIL check" value={values.GuarantorPAN} onChange={handleChange} onBlur={handleBlur} />
                                                                     </FormGroup>
@@ -365,30 +557,28 @@ const LoanApplication = () => {
                                                     <Card className="border border-info bg-light-info mb-0 shadow-sm">
                                                         <CardBody>
                                                             <h6 className="mb-3 text-info"><i className="fa fa-paperclip me-2"></i> Loan Application Documents</h6>
-                                                            <Row className="gy-3">
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                            <Row className="gy-0">
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Loan Application Form (Signed) <span className="text-danger">*</span></Label>
                                                                         <Input type="file" name="LoanAppFormFile" onChange={(e) => setFieldValue('LoanAppFormFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.LoanAppFormFile && !!errors.LoanAppFormFile} />
                                                                         <ErrorMessage name="LoanAppFormFile" component="div" className="text-danger small mt-1" />
-                                                                        <HelperText text="Scanned physical form OR e-signed digital form" />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Income Documents</Label>
                                                                         <Input type="file" name="IncomeDocumentsFile" onChange={(e) => setFieldValue('IncomeDocumentsFile', e.currentTarget.files?.[0])} onBlur={handleBlur} />
-                                                                        <HelperText text="Salary slip / bank statement / ITR" />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Business Proof (if self-employed)</Label>
                                                                         <Input type="file" name="BusinessProofFile" onChange={(e) => setFieldValue('BusinessProofFile', e.currentTarget.files?.[0])} onBlur={handleBlur} />
                                                                     </FormGroup>
                                                                 </Col>
-                                                                <Col md="6">
-                                                                    <FormGroup>
+                                                                <Col md="4">
+                                                                    <FormGroup className="mb-1">
                                                                         <Label>Other Supporting Documents</Label>
                                                                         <Input type="file" name="OtherDocsFile" multiple onChange={(e) => setFieldValue('OtherDocsFile', e.currentTarget.files)} onBlur={handleBlur} />
                                                                     </FormGroup>

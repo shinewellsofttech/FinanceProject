@@ -8,35 +8,29 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Fn_DeleteData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
-const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.UserMaster}/Id/0`;
-const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.UserMaster}/Id`;
+const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/LoanApplicationMaster/Id/0`;
+const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/LoanApplicationMaster/Id`;
 
-interface AdminListState {
-  UserMasterList: any[];
+interface ListState {
+  dataList: any[];
   isProgress: boolean;
   filterText: string;
 }
 
-/**
- * Displays the admin master list page with search, edit, and delete capabilities.
- */
-const PageList_AdminMaster = () => {
+const PageList_LoanApplication = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [state, setState] = useState<AdminListState>({
-    UserMasterList: [],
+  const [state, setState] = useState<ListState>({
+    dataList: [],
     isProgress: true,
     filterText: "",
   });
 
-  /**
-   * Loads list from UserMaster API (same as PageList_UserMaster); only UserType 1 shown as admins.
-   */
   const loadData = useCallback(() => {
     setState((prev) => ({ ...prev, isProgress: true }));
-    Fn_FillListData(dispatch, setState, "UserMasterList", LIST_API_URL).catch((error) => {
-      console.error("Failed to load admin list:", error);
+    Fn_FillListData(dispatch, setState, "dataList", LIST_API_URL).catch((error) => {
+      console.error("Failed to load loan application list:", error);
       setState((prev) => ({ ...prev, isProgress: false }));
     });
   }, [dispatch]);
@@ -45,91 +39,57 @@ const PageList_AdminMaster = () => {
     loadData();
   }, [loadData]);
 
-  /**
-   * Navigates to the add admin master page.
-   */
   const handleAdd = () => {
-    navigate("/addEditAdminMaster", { state: { Id: 0 } });
+    navigate("/loanApplication", { state: { Id: 0 } });
   };
 
-  /**
-   * Navigates to the edit form for the selected admin.
-   */
   const handleEdit = (id: number | string) => {
     if (!id) return;
-    navigate("/addEditAdminMaster", { state: { Id: id } });
+    navigate("/loanApplication", { state: { Id: id } });
   };
 
-  /**
-   * Deletes the selected admin record after user confirmation.
-   */
   const handleDelete = (id: number | string) => {
-    if (!id) {
-      return;
-    }
-    if (window.confirm("Are you sure you want to delete this admin?")) {
+    if (!id) return;
+    if (window.confirm("Are you sure you want to delete this loan application?")) {
       Fn_DeleteData(dispatch, setState as any, Number(id), DELETE_API_URL, LIST_API_URL)
-        .then(() => {
-          loadData();
-        })
+        .then(() => loadData())
         .catch((error) => {
-          console.error("Failed to delete admin:", error);
-          alert("Failed to delete admin. Please try again.");
+          console.error("Failed to delete:", error);
+          alert("Failed to delete. Please try again.");
         });
     }
   };
 
-  /**
-   * Updates the search filter text state.
-   */
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { value } = event.target;
-    setState((prev) => ({
-      ...prev,
-      filterText: value,
-    }));
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setState((prev) => ({ ...prev, filterText: e.target.value }));
   };
 
-  /**
-   * Filters the list: same API as UserMaster but only UserType 1 (admins), then by search text.
-   */
   const filteredList = useMemo(() => {
-    const rawList = Array.isArray(state.UserMasterList) ? state.UserMasterList : [];
-    const onlyUserType1 = rawList.filter((item) => Number(item?.F_UserType) === 1);
-    const searchText = state.filterText.trim().toLowerCase();
-    if (!searchText) {
-      return onlyUserType1;
-    }
-    return onlyUserType1.filter((item) => {
-      const fields = [
-        item?.Name,
-        item?.FullName,
-        item?.ContactPerson,
-        item?.ContactEmail,
-        item?.ContactMobile,
-        item?.StateName,
-        item?.CityName,
-      ];
-      return fields.some((field) => String(field ?? "").toLowerCase().includes(searchText));
-    });
-  }, [state.UserMasterList, state.filterText]);
+    const list = Array.isArray(state.dataList) ? state.dataList : [];
+    const search = state.filterText.trim().toLowerCase();
+    if (!search) return list;
+    return list.filter(
+      (item: any) =>
+        String(item?.CustomerID ?? item?.CustomerName ?? "").toLowerCase().includes(search) ||
+        String(item?.LoanSchemeName ?? item?.LoanScheme ?? "").toLowerCase().includes(search)
+    );
+  }, [state.dataList, state.filterText]);
 
   return (
-    <>
     <div className="page-body">
-      <Breadcrumbs mainTitle="Admin Master" parent="Masters" />
+      <Breadcrumbs mainTitle="Loan Application" parent="Customer & Loan" />
       <Container fluid>
         <Row>
           <Col xs="12">
             <Card>
-              <CardHeaderCommon title="Admin Master List" tagClass="card-title mb-0" />
+              <CardHeaderCommon title="Loan Application List" tagClass="card-title mb-0" />
               <CardBody>
                 <Row className="mb-3">
                   <Col md="6" className="d-flex align-items-center">
                     <Label className="me-2 mb-0">Search:</Label>
                     <Input
                       type="search"
-                      placeholder="Search by name, email, or location..."
+                      placeholder="Search by customer, scheme..."
                       value={state.filterText}
                       onChange={handleSearchChange}
                     />
@@ -137,7 +97,7 @@ const PageList_AdminMaster = () => {
                   <Col md="6" className="text-end">
                     <Btn color="primary" onClick={handleAdd}>
                       <i className="fa fa-plus me-2" />
-                      Add Admin
+                      Add Loan Application
                     </Btn>
                   </Col>
                 </Row>
@@ -154,15 +114,17 @@ const PageList_AdminMaster = () => {
                       <thead>
                         <tr>
                           <th>#</th>
-                          <th>Username</th>
-                          <th>Contact Person</th>
+                          <th>Customer</th>
+                          <th>Scheme</th>
+                          <th>Loan Amount</th>
+                          <th>Application Date</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredList.length === 0 ? (
                           <tr>
-                            <td colSpan={4} className="text-center py-4">
+                            <td colSpan={6} className="text-center py-4">
                               No records found.
                             </td>
                           </tr>
@@ -170,15 +132,12 @@ const PageList_AdminMaster = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.Name ?? "-"}</td>
-                              <td>{item?.ContactPerson ?? "-"}</td>
+                              <td>{item?.CustomerName ?? item?.CustomerID ?? "-"}</td>
+                              <td>{item?.LoanSchemeName ?? item?.LoanScheme ?? "-"}</td>
+                              <td>{item?.LoanAmount != null ? `₹ ${item.LoanAmount}` : "-"}</td>
+                              <td>{item?.ApplicationDate ?? "-"}</td>
                               <td>
-                                <Btn
-                                  color="primary"
-                                  size="sm"
-                                  className="me-2"
-                                  onClick={() => handleEdit(item?.Id)}
-                                >
+                                <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />
                                 </Btn>
                                 <Btn color="danger" size="sm" onClick={() => handleDelete(item?.Id)}>
@@ -195,11 +154,10 @@ const PageList_AdminMaster = () => {
               </CardBody>
             </Card>
           </Col>
-          </Row>
-        </Container>
-      </div>
-    </>
+        </Row>
+      </Container>
+    </div>
   );
 };
 
-export default PageList_AdminMaster;
+export default PageList_LoanApplication;

@@ -213,12 +213,6 @@ const BranchOfficeCreation = () => {
         }
     };
 
-    const HelperText = ({ text }: { text: string }) => (
-        <div className="text-muted small mt-1" style={{ fontSize: "0.80rem" }}>
-            <i className="fa fa-thumb-tack text-danger me-1"></i> {text}
-        </div>
-    );
-
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Branch Office Creation" parent="Setup & Admin" />
@@ -236,9 +230,9 @@ const BranchOfficeCreation = () => {
                                     <Card>
                                         <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} Branch Office`} tagClass="card-title mb-0" />
                                         <CardBody>
-                                            <Row className="gy-2">
-                                                <Col md="6">
-                                                    <FormGroup>
+                                            <Row className="gy-0">
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Branch Name <span className="text-danger">*</span>
                                                         </Label>
@@ -253,11 +247,10 @@ const BranchOfficeCreation = () => {
                                                             innerRef={branchNameRef}
                                                         />
                                                         <ErrorMessage name="BranchName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Branch-level reports, user login identification" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Branch Code <span className="text-danger">*</span>
                                                         </Label>
@@ -271,12 +264,11 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.BranchCode && !!errors.BranchCode}
                                                         />
                                                         <ErrorMessage name="BranchCode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Loan Account Numbers, Voucher Numbers, Receipt Numbers" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Reporting Regional Office <span className="text-danger">*</span>
                                                         </Label>
@@ -297,11 +289,11 @@ const BranchOfficeCreation = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="ReportingRegion" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="FK: Regional_ID — defines hierarchy and reporting chain" />
+
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             IFSC Code <span className="text-danger">*</span>
                                                         </Label>
@@ -315,12 +307,11 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.IFSCCode && !!errors.IFSCCode}
                                                         />
                                                         <ErrorMessage name="IFSCCode" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Bank transfers, NACH mandate setup, payment processing" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Branch Manager Name <span className="text-danger">*</span>
                                                         </Label>
@@ -329,16 +320,18 @@ const BranchOfficeCreation = () => {
                                                             name="BranchManagerName"
                                                             placeholder="Enter manager name"
                                                             value={values.BranchManagerName}
+
+
+                                                            
                                                             onChange={handleChange}
                                                             onBlur={handleBlur}
                                                             invalid={touched.BranchManagerName && !!errors.BranchManagerName}
                                                         />
                                                         <ErrorMessage name="BranchManagerName" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Approval workflows, escalation matrix" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Branch Opening Date <span className="text-danger">*</span>
                                                         </Label>
@@ -351,12 +344,11 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.BranchOpeningDate && !!errors.BranchOpeningDate}
                                                         />
                                                         <ErrorMessage name="BranchOpeningDate" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Financial year opening, initial balance entry" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Cash Limit (₹) <span className="text-danger">*</span>
                                                         </Label>
@@ -370,11 +362,10 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.CashLimit && !!errors.CashLimit}
                                                         />
                                                         <ErrorMessage name="CashLimit" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Day-closing cash verification, alerts when cash exceeds limit" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Opening Cash Balance (₹) <span className="text-danger">*</span>
                                                         </Label>
@@ -388,12 +379,11 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.OpeningCashBalance && !!errors.OpeningCashBalance}
                                                         />
                                                         <ErrorMessage name="OpeningCashBalance" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Opening GL entry, Day Book starting balance" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="12">
-                                                    <FormGroup>
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Branch Address <span className="text-danger">*</span>
                                                         </Label>
@@ -408,12 +398,11 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.BranchAddress && !!errors.BranchAddress}
                                                         />
                                                         <ErrorMessage name="BranchAddress" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Official letters, loan documents" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             City <span className="text-danger">*</span>
                                                         </Label>
@@ -434,11 +423,10 @@ const BranchOfficeCreation = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: District-level MIS reports" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             State <span className="text-danger">*</span>
                                                         </Label>
@@ -458,12 +446,11 @@ const BranchOfficeCreation = () => {
                                                             ))}
                                                         </Input>
                                                         <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: State-wise portfolio reports" />
                                                     </FormGroup>
                                                 </Col>
 
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Contact Number <span className="text-danger">*</span>
                                                         </Label>
@@ -477,11 +464,10 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.ContactNumber && !!errors.ContactNumber}
                                                         />
                                                         <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: SMS alerts, customer communication" />
                                                     </FormGroup>
                                                 </Col>
-                                                <Col md="6">
-                                                    <FormGroup>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
                                                         <Label>
                                                             Email <span className="text-danger">*</span>
                                                         </Label>
@@ -495,7 +481,6 @@ const BranchOfficeCreation = () => {
                                                             invalid={touched.Email && !!errors.Email}
                                                         />
                                                         <ErrorMessage name="Email" component="div" className="text-danger small mt-1" />
-                                                        <HelperText text="Used in: Scheduled MIS email delivery to branch" />
                                                     </FormGroup>
                                                 </Col>
 
