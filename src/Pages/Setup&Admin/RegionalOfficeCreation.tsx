@@ -64,8 +64,8 @@ const RegionalOfficeCreation = () => {
 
     // TODO: Confirm correct API URL for getting head offices list - using a placeholder for now
     const HO_API_URL = `${API_WEB_URLS.MASTER}/0/token/HeadOfficeMaster/Id/0`;
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/RegionalOfficeMaster/Id`;
-    const API_URL_SAVE = `RegionalOfficeMaster/0/token`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/RegionalOffice/Id`;
+    const API_URL_SAVE = `RegionalOffice/0/token`;
 
     const validationSchema = useMemo(
         () =>
@@ -128,15 +128,14 @@ const RegionalOfficeCreation = () => {
         try {
             const formData = new FormData();
 
-            formData.append("Id", String(roState.id ?? 0));
-            formData.append("RegionalOfficeName", values.RegionalOfficeName || "");
-            formData.append("RegionCode", values.RegionCode || "");
-            formData.append("ReportingHO", values.ReportingHO || "");
-            formData.append("RegionManagerName", values.RegionManagerName || "");
-            formData.append("OfficeAddress", values.OfficeAddress || "");
-            formData.append("ContactNumber", values.ContactNumber || "");
+            formData.append("Name", values.RegionalOfficeName || "");
+            formData.append("Code", values.RegionCode || "");
+            formData.append("F_HeadOffice", values.ReportingHO || "");
+            formData.append("ManagerName", values.RegionManagerName || "");
+            formData.append("Address", values.OfficeAddress || "");
+            formData.append("ContactNo", values.ContactNumber || "");
             formData.append("Email", values.Email || "");
-            formData.append("Status", values.Status || "");
+            formData.append("IsActive", values.Status === "Active" ? "true" : "false");
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;

@@ -85,7 +85,7 @@ const HOCreation = () => {
     const COUNTRY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CountryMaster}/Id/0`;
     const STATE_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.StateMaster}/Id/0`;
     const CITY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CityMaster}/Id/0`;
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/HeadOfficeMaster/Id`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/HeadOffice/Id`;
 
     const validationSchema = useMemo(
         () =>
@@ -116,30 +116,142 @@ const HOCreation = () => {
     useEffect(() => {
         Fn_FillListData(dispatch, setDropdowns, "countries", COUNTRY_API_URL)
             .catch((err) => console.error("Failed to fetch countries:", err));
-        Fn_FillListData(dispatch, setDropdowns, "states", STATE_API_URL)
-            .catch((err) => console.error("Failed to fetch states:", err));
-        Fn_FillListData(dispatch, setDropdowns, "cities", CITY_API_URL)
-            .catch((err) => console.error("Failed to fetch cities:", err));
     }, [dispatch]);
 
     useEffect(() => {
-        const locationState = location.state as { Id?: number } | undefined;
-        const recordId = locationState?.Id ?? 0;
+        const run = async () => {
+            const locationState = location.state as { Id?: number } | undefined;
+            const recordId = locationState?.Id ?? 0;
 
-        if (recordId > 0) {
-            setHoState((prev) => ({
-                ...prev,
-                id: recordId,
-            }));
-            Fn_DisplayData(dispatch, setHoState, recordId, API_URL_EDIT);
-        } else {
-            setHoState((prev) => ({
-                ...prev,
-                id: 0,
-                formData: { ...initialValues },
-            }));
-        }
+            console.log("HOCreation: navigation state:", locationState, "resolved recordId:", recordId, "API_URL_EDIT:", API_URL_EDIT);
+
+            if (recordId > 0) {
+                setHoState((prev) => ({
+                    ...prev,
+                    id: recordId,
+                }));
+                try {
+                    await Fn_DisplayData(dispatch, setHoState, recordId, API_URL_EDIT);
+                    console.log("Fn_DisplayData resolved for id:", recordId);
+                } catch (err) {
+                    console.error("Fn_DisplayData failed:", err);
+                }
+            } else {
+                setHoState((prev) => ({
+                    ...prev,
+                    id: 0,
+                    formData: { ...initialValues },
+                }));
+            }
+        };
+
+        run();
     }, [dispatch, location.state, API_URL_EDIT]);
+
+    // When Fn_DisplayData sets `hoState.formData` with API fields (Name, Code, CountryName, etc.), map
+    // those API field names into our FormValues keys so Formik initialValues populate correctly.
+    useEffect(() => {
+        const record: any = hoState.formData as any;
+        
+        console.log("Mapping effect triggered - hoState.id:", hoState.id, "record:", record);
+        
+        if (!hoState.id || hoState.id === 0) {
+            console.log("Skipping mapping - no ID or in add mode");
+            return;
+        }
+
+        // Check if record has actual data (not just initialValues)
+        if (!record.Name && !record.Code) {
+            console.log("Skipping mapping - record has no Name or Code data yet");
+            return;
+        }
+
+        const mapAndPopulate = async () => {
+            console.log("Starting to map and populate data...");
+            
+            // Map basic fields
+            const mapped: Partial<FormValues> & any = {
+                ...hoState.formData,
+                HOName: record.Name ?? "",
+                ShortCode: record.Code ?? "",
+                GSTNumber: record.GST ?? "",
+                CIN: record.CIN ?? "",
+                RBIRegistration: record.LicenseNo ?? record.Licenseinfo ?? record.LicenseInfo ?? "",
+                PANNumber: record.PAN ?? record.PIN ?? "",
+                RegisteredAddress: record.Address ?? "",
+                PINCode: record.Pincode ?? record.PINCODE ?? "",
+                ContactNumber: record.ContactNo ?? record.Contactno ?? record.ContactNumber ?? "",
+                EmailAddress: record.Email ?? record.EmailAddress ?? "",
+                Website: record.Website ?? "",
+                HOEstablishmentDate: record.EstablishmentDate ? String(record.EstablishmentDate).split("T")[0] : "",
+            };
+
+            console.log("Mapped fields:", mapped);
+
+            // Resolve country id: prefer explicit id fields, otherwise match by name from countries dropdown
+            let countryId = record.F_CountryMaster ?? record.CountryId ?? record.CountryMasterId ?? null;
+            
+            if (!countryId && record.CountryName && dropdowns.countries.length > 0) {
+                const found = dropdowns.countries.find((c) => c.Name === record.CountryName || String(c.Id) === String(record.CountryName));
+                countryId = found?.Id ?? null;
+            }
+
+            console.log("Resolved countryId:", countryId);
+
+            if (countryId) {
+                mapped.F_CountryMaster = String(countryId);
+                // fetch states for this country, then try to map state and city
+                try {
+                    const statesList: any = await Fn_FillListData(dispatch, setDropdowns, "states", `${API_WEB_URLS.MASTER}/0/token/StateMasterByCountry/Id/${countryId}`);
+                    console.log("Fetched states:", statesList);
+                    
+                    // Try to find state id
+                    let stateId = record.F_StateMaster ?? record.StateId ?? record.StateMasterId ?? null;
+                    if (!stateId && record.StateName && Array.isArray(statesList)) {
+                        const foundState = statesList.find((s: any) => s.Name === record.StateName || String(s.Id) === String(record.StateName));
+                        stateId = foundState?.Id ?? null;
+                    }
+
+                    console.log("Resolved stateId:", stateId);
+
+                    if (stateId) {
+                        mapped.F_StateMaster = String(stateId);
+                        // fetch cities for this state and try to map city
+                        try {
+                            const citiesList: any = await Fn_FillListData(dispatch, setDropdowns, "cities", `${API_WEB_URLS.MASTER}/0/token/CityMasterByState/Id/${stateId}`);
+                            console.log("Fetched cities:", citiesList);
+                            
+                            let cityId = record.F_CityMaster ?? record.CityId ?? record.CityMasterId ?? null;
+                            if (!cityId && record.CityName && Array.isArray(citiesList)) {
+                                const foundCity = citiesList.find((c: any) => c.Name === record.CityName || String(c.Id) === String(record.CityName));
+                                cityId = foundCity?.Id ?? null;
+                            }
+                            
+                            console.log("Resolved cityId:", cityId);
+                            if (cityId) mapped.F_CityMaster = String(cityId);
+                        } catch (err) {
+                            console.error("Failed to fetch cities while mapping display data:", err);
+                        }
+                    }
+                } catch (err) {
+                    console.error("Failed to fetch states while mapping display data:", err);
+                }
+            }
+
+            console.log("Final mapped object:", mapped);
+
+            // Finally update hoState.formData with mapped values
+            setHoState((prev) => ({
+                ...prev,
+                formData: {
+                    ...prev.formData,
+                    ...mapped,
+                },
+            }));
+        };
+
+        mapAndPopulate();
+    }, [hoState.formData, dispatch, dropdowns.countries]);
 
     const toStringOrEmpty = (value: unknown) => (value !== undefined && value !== null ? String(value) : "");
 
@@ -163,6 +275,24 @@ const HOCreation = () => {
         LogoUpload: hoState.formData.LogoUpload || null,
     };
 
+    const handleCountryChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        handleChange: FormikProps<FormValues>["handleChange"],
+        setFieldValue: FormikProps<FormValues>["setFieldValue"]
+    ) => {
+        handleChange(e);
+        const selectedCountry = e.target.value;
+        if (selectedCountry) {
+            Fn_FillListData(dispatch, setDropdowns, "states", `${API_WEB_URLS.MASTER}/0/token/StateMasterByCountry/Id/${selectedCountry}`).catch((err) => {
+                console.error("Failed to fetch states by country:", err);
+            });
+        } else {
+            setDropdowns((prev) => ({ ...prev, states: [], cities: [] }));
+        }
+        setFieldValue("F_StateMaster", "");
+        setFieldValue("F_CityMaster", "");
+    };
+
     const handleStateChange = (
         e: React.ChangeEvent<HTMLInputElement>,
         handleChange: FormikProps<FormValues>["handleChange"],
@@ -171,7 +301,7 @@ const HOCreation = () => {
         handleChange(e);
         const selectedState = e.target.value;
         if (selectedState) {
-            Fn_FillListData(dispatch, setDropdowns, "cities", `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CityMaster}/Id/${selectedState}`).catch((err) => {
+            Fn_FillListData(dispatch, setDropdowns, "cities", `${API_WEB_URLS.MASTER}/0/token/CityMasterByState/Id/${selectedState}`).catch((err) => {
                 console.error("Failed to fetch cities by state:", err);
             });
         } else {
@@ -180,31 +310,30 @@ const HOCreation = () => {
         setFieldValue("F_CityMaster", "");
     };
 
-    const API_URL_SAVE = `HeadOfficeMaster/0/token`; // Adjust this logic per your actual API endpoint
+    const API_URL_SAVE = `HeadOffice/0/token`;
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
         try {
             const formData = new FormData();
 
-            formData.append("Id", String(hoState.id ?? 0));
-            formData.append("HOName", values.HOName || "");
-            formData.append("ShortCode", values.ShortCode || "");
-            formData.append("GSTNumber", values.GSTNumber || "");
+            formData.append("Name", values.HOName || "");
+            formData.append("Code", values.ShortCode || "");
+            formData.append("GST", values.GSTNumber || "");
             formData.append("CIN", values.CIN || "");
-            formData.append("RBIRegistration", values.RBIRegistration || "");
-            formData.append("PANNumber", values.PANNumber || "");
-            formData.append("RegisteredAddress", values.RegisteredAddress || "");
+            formData.append("Licenseinfo", values.RBIRegistration || "");
+            formData.append("PIN", values.PANNumber || "");
+            formData.append("Address", values.RegisteredAddress || "");
             formData.append("F_CountryMaster", values.F_CountryMaster || "");
-            formData.append("F_CityMaster", values.F_CityMaster || "");
             formData.append("F_StateMaster", values.F_StateMaster || "");
-            formData.append("PINCode", values.PINCode || "");
-            formData.append("ContactNumber", values.ContactNumber || "");
-            formData.append("EmailAddress", values.EmailAddress || "");
+            formData.append("F_CityMaster", values.F_CityMaster || "");
+            formData.append("Pincode", values.PINCode || "");
+            formData.append("Contactno", values.ContactNumber || "");
+            formData.append("Email", values.EmailAddress || "");
             formData.append("Website", values.Website || "");
-            formData.append("HOEstablishmentDate", values.HOEstablishmentDate || "");
+            formData.append("EstablishmentDate", values.HOEstablishmentDate || "");
 
             if (values.LogoUpload) {
-                formData.append("LogoUpload", values.LogoUpload);
+                formData.append("Logo", values.LogoUpload);
             }
 
             const storedUser = localStorage.getItem("user");
@@ -381,7 +510,7 @@ const HOCreation = () => {
                                                             type="select"
                                                             name="F_CountryMaster"
                                                             value={values.F_CountryMaster}
-                                                            onChange={handleChange}
+                                                            onChange={(e) => handleCountryChange(e, handleChange, setFieldValue)}
                                                             onBlur={handleBlur}
                                                             invalid={touched.F_CountryMaster && !!errors.F_CountryMaster}
                                                         >

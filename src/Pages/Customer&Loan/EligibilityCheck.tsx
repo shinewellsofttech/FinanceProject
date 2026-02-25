@@ -42,6 +42,8 @@ const initialValues: EligibilityFormValues = {
     ApprovalRemarks: "",
 };
 
+
+
 const readOnlyInputClass = "bg-light";
 
 const EligibilityCheck = () => {
@@ -64,7 +66,7 @@ const EligibilityCheck = () => {
             setSubmitting(false);
         }
     };
-
+    
     return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Eligibility Check" parent="Customer & Loan" />
@@ -118,7 +120,7 @@ const EligibilityCheck = () => {
                                                             onBlur={handleBlur}
                                                             className={readOnlyInputClass}
                                                             readOnly
-                                                        />x
+                                                        />
                                                     </FormGroup>
 
                                                     <FormGroup>
