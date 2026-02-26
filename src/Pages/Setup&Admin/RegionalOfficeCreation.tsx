@@ -40,7 +40,15 @@ interface DropdownState {
 
 interface ROState {
     id: number;
-    formData: Partial<FormValues>;
+    formData: Partial<FormValues> & {
+        Name?: string;
+        Code?: string;
+        F_HeadOffice?: number | string;
+        ManagerName?: string;
+        Address?: string;
+        ContactNo?: string;
+        IsActive?: boolean;
+    };
     isProgress?: boolean;
 }
 
@@ -62,8 +70,7 @@ const RegionalOfficeCreation = () => {
 
     const isEditMode = roState.id > 0;
 
-    // TODO: Confirm correct API URL for getting head offices list - using a placeholder for now
-    const HO_API_URL = `${API_WEB_URLS.MASTER}/0/token/HeadOfficeMaster/Id/0`;
+    const HO_API_URL = `${API_WEB_URLS.MASTER}/0/token/HeadOffice/Id/0`;
     const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/RegionalOffice/Id`;
     const API_URL_SAVE = `RegionalOffice/0/token`;
 
@@ -114,14 +121,15 @@ const RegionalOfficeCreation = () => {
 
     const initialFormValues: FormValues = {
         ...initialValues,
-        RegionalOfficeName: toStringOrEmpty(roState.formData.RegionalOfficeName),
-        RegionCode: toStringOrEmpty(roState.formData.RegionCode),
-        ReportingHO: toStringOrEmpty(roState.formData.ReportingHO),
-        RegionManagerName: toStringOrEmpty(roState.formData.RegionManagerName),
-        OfficeAddress: toStringOrEmpty(roState.formData.OfficeAddress),
-        ContactNumber: toStringOrEmpty(roState.formData.ContactNumber),
+        RegionalOfficeName: toStringOrEmpty(roState.formData.Name ?? roState.formData.RegionalOfficeName),
+        RegionCode: toStringOrEmpty(roState.formData.Code ?? roState.formData.RegionCode),
+        ReportingHO: toStringOrEmpty(roState.formData.F_HeadOffice ?? roState.formData.ReportingHO),
+        RegionManagerName: toStringOrEmpty(roState.formData.ManagerName ?? roState.formData.RegionManagerName),
+        OfficeAddress: toStringOrEmpty(roState.formData.Address ?? roState.formData.OfficeAddress),
+        ContactNumber: toStringOrEmpty(roState.formData.ContactNo ?? roState.formData.ContactNumber),
         Email: toStringOrEmpty(roState.formData.Email),
-        Status: toStringOrEmpty(roState.formData.Status) || "Active",
+        Status: roState.formData.IsActive === true || roState.formData.Status === "Active" ? "Active" :
+            (roState.formData.IsActive === false || roState.formData.Status === "Inactive" ? "Inactive" : "Active"),
     };
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -139,13 +147,17 @@ const RegionalOfficeCreation = () => {
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
-            formData.append("UserId", currentUser?.uid ?? currentUser?.id ?? "0");
+            const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+            const userToken = currentUser?.token ?? "token";
+
+            // Adjust API URL dynamically according to swagger specs: /api/V1/RegionalOffice/{UserId}/{UserToken}
+            const localApiUrlSave = `RegionalOffice/${userId}/${userToken}`;
 
             await Fn_AddEditData(
                 dispatch,
                 () => { }, // Placeholder callback
                 { arguList: { id: roState.id, formData } },
-                API_URL_SAVE,
+                localApiUrlSave,
                 true,
                 "memberid",
                 navigate,

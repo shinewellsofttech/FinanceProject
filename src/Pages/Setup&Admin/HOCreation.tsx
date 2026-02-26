@@ -121,7 +121,8 @@ const HOCreation = () => {
     useEffect(() => {
         const run = async () => {
             const locationState = location.state as { Id?: number } | undefined;
-            const recordId = locationState?.Id ?? 0;
+            // Automatically select ID 1 if no specific valid ID is passed, so data is fetched and pre-filled on load/reload.
+            const recordId = (locationState?.Id && locationState.Id > 0) ? locationState.Id : 1;
 
             console.log("HOCreation: navigation state:", locationState, "resolved recordId:", recordId, "API_URL_EDIT:", API_URL_EDIT);
 
@@ -152,9 +153,9 @@ const HOCreation = () => {
     // those API field names into our FormValues keys so Formik initialValues populate correctly.
     useEffect(() => {
         const record: any = hoState.formData as any;
-        
+
         console.log("Mapping effect triggered - hoState.id:", hoState.id, "record:", record);
-        
+
         if (!hoState.id || hoState.id === 0) {
             console.log("Skipping mapping - no ID or in add mode");
             return;
@@ -166,9 +167,14 @@ const HOCreation = () => {
             return;
         }
 
+        if (record.isMapped) {
+            console.log("Skipping mapping - record is already mapped");
+            return;
+        }
+
         const mapAndPopulate = async () => {
             console.log("Starting to map and populate data...");
-            
+
             // Map basic fields
             const mapped: Partial<FormValues> & any = {
                 ...hoState.formData,
@@ -177,20 +183,21 @@ const HOCreation = () => {
                 GSTNumber: record.GST ?? "",
                 CIN: record.CIN ?? "",
                 RBIRegistration: record.LicenseNo ?? record.Licenseinfo ?? record.LicenseInfo ?? "",
-                PANNumber: record.PAN ?? record.PIN ?? "",
+                PANNumber: record.PAN ?? record.PAN ?? "",
                 RegisteredAddress: record.Address ?? "",
                 PINCode: record.Pincode ?? record.PINCODE ?? "",
                 ContactNumber: record.ContactNo ?? record.Contactno ?? record.ContactNumber ?? "",
                 EmailAddress: record.Email ?? record.EmailAddress ?? "",
                 Website: record.Website ?? "",
                 HOEstablishmentDate: record.EstablishmentDate ? String(record.EstablishmentDate).split("T")[0] : "",
+                isMapped: true,
             };
 
             console.log("Mapped fields:", mapped);
 
             // Resolve country id: prefer explicit id fields, otherwise match by name from countries dropdown
             let countryId = record.F_CountryMaster ?? record.CountryId ?? record.CountryMasterId ?? null;
-            
+
             if (!countryId && record.CountryName && dropdowns.countries.length > 0) {
                 const found = dropdowns.countries.find((c) => c.Name === record.CountryName || String(c.Id) === String(record.CountryName));
                 countryId = found?.Id ?? null;
@@ -204,7 +211,7 @@ const HOCreation = () => {
                 try {
                     const statesList: any = await Fn_FillListData(dispatch, setDropdowns, "states", `${API_WEB_URLS.MASTER}/0/token/StateMasterByCountry/Id/${countryId}`);
                     console.log("Fetched states:", statesList);
-                    
+
                     // Try to find state id
                     let stateId = record.F_StateMaster ?? record.StateId ?? record.StateMasterId ?? null;
                     if (!stateId && record.StateName && Array.isArray(statesList)) {
@@ -220,13 +227,13 @@ const HOCreation = () => {
                         try {
                             const citiesList: any = await Fn_FillListData(dispatch, setDropdowns, "cities", `${API_WEB_URLS.MASTER}/0/token/CityMasterByState/Id/${stateId}`);
                             console.log("Fetched cities:", citiesList);
-                            
+
                             let cityId = record.F_CityMaster ?? record.CityId ?? record.CityMasterId ?? null;
                             if (!cityId && record.CityName && Array.isArray(citiesList)) {
                                 const foundCity = citiesList.find((c: any) => c.Name === record.CityName || String(c.Id) === String(record.CityName));
                                 cityId = foundCity?.Id ?? null;
                             }
-                            
+
                             console.log("Resolved cityId:", cityId);
                             if (cityId) mapped.F_CityMaster = String(cityId);
                         } catch (err) {
@@ -320,8 +327,8 @@ const HOCreation = () => {
             formData.append("Code", values.ShortCode || "");
             formData.append("GST", values.GSTNumber || "");
             formData.append("CIN", values.CIN || "");
-            formData.append("Licenseinfo", values.RBIRegistration || "");
-            formData.append("PIN", values.PANNumber || "");
+            formData.append("LicenseNo", values.RBIRegistration || "");
+            formData.append("PAN", values.PANNumber || "");
             formData.append("Address", values.RegisteredAddress || "");
             formData.append("F_CountryMaster", values.F_CountryMaster || "");
             formData.append("F_StateMaster", values.F_StateMaster || "");

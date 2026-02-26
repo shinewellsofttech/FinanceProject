@@ -8,8 +8,8 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Fn_DeleteData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
-const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/RegionalOfficeMaster/Id/0`;
-const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/RegionalOfficeMaster/Id`;
+const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/RegionalOffice/Id/0`;
+const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/RegionalOffice/Id`;
 
 interface ListState {
   dataList: any[];
@@ -48,18 +48,6 @@ const PageList_RegionalOffice = () => {
     navigate("/regionalOfficeCreation", { state: { Id: id } });
   };
 
-  const handleDelete = (id: number | string) => {
-    if (!id) return;
-    if (window.confirm("Are you sure you want to delete this regional office?")) {
-      Fn_DeleteData(dispatch, setState as any, Number(id), DELETE_API_URL, LIST_API_URL)
-        .then(() => loadData())
-        .catch((error) => {
-          console.error("Failed to delete:", error);
-          alert("Failed to delete. Please try again.");
-        });
-    }
-  };
-
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({ ...prev, filterText: e.target.value }));
   };
@@ -70,9 +58,9 @@ const PageList_RegionalOffice = () => {
     if (!search) return list;
     return list.filter(
       (item: any) =>
-        String(item?.RegionalOfficeName ?? "").toLowerCase().includes(search) ||
-        String(item?.RegionCode ?? "").toLowerCase().includes(search) ||
-        String(item?.OfficeAddress ?? "").toLowerCase().includes(search)
+        String(item?.Name ?? "").toLowerCase().includes(search) ||
+        String(item?.Code ?? "").toLowerCase().includes(search) ||
+        String(item?.Address ?? "").toLowerCase().includes(search)
     );
   }, [state.dataList, state.filterText]);
 
@@ -133,16 +121,13 @@ const PageList_RegionalOffice = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.RegionalOfficeName ?? "-"}</td>
-                              <td>{item?.RegionCode ?? "-"}</td>
-                              <td>{item?.OfficeAddress ?? "-"}</td>
-                              <td>{item?.Status ?? "-"}</td>
+                              <td>{item?.Name ?? "-"}</td>
+                              <td>{item?.Code ?? "-"}</td>
+                              <td>{item?.Address ?? "-"}</td>
+                              <td>{item?.IsActive ? "Active" : "Inactive"}</td>
                               <td>
                                 <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />
-                                </Btn>
-                                <Btn color="danger" size="sm" onClick={() => handleDelete(item?.Id)}>
-                                  <i className="fa fa-trash" />
                                 </Btn>
                               </td>
                             </tr>
