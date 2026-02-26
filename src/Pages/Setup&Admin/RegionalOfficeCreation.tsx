@@ -351,9 +351,6 @@ const RegionalOfficeCreation = () => {
                                             <Btn color="light" type="button" className="text-dark">
                                                 <i className="fa fa-pencil me-1"></i> Edit
                                             </Btn>
-                                            <Btn color="danger" type="button">
-                                                <i className="fa fa-minus-circle me-1"></i> Deactivate
-                                            </Btn>
                                         </CardFooter>
                                     </Card>
                                 </Form>

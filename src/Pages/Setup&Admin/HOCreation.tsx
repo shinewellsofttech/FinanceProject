@@ -29,6 +29,7 @@ interface FormValues {
     Website: string;
     LogoUpload: any;
     HOEstablishmentDate: string;
+    Status: string;
 }
 
 const initialValues: FormValues = {
@@ -48,6 +49,7 @@ const initialValues: FormValues = {
     Website: "",
     LogoUpload: null,
     HOEstablishmentDate: "",
+    Status: "Active",
 };
 
 interface DropdownState {
@@ -58,8 +60,12 @@ interface DropdownState {
 
 interface HOState {
     id: number;
-    formData: Partial<FormValues>;
+    formData: Partial<FormValues> & {
+        IsActive?: boolean;
+        Status?: string;
+    };
     isProgress?: boolean;
+    isEditingOpen?: boolean;
 }
 
 const HOCreation = () => {
@@ -72,6 +78,7 @@ const HOCreation = () => {
         id: 0,
         formData: { ...initialValues },
         isProgress: false,
+        isEditingOpen: true,
     });
 
     const [dropdowns, setDropdowns] = useState<DropdownState>({
@@ -105,6 +112,7 @@ const HOCreation = () => {
                 EmailAddress: Yup.string().trim().email("Invalid email format").required("Email is required"),
                 Website: Yup.string().trim().url("Invalid URL format"),
                 HOEstablishmentDate: Yup.string().trim().required("HO Establishment Date is required"),
+                Status: Yup.string().trim().required("Status is required"),
             }),
         []
     );
@@ -130,6 +138,7 @@ const HOCreation = () => {
                 setHoState((prev) => ({
                     ...prev,
                     id: recordId,
+                    isEditingOpen: false,
                 }));
                 try {
                     await Fn_DisplayData(dispatch, setHoState, recordId, API_URL_EDIT);
@@ -142,6 +151,7 @@ const HOCreation = () => {
                     ...prev,
                     id: 0,
                     formData: { ...initialValues },
+                    isEditingOpen: true,
                 }));
             }
         };
@@ -280,6 +290,8 @@ const HOCreation = () => {
         Website: toStringOrEmpty(hoState.formData.Website),
         HOEstablishmentDate: toStringOrEmpty(hoState.formData.HOEstablishmentDate),
         LogoUpload: hoState.formData.LogoUpload || null,
+        Status: hoState.formData.IsActive === true || hoState.formData.Status === "Active" ? "Active" :
+            (hoState.formData.IsActive === false || hoState.formData.Status === "Inactive" ? "Inactive" : "Active"),
     };
 
     const handleCountryChange = (
@@ -338,6 +350,7 @@ const HOCreation = () => {
             formData.append("Email", values.EmailAddress || "");
             formData.append("Website", values.Website || "");
             formData.append("EstablishmentDate", values.HOEstablishmentDate || "");
+            formData.append("IsActive", values.Status === "Active" ? "true" : "false");
 
             if (values.LogoUpload) {
                 formData.append("Logo", values.LogoUpload);
@@ -382,318 +395,343 @@ const HOCreation = () => {
                                     <Card>
                                         <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} Head Office Information`} tagClass="card-title mb-0" />
                                         <CardBody>
-                                            <Row className="gy-0">
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            HO Name <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="HOName"
-                                                            placeholder="e.g. ABC Finance Pvt. Ltd."
-                                                            value={values.HOName}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.HOName && !!errors.HOName}
-                                                            innerRef={hoNameRef}
-                                                        />
-                                                        <ErrorMessage name="HOName" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Short Code / Alias <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="ShortCode"
-                                                            placeholder="e.g. ABCFIN"
-                                                            value={values.ShortCode}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.ShortCode && !!errors.ShortCode}
-                                                        />
-                                                        <ErrorMessage name="ShortCode" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                            <fieldset disabled={!hoState.isEditingOpen}>
+                                                <Row className="gy-0">
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                HO Name <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="HOName"
+                                                                placeholder="e.g. ABC Finance Pvt. Ltd."
+                                                                value={values.HOName}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.HOName && !!errors.HOName}
+                                                                innerRef={hoNameRef}
+                                                            />
+                                                            <ErrorMessage name="HOName" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Short Code / Alias <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="ShortCode"
+                                                                placeholder="e.g. ABCFIN"
+                                                                value={values.ShortCode}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.ShortCode && !!errors.ShortCode}
+                                                            />
+                                                            <ErrorMessage name="ShortCode" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            GST Number <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="GSTNumber"
-                                                            placeholder="22AAAAA0000A1Z5"
-                                                            value={values.GSTNumber}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.GSTNumber && !!errors.GSTNumber}
-                                                        />
-                                                        <ErrorMessage name="GSTNumber" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            CIN (Company Identification No.) <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="CIN"
-                                                            placeholder="U65999MH2020PTC123456"
-                                                            value={values.CIN}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.CIN && !!errors.CIN}
-                                                        />
-                                                        <ErrorMessage name="CIN" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                GST Number <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="GSTNumber"
+                                                                placeholder="22AAAAA0000A1Z5"
+                                                                value={values.GSTNumber}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.GSTNumber && !!errors.GSTNumber}
+                                                            />
+                                                            <ErrorMessage name="GSTNumber" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                CIN (Company Identification No.) <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="CIN"
+                                                                placeholder="U65999MH2020PTC123456"
+                                                                value={values.CIN}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.CIN && !!errors.CIN}
+                                                            />
+                                                            <ErrorMessage name="CIN" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            RBI Registration / NBFC License No. <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="RBIRegistration"
-                                                            placeholder="N-14.03234"
-                                                            value={values.RBIRegistration}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.RBIRegistration && !!errors.RBIRegistration}
-                                                        />
-                                                        <ErrorMessage name="RBIRegistration" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            PAN Number <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="PANNumber"
-                                                            placeholder="AAAAA0000A"
-                                                            value={values.PANNumber}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.PANNumber && !!errors.PANNumber}
-                                                        />
-                                                        <ErrorMessage name="PANNumber" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                RBI Registration / NBFC License No. <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="RBIRegistration"
+                                                                placeholder="N-14.03234"
+                                                                value={values.RBIRegistration}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.RBIRegistration && !!errors.RBIRegistration}
+                                                            />
+                                                            <ErrorMessage name="RBIRegistration" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                PAN Number <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="PANNumber"
+                                                                placeholder="AAAAA0000A"
+                                                                value={values.PANNumber}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.PANNumber && !!errors.PANNumber}
+                                                            />
+                                                            <ErrorMessage name="PANNumber" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="12">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Registered Address <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="textarea"
-                                                            name="RegisteredAddress"
-                                                            rows={3}
-                                                            placeholder="Full registered address as per MCA"
-                                                            value={values.RegisteredAddress}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.RegisteredAddress && !!errors.RegisteredAddress}
-                                                        />
-                                                        <ErrorMessage name="RegisteredAddress" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="12">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Registered Address <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="textarea"
+                                                                name="RegisteredAddress"
+                                                                rows={3}
+                                                                placeholder="Full registered address as per MCA"
+                                                                value={values.RegisteredAddress}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.RegisteredAddress && !!errors.RegisteredAddress}
+                                                            />
+                                                            <ErrorMessage name="RegisteredAddress" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Country <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="F_CountryMaster"
-                                                            value={values.F_CountryMaster}
-                                                            onChange={(e) => handleCountryChange(e, handleChange, setFieldValue)}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.F_CountryMaster && !!errors.F_CountryMaster}
-                                                        >
-                                                            <option value="">-- Select Country --</option>
-                                                            {dropdowns.countries.map((countryOption) => (
-                                                                <option key={countryOption?.Id} value={countryOption?.Id ?? ""}>
-                                                                    {countryOption?.Name || `Country ${countryOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="F_CountryMaster" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            State <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="F_StateMaster"
-                                                            value={values.F_StateMaster}
-                                                            onChange={(e) => handleStateChange(e, handleChange, setFieldValue)}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.F_StateMaster && !!errors.F_StateMaster}
-                                                        >
-                                                            <option value="">-- Select State --</option>
-                                                            {dropdowns.states.map((stateOption) => (
-                                                                <option key={stateOption?.Id} value={stateOption?.Id ?? ""}>
-                                                                    {stateOption?.Name || `State ${stateOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            City <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="F_CityMaster"
-                                                            value={values.F_CityMaster}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.F_CityMaster && !!errors.F_CityMaster}
-                                                            disabled={!values.F_StateMaster}
-                                                        >
-                                                            <option value="">Select City</option>
-                                                            {dropdowns.cities.map((cityOption) => (
-                                                                <option key={cityOption?.Id} value={cityOption?.Id ?? ""}>
-                                                                    {cityOption?.Name || `City ${cityOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Country <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="F_CountryMaster"
+                                                                value={values.F_CountryMaster}
+                                                                onChange={(e) => handleCountryChange(e, handleChange, setFieldValue)}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.F_CountryMaster && !!errors.F_CountryMaster}
+                                                            >
+                                                                <option value="">-- Select Country --</option>
+                                                                {dropdowns.countries.map((countryOption) => (
+                                                                    <option key={countryOption?.Id} value={countryOption?.Id ?? ""}>
+                                                                        {countryOption?.Name || `Country ${countryOption?.Id ?? ""}`}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
+                                                            <ErrorMessage name="F_CountryMaster" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                State <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="F_StateMaster"
+                                                                value={values.F_StateMaster}
+                                                                onChange={(e) => handleStateChange(e, handleChange, setFieldValue)}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.F_StateMaster && !!errors.F_StateMaster}
+                                                            >
+                                                                <option value="">-- Select State --</option>
+                                                                {dropdowns.states.map((stateOption) => (
+                                                                    <option key={stateOption?.Id} value={stateOption?.Id ?? ""}>
+                                                                        {stateOption?.Name || `State ${stateOption?.Id ?? ""}`}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
+                                                            <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                City <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="F_CityMaster"
+                                                                value={values.F_CityMaster}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.F_CityMaster && !!errors.F_CityMaster}
+                                                                disabled={!values.F_StateMaster}
+                                                            >
+                                                                <option value="">Select City</option>
+                                                                {dropdowns.cities.map((cityOption) => (
+                                                                    <option key={cityOption?.Id} value={cityOption?.Id ?? ""}>
+                                                                        {cityOption?.Name || `City ${cityOption?.Id ?? ""}`}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
+                                                            <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            PIN Code <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="PINCode"
-                                                            placeholder="400001"
-                                                            value={values.PINCode}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.PINCode && !!errors.PINCode}
-                                                        />
-                                                        <ErrorMessage name="PINCode" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Contact Number <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="ContactNumber"
-                                                            placeholder="+91-9876543210"
-                                                            value={values.ContactNumber}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.ContactNumber && !!errors.ContactNumber}
-                                                        />
-                                                        <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                PIN Code <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="PINCode"
+                                                                placeholder="400001"
+                                                                value={values.PINCode}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.PINCode && !!errors.PINCode}
+                                                            />
+                                                            <ErrorMessage name="PINCode" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Contact Number <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="ContactNumber"
+                                                                placeholder="+91-9876543210"
+                                                                value={values.ContactNumber}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.ContactNumber && !!errors.ContactNumber}
+                                                            />
+                                                            <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Email Address <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="email"
-                                                            name="EmailAddress"
-                                                            placeholder="admin@abcfinance.com"
-                                                            value={values.EmailAddress}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.EmailAddress && !!errors.EmailAddress}
-                                                        />
-                                                        <ErrorMessage name="EmailAddress" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Website
-                                                        </Label>
-                                                        <Input
-                                                            type="url"
-                                                            name="Website"
-                                                            placeholder="https://www.abcfinance.com"
-                                                            value={values.Website}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.Website && !!errors.Website}
-                                                        />
-                                                        <ErrorMessage name="Website" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Email Address <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="email"
+                                                                name="EmailAddress"
+                                                                placeholder="admin@abcfinance.com"
+                                                                value={values.EmailAddress}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.EmailAddress && !!errors.EmailAddress}
+                                                            />
+                                                            <ErrorMessage name="EmailAddress" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Website
+                                                            </Label>
+                                                            <Input
+                                                                type="url"
+                                                                name="Website"
+                                                                placeholder="https://www.abcfinance.com"
+                                                                value={values.Website}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Website && !!errors.Website}
+                                                            />
+                                                            <ErrorMessage name="Website" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Logo Upload <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="file"
-                                                            name="LogoUpload"
-                                                            onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                                                                setFieldValue("LogoUpload", event.currentTarget.files ? event.currentTarget.files[0] : null);
-                                                            }}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.LogoUpload && !!errors.LogoUpload}
-                                                        />
-                                                        <ErrorMessage name="LogoUpload" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            HO Establishment Date <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="date"
-                                                            name="HOEstablishmentDate"
-                                                            value={values.HOEstablishmentDate}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.HOEstablishmentDate && !!errors.HOEstablishmentDate}
-                                                        />
-                                                        <ErrorMessage name="HOEstablishmentDate" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Logo Upload <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="file"
+                                                                name="LogoUpload"
+                                                                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
+                                                                    setFieldValue("LogoUpload", event.currentTarget.files ? event.currentTarget.files[0] : null);
+                                                                }}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.LogoUpload && !!errors.LogoUpload}
+                                                            />
+                                                            <ErrorMessage name="LogoUpload" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                HO Establishment Date <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="date"
+                                                                name="HOEstablishmentDate"
+                                                                value={values.HOEstablishmentDate}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.HOEstablishmentDate && !!errors.HOEstablishmentDate}
+                                                            />
+                                                            <ErrorMessage name="HOEstablishmentDate" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                            </Row>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Status <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="Status"
+                                                                value={values.Status}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Status && !!errors.Status}
+                                                            >
+                                                                <option value="Active">Active</option>
+                                                                <option value="Inactive">Inactive</option>
+                                                            </Input>
+                                                            <ErrorMessage name="Status" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+
+                                                </Row>
+                                            </fieldset>
                                         </CardBody>
                                         <CardFooter className="d-flex align-items-center gap-2">
-                                            <Btn color="primary" type="submit" disabled={isSubmitting}>
+                                            <Btn color="primary" type="submit" disabled={isSubmitting || !hoState.isEditingOpen}>
                                                 <i className="fa fa-plus me-1"></i> {isEditMode ? "Update Head Office" : "Create Head Office"}
                                             </Btn>
-                                            <Btn color="light" type="button" className="text-dark">
-                                                <i className="fa fa-pencil me-1"></i> Edit
-                                            </Btn>
-                                            <Btn color="danger" type="button">
-                                                <i className="fa fa-minus-circle me-1"></i> Deactivate
+                                            <Btn
+                                                color="light"
+                                                type="button"
+                                                className="text-dark"
+                                                onClick={() => setHoState(prev => ({ ...prev, isEditingOpen: !prev.isEditingOpen }))}
+                                                disabled={!isEditMode}
+                                            >
+                                                <i className="fa fa-pencil me-1"></i> {hoState.isEditingOpen ? "Lock" : "Edit"}
                                             </Btn>
                                         </CardFooter>
                                     </Card>
