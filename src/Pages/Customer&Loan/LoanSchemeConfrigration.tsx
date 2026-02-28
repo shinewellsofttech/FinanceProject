@@ -12,45 +12,47 @@ import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Btn } from "../../AbstractElements";
 
 interface FormValues {
-    SchemeName: string;
-    SchemeCode: string;
-    LoanType: string;
-    EMIFrequency: string;
-    InterestType: string;
-    InterestCalculationBasis: string;
+    Name: string;
+    Code: string;
+    F_LoanType: string;
+    F_EMIFrequency: string;
+    F_InterestType: string;
+    F_InterestCalculationBasis: string;
     InterestRate: string;
-    AllowInterestRateChange: string;
+    IsInterestRateChange: string;
     MinLoanAmount: string;
     MaxLoanAmount: string;
-    MinTenure: string;
-    MaxTenure: string;
-    ProcessingFee: string;
-    PrepaymentCharges: string;
-    PenalInterest: string;
-    InsuranceRequired: string;
+    MinTenureMonths: string;
+    MaxTenureMonths: string;
+    ProcessingFeePercent: string;
+    PrepaymentChargesPercent: string;
+    PenalInterestPerDayPercent: string;
+    IsInsuranceRequired: string;
     AvailableTenures: string[];
-    LTV: string;
+    LTVPercent: string;
+    IsActive: string;
 }
 
 const initialValues: FormValues = {
-    SchemeName: "",
-    SchemeCode: "",
-    LoanType: "",
-    EMIFrequency: "",
-    InterestType: "",
-    InterestCalculationBasis: "",
+    Name: "",
+    Code: "",
+    F_LoanType: "",
+    F_EMIFrequency: "",
+    F_InterestType: "",
+    F_InterestCalculationBasis: "",
     InterestRate: "",
-    AllowInterestRateChange: "",
+    IsInterestRateChange: "",
     MinLoanAmount: "",
     MaxLoanAmount: "",
-    MinTenure: "",
-    MaxTenure: "",
-    ProcessingFee: "",
-    PrepaymentCharges: "",
-    PenalInterest: "",
-    InsuranceRequired: "No", // Static default as per request
+    MinTenureMonths: "",
+    MaxTenureMonths: "",
+    ProcessingFeePercent: "",
+    PrepaymentChargesPercent: "",
+    PenalInterestPerDayPercent: "",
+    IsInsuranceRequired: "false", // Static default as per request
     AvailableTenures: [],
-    LTV: "",
+    LTVPercent: "",
+    IsActive: "true",
 };
 
 interface DropdownState {
@@ -92,26 +94,31 @@ const LoanSchemeConfiguration = () => {
     const isEditMode = schemeState.id > 0;
 
     // Adjust endpoints to reflect your specific masters
-    const MASTER_URL = `${API_WEB_URLS.MASTER}/0/token`;
-    const API_URL_EDIT = `${MASTER_URL}/LoanSchemeMaster/Id`;
-    const API_URL_SAVE = `LoanSchemeMaster/0/token`;
+    const storedUser = localStorage.getItem("user");
+    const currentUser = storedUser ? JSON.parse(storedUser) : null;
+    const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+    const userToken = "token"; // Get from your auth system
+    
+    const MASTER_URL = `${API_WEB_URLS.MASTER}/${userId}/${userToken}`;
+    const API_URL_EDIT = `/api/V1/LoanSchemeMaster/${userId}/${userToken}`;
+    const API_URL_SAVE = `/api/V1/LoanSchemeMaster/${userId}/${userToken}`;
 
     const validationSchema = useMemo(
         () =>
             Yup.object({
-                SchemeName: Yup.string().trim().required("Scheme Name is required"),
-                SchemeCode: Yup.string().trim().required("Scheme Code is required"),
-                LoanType: Yup.string().required("Loan Type is required"),
-                EMIFrequency: Yup.string().required("EMI Frequency is required"),
-                InterestType: Yup.string().required("Interest Type is required"),
-                InterestCalculationBasis: Yup.string().required("Interest Calculation Basis is required"),
+                Name: Yup.string().trim().required("Name is required"),
+                Code: Yup.string().trim().required("Code is required"),
+                F_LoanType: Yup.string().required("Loan Type is required"),
+                F_EMIFrequency: Yup.string().required("EMI Frequency is required"),
+                F_InterestType: Yup.string().required("Interest Type is required"),
+                F_InterestCalculationBasis: Yup.string().required("Interest Calculation Basis is required"),
                 InterestRate: Yup.number().typeError("Must be a number").required("Interest Rate is required"),
                 MinLoanAmount: Yup.number().typeError("Must be a number").required("Min Loan Amount is required"),
                 MaxLoanAmount: Yup.number().typeError("Must be a number").required("Max Loan Amount is required"),
-                MinTenure: Yup.number().typeError("Must be a number").required("Min Tenure is required"),
-                MaxTenure: Yup.number().typeError("Must be a number").required("Max Tenure is required"),
-                ProcessingFee: Yup.number().typeError("Must be a number").required("Processing Fee is required"),
-                InsuranceRequired: Yup.string().required("Insurance Required flag is mandatory"),
+                MinTenureMonths: Yup.number().typeError("Must be a number").required("Min Tenure is required"),
+                MaxTenureMonths: Yup.number().typeError("Must be a number").required("Max Tenure is required"),
+                ProcessingFeePercent: Yup.number().typeError("Must be a number").required("Processing Fee is required"),
+                IsInsuranceRequired: Yup.string().required("Insurance Required flag is mandatory"),
             }),
         []
     );
@@ -119,13 +126,18 @@ const LoanSchemeConfiguration = () => {
     useEffect(() => {
         nameRef.current?.focus();
         // Fetch all dynamic dropdowns
-        Fn_FillListData(dispatch, setDropdowns, "loanTypes", `${MASTER_URL}/LoanTypeMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "emiFrequencies", `${MASTER_URL}/EMIFrequencyMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "interestTypes", `${MASTER_URL}/InterestTypeMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "interestCalcBasis", `${MASTER_URL}/InterestCalcBasisMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "allowInterestChangeOptions", `${MASTER_URL}/YesNoMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "availableTenuresOptions", `${MASTER_URL}/TenureMaster/Id/0`);
-    }, [dispatch, MASTER_URL]);
+        const storedUser = localStorage.getItem("user");
+        const currentUser = storedUser ? JSON.parse(storedUser) : null;
+        const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+        const userToken = "token"; // Get from your auth system
+        
+        Fn_FillListData(dispatch, setDropdowns, "loanTypes", `/api/V1/LoanTypeMaster/${userId}/${userToken}`);
+        Fn_FillListData(dispatch, setDropdowns, "emiFrequencies", `/api/V1/EMIFrequencyMaster/${userId}/${userToken}`);
+        Fn_FillListData(dispatch, setDropdowns, "interestTypes", `/api/V1/InterestTypeMaster/${userId}/${userToken}`);
+        Fn_FillListData(dispatch, setDropdowns, "interestCalcBasis", `/api/V1/InterestCalcBasisMaster/${userId}/${userToken}`);
+        Fn_FillListData(dispatch, setDropdowns, "allowInterestChangeOptions", `/api/V1/YesNoMaster/${userId}/${userToken}`);
+        Fn_FillListData(dispatch, setDropdowns, "availableTenuresOptions", `/api/V1/TenureMaster/${userId}/${userToken}`);
+    }, [dispatch]);
 
     useEffect(() => {
         const locationState = location.state as { Id?: number } | undefined;
@@ -150,24 +162,25 @@ const LoanSchemeConfiguration = () => {
 
     const initialFormValues: FormValues = {
         ...initialValues,
-        SchemeName: toStringOrEmpty(schemeState.formData.SchemeName),
-        SchemeCode: toStringOrEmpty(schemeState.formData.SchemeCode),
-        LoanType: toStringOrEmpty(schemeState.formData.LoanType),
-        EMIFrequency: toStringOrEmpty(schemeState.formData.EMIFrequency),
-        InterestType: toStringOrEmpty(schemeState.formData.InterestType),
-        InterestCalculationBasis: toStringOrEmpty(schemeState.formData.InterestCalculationBasis),
+        Name: toStringOrEmpty(schemeState.formData.Name),
+        Code: toStringOrEmpty(schemeState.formData.Code),
+        F_LoanType: toStringOrEmpty(schemeState.formData.F_LoanType),
+        F_EMIFrequency: toStringOrEmpty(schemeState.formData.F_EMIFrequency),
+        F_InterestType: toStringOrEmpty(schemeState.formData.F_InterestType),
+        F_InterestCalculationBasis: toStringOrEmpty(schemeState.formData.F_InterestCalculationBasis),
         InterestRate: toStringOrEmpty(schemeState.formData.InterestRate),
-        AllowInterestRateChange: toStringOrEmpty(schemeState.formData.AllowInterestRateChange),
+        IsInterestRateChange: toStringOrEmpty(schemeState.formData.IsInterestRateChange),
         MinLoanAmount: toStringOrEmpty(schemeState.formData.MinLoanAmount),
         MaxLoanAmount: toStringOrEmpty(schemeState.formData.MaxLoanAmount),
-        MinTenure: toStringOrEmpty(schemeState.formData.MinTenure),
-        MaxTenure: toStringOrEmpty(schemeState.formData.MaxTenure),
-        ProcessingFee: toStringOrEmpty(schemeState.formData.ProcessingFee),
-        PrepaymentCharges: toStringOrEmpty(schemeState.formData.PrepaymentCharges),
-        PenalInterest: toStringOrEmpty(schemeState.formData.PenalInterest),
-        InsuranceRequired: toStringOrEmpty(schemeState.formData.InsuranceRequired) || "No",
+        MinTenureMonths: toStringOrEmpty(schemeState.formData.MinTenureMonths),
+        MaxTenureMonths: toStringOrEmpty(schemeState.formData.MaxTenureMonths),
+        ProcessingFeePercent: toStringOrEmpty(schemeState.formData.ProcessingFeePercent),
+        PrepaymentChargesPercent: toStringOrEmpty(schemeState.formData.PrepaymentChargesPercent),
+        PenalInterestPerDayPercent: toStringOrEmpty(schemeState.formData.PenalInterestPerDayPercent),
+        IsInsuranceRequired: toStringOrEmpty(schemeState.formData.IsInsuranceRequired) || "false",
         AvailableTenures: schemeState.formData.AvailableTenures || [],
-        LTV: toStringOrEmpty(schemeState.formData.LTV),
+        LTVPercent: toStringOrEmpty(schemeState.formData.LTVPercent),
+        IsActive: toStringOrEmpty(schemeState.formData.IsActive) || "true",
     };
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -186,7 +199,7 @@ const LoanSchemeConfiguration = () => {
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
-            formData.append("UserId", currentUser?.uid ?? currentUser?.id ?? "0");
+            const userId = currentUser?.uid ?? currentUser?.id ?? "0";
 
             await Fn_AddEditData(
                 dispatch,
@@ -225,70 +238,70 @@ const LoanSchemeConfiguration = () => {
                                             <Row className="gy-0">
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
-                                                        <Label>Scheme Name <span className="text-danger">*</span></Label>
-                                                        <Input type="text" name="SchemeName" placeholder="e.g. Monthly Personal Loan" value={values.SchemeName} onChange={handleChange} onBlur={handleBlur} invalid={touched.SchemeName && !!errors.SchemeName} innerRef={nameRef} />
-                                                        <ErrorMessage name="SchemeName" component="div" className="text-danger small mt-1" />
+                                                        <Label>Name <span className="text-danger">*</span></Label>
+                                                        <Input type="text" name="Name" placeholder="e.g. Monthly Personal Loan" value={values.Name} onChange={handleChange} onBlur={handleBlur} invalid={touched.Name && !!errors.Name} innerRef={nameRef} />
+                                                        <ErrorMessage name="Name" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
-                                                        <Label>Scheme Code <span className="text-danger">*</span></Label>
-                                                        <Input type="text" name="SchemeCode" placeholder="e.g. PLM-01" value={values.SchemeCode} onChange={handleChange} onBlur={handleBlur} invalid={touched.SchemeCode && !!errors.SchemeCode} />
-                                                        <ErrorMessage name="SchemeCode" component="div" className="text-danger small mt-1" />
+                                                        <Label>Code <span className="text-danger">*</span></Label>
+                                                        <Input type="text" name="Code" placeholder="e.g. PLM-01" value={values.Code} onChange={handleChange} onBlur={handleBlur} invalid={touched.Code && !!errors.Code} />
+                                                        <ErrorMessage name="Code" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Loan Type <span className="text-danger">*</span></Label>
-                                                        <Input type="select" name="LoanType" value={values.LoanType} onChange={handleChange} onBlur={handleBlur} invalid={touched.LoanType && !!errors.LoanType}>
+                                                        <Input type="select" name="F_LoanType" value={values.F_LoanType} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_LoanType && !!errors.F_LoanType}>
                                                             <option value="">-- Select --</option>
                                                             {dropdowns.loanTypes.length === 0 && <option value="1">Mock Personal Loan</option>}
                                                             {dropdowns.loanTypes.map(opt => (
                                                                 <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>
                                                             ))}
                                                         </Input>
-                                                        <ErrorMessage name="LoanType" component="div" className="text-danger small mt-1" />
+                                                        <ErrorMessage name="F_LoanType" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>EMI Frequency <span className="text-danger">*</span></Label>
-                                                        <Input type="select" name="EMIFrequency" value={values.EMIFrequency} onChange={handleChange} onBlur={handleBlur} invalid={touched.EMIFrequency && !!errors.EMIFrequency}>
+                                                        <Input type="select" name="F_EMIFrequency" value={values.F_EMIFrequency} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_EMIFrequency && !!errors.F_EMIFrequency}>
                                                             <option value="">-- Select --</option>
                                                             {dropdowns.emiFrequencies.length === 0 && <option value="1">Monthly Mock</option>}
                                                             {dropdowns.emiFrequencies.map(opt => (
                                                                 <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>
                                                             ))}
                                                         </Input>
-                                                        <ErrorMessage name="EMIFrequency" component="div" className="text-danger small mt-1" />
+                                                        <ErrorMessage name="F_EMIFrequency" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Interest Type <span className="text-danger">*</span></Label>
-                                                        <Input type="select" name="InterestType" value={values.InterestType} onChange={handleChange} onBlur={handleBlur} invalid={touched.InterestType && !!errors.InterestType}>
+                                                        <Input type="select" name="F_InterestType" value={values.F_InterestType} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_InterestType && !!errors.F_InterestType}>
                                                             <option value="">-- Select --</option>
                                                             {dropdowns.interestTypes.length === 0 && <option value="1">Mock Flat</option>}
                                                             {dropdowns.interestTypes.map(opt => (
                                                                 <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>
                                                             ))}
                                                         </Input>
-                                                        <ErrorMessage name="InterestType" component="div" className="text-danger small mt-1" />
+                                                        <ErrorMessage name="F_InterestType" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Interest Calculation Basis <span className="text-danger">*</span></Label>
-                                                        <Input type="select" name="InterestCalculationBasis" value={values.InterestCalculationBasis} onChange={handleChange} onBlur={handleBlur} invalid={touched.InterestCalculationBasis && !!errors.InterestCalculationBasis}>
+                                                        <Input type="select" name="F_InterestCalculationBasis" value={values.F_InterestCalculationBasis} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_InterestCalculationBasis && !!errors.F_InterestCalculationBasis}>
                                                             <option value="">-- Select --</option>
                                                             {dropdowns.interestCalcBasis.length === 0 && <option value="1">Mock Monthly</option>}
                                                             {dropdowns.interestCalcBasis.map(opt => (
                                                                 <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>
                                                             ))}
                                                         </Input>
-                                                        <ErrorMessage name="InterestCalculationBasis" component="div" className="text-danger small mt-1" />
+                                                        <ErrorMessage name="F_InterestCalculationBasis" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
@@ -302,14 +315,14 @@ const LoanSchemeConfiguration = () => {
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Allow Interest Rate Change Mid-Tenure?</Label>
-                                                        <Input type="select" name="AllowInterestRateChange" value={values.AllowInterestRateChange} onChange={handleChange} onBlur={handleBlur} invalid={touched.AllowInterestRateChange && !!errors.AllowInterestRateChange}>
+                                                        <Input type="select" name="IsInterestRateChange" value={values.IsInterestRateChange} onChange={handleChange} onBlur={handleBlur} invalid={touched.IsInterestRateChange && !!errors.IsInterestRateChange}>
                                                             <option value="">-- Select --</option>
-                                                            {dropdowns.allowInterestChangeOptions.length === 0 && <option value="No">No</option>}
+                                                            {dropdowns.allowInterestChangeOptions.length === 0 && <option value="false">No</option>}
                                                             {dropdowns.allowInterestChangeOptions.map(opt => (
                                                                 <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>
                                                             ))}
                                                         </Input>
-                                                        <ErrorMessage name="AllowInterestRateChange" component="div" className="text-danger small mt-1" />
+                                                        <ErrorMessage name="IsInterestRateChange" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
@@ -331,48 +344,48 @@ const LoanSchemeConfiguration = () => {
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Min Tenure (Months) <span className="text-danger">*</span></Label>
-                                                        <Input type="number" name="MinTenure" value={values.MinTenure} onChange={handleChange} onBlur={handleBlur} invalid={touched.MinTenure && !!errors.MinTenure} />
-                                                        <ErrorMessage name="MinTenure" component="div" className="text-danger small mt-1" />
+                                                        <Input type="number" name="MinTenureMonths" value={values.MinTenureMonths} onChange={handleChange} onBlur={handleBlur} invalid={touched.MinTenureMonths && !!errors.MinTenureMonths} />
+                                                        <ErrorMessage name="MinTenureMonths" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Max Tenure (Months) <span className="text-danger">*</span></Label>
-                                                        <Input type="number" name="MaxTenure" value={values.MaxTenure} onChange={handleChange} onBlur={handleBlur} invalid={touched.MaxTenure && !!errors.MaxTenure} />
-                                                        <ErrorMessage name="MaxTenure" component="div" className="text-danger small mt-1" />
+                                                        <Input type="number" name="MaxTenureMonths" value={values.MaxTenureMonths} onChange={handleChange} onBlur={handleBlur} invalid={touched.MaxTenureMonths && !!errors.MaxTenureMonths} />
+                                                        <ErrorMessage name="MaxTenureMonths" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Processing Fee (%) <span className="text-danger">*</span></Label>
-                                                        <Input type="number" name="ProcessingFee" value={values.ProcessingFee} onChange={handleChange} onBlur={handleBlur} invalid={touched.ProcessingFee && !!errors.ProcessingFee} />
-                                                        <ErrorMessage name="ProcessingFee" component="div" className="text-danger small mt-1" />
+                                                        <Input type="number" name="ProcessingFeePercent" value={values.ProcessingFeePercent} onChange={handleChange} onBlur={handleBlur} invalid={touched.ProcessingFeePercent && !!errors.ProcessingFeePercent} />
+                                                        <ErrorMessage name="ProcessingFeePercent" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Prepayment Charges (%)</Label>
-                                                        <Input type="number" name="PrepaymentCharges" value={values.PrepaymentCharges} onChange={handleChange} onBlur={handleBlur} invalid={touched.PrepaymentCharges && !!errors.PrepaymentCharges} />
-                                                        <ErrorMessage name="PrepaymentCharges" component="div" className="text-danger small mt-1" />
+                                                        <Input type="number" name="PrepaymentChargesPercent" value={values.PrepaymentChargesPercent} onChange={handleChange} onBlur={handleBlur} invalid={touched.PrepaymentChargesPercent && !!errors.PrepaymentChargesPercent} />
+                                                        <ErrorMessage name="PrepaymentChargesPercent" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Penal Interest (% per day on overdue)</Label>
-                                                        <Input type="number" name="PenalInterest" value={values.PenalInterest} onChange={handleChange} onBlur={handleBlur} invalid={touched.PenalInterest && !!errors.PenalInterest} />
-                                                        <ErrorMessage name="PenalInterest" component="div" className="text-danger small mt-1" />
+                                                        <Input type="number" name="PenalInterestPerDayPercent" value={values.PenalInterestPerDayPercent} onChange={handleChange} onBlur={handleBlur} invalid={touched.PenalInterestPerDayPercent && !!errors.PenalInterestPerDayPercent} />
+                                                        <ErrorMessage name="PenalInterestPerDayPercent" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>Insurance Required? <span className="text-danger">*</span></Label>
-                                                        <Input type="select" name="InsuranceRequired" value={values.InsuranceRequired} onChange={handleChange} onBlur={handleBlur} invalid={touched.InsuranceRequired && !!errors.InsuranceRequired}>
-                                                            <option value="Yes">Yes</option>
-                                                            <option value="No">No</option>
+                                                        <Input type="select" name="IsInsuranceRequired" value={values.IsInsuranceRequired} onChange={handleChange} onBlur={handleBlur} invalid={touched.IsInsuranceRequired && !!errors.IsInsuranceRequired}>
+                                                            <option value="true">Yes</option>
+                                                            <option value="false">No</option>
                                                         </Input>
-                                                        <ErrorMessage name="InsuranceRequired" component="div" className="text-danger small mt-1" />
+                                                        <ErrorMessage name="IsInsuranceRequired" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 
@@ -410,8 +423,18 @@ const LoanSchemeConfiguration = () => {
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>LTV % (For Gold Loan only)</Label>
-                                                        <Input type="number" name="LTV" value={values.LTV} onChange={handleChange} onBlur={handleBlur} invalid={touched.LTV && !!errors.LTV} />
-                                                        <ErrorMessage name="LTV" component="div" className="text-danger small mt-1" />
+                                                        <Input type="number" name="LTVPercent" value={values.LTVPercent} onChange={handleChange} onBlur={handleBlur} invalid={touched.LTVPercent && !!errors.LTVPercent} />
+                                                        <ErrorMessage name="LTVPercent" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Active Status</Label>
+                                                        <Input type="select" name="IsActive" value={values.IsActive} onChange={handleChange} onBlur={handleBlur}>
+                                                            <option value="true">Active</option>
+                                                            <option value="false">Inactive</option>
+                                                        </Input>
+                                                        <ErrorMessage name="IsActive" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
 

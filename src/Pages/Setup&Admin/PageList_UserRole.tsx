@@ -8,8 +8,8 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Fn_DeleteData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
-const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id/0`;
-const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id`;
+const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id/0`;
+const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id`;
 
 interface ListState {
   dataList: any[];
@@ -49,15 +49,8 @@ const PageList_UserRole = () => {
   };
 
   const handleDelete = (id: number | string) => {
-    if (!id) return;
-    if (window.confirm("Are you sure you want to delete this role?")) {
-      Fn_DeleteData(dispatch, setState as any, Number(id), DELETE_API_URL, LIST_API_URL)
-        .then(() => loadData())
-        .catch((error) => {
-          console.error("Failed to delete:", error);
-          alert("Failed to delete. Please try again.");
-        });
-    }
+    // Delete action removed as per requirements.
+    console.log("Delete action is disabled.");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +62,8 @@ const PageList_UserRole = () => {
     const search = state.filterText.trim().toLowerCase();
     if (!search) return list;
     return list.filter((item: any) =>
-      String(item?.RoleName ?? "").toLowerCase().includes(search)
+      String(item?.Name ?? "").toLowerCase().includes(search) ||
+      String(item?.Code ?? "").toLowerCase().includes(search)
     );
   }, [state.dataList, state.filterText]);
 
@@ -113,6 +107,9 @@ const PageList_UserRole = () => {
                         <tr>
                           <th>#</th>
                           <th>Role Name</th>
+                          <th>Role Code</th>
+                          <th>Transaction Limit</th>
+                          <th>Status</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -127,13 +124,13 @@ const PageList_UserRole = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.RoleName ?? "-"}</td>
+                              <td>{item?.Name ?? "-"}</td>
+                              <td>{item?.Code ?? "-"}</td>
+                              <td>{item?.TransactionApprovalLimit ?? "-"}</td>
+                              <td>{item?.IsActive ? "Active" : "Inactive"}</td>
                               <td>
                                 <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />
-                                </Btn>
-                                <Btn color="danger" size="sm" onClick={() => handleDelete(item?.Id)}>
-                                  <i className="fa fa-trash" />
                                 </Btn>
                               </td>
                             </tr>

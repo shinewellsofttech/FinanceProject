@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { Card, CardBody, Col, Container, FormGroup, Input, Label, Row, Table, Button } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
-import { Fn_FillListData } from "../../store/Functions";
+import { Fn_FillListData, Fn_AddEditData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
 interface DropdownState {
     roles: Array<{ Id?: number; Name?: string }>;
     modules: Array<{ Id?: number; Name?: string }>;
+    branches: Array<{ Id?: number; Name?: string }>;
 }
 
 interface ModulePermission {
@@ -42,17 +44,22 @@ const mockModulesData = [
 
 const PermissionMetrixs = () => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const [selectedRole, setSelectedRole] = useState<string>("");
+    const [selectedBranch, setSelectedBranch] = useState<string>("");
     const [permissions, setPermissions] = useState<ModulePermission[]>([]);
+    const [isEditingOpen, setIsEditingOpen] = useState<boolean>(true);
 
     const [dropdowns, setDropdowns] = useState<DropdownState>({
         roles: [],
         modules: [],
+        branches: [],
     });
 
-    const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id/0`;
+    const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id/0`;
     const MODULE_API_URL = `${API_WEB_URLS.MASTER}/0/token/ModuleMaster/Id/0`;
+    const BRANCH_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOffice/Id/0`;
 
     useEffect(() => {
         Fn_FillListData(dispatch, setDropdowns, "roles", ROLE_API_URL)
@@ -60,9 +67,12 @@ const PermissionMetrixs = () => {
 
         Fn_FillListData(dispatch, setDropdowns, "modules", MODULE_API_URL)
             .catch(err => console.error("Failed to fetch modules:", err));
-    }, [dispatch, ROLE_API_URL, MODULE_API_URL]);
 
-    // Initialize permissions based on fetched modules (or mock data if API fails/is empty)
+        Fn_FillListData(dispatch, setDropdowns, "branches", BRANCH_API_URL)
+            .catch(err => console.error("Failed to fetch branches:", err));
+    }, [dispatch, ROLE_API_URL, MODULE_API_URL, BRANCH_API_URL]);
+
+    // Initialize permissions based on fetched modules or API response
     useEffect(() => {
         const sourceModules = dropdowns.modules.length > 0 ? dropdowns.modules : mockModulesData;
         const initialPermissions = sourceModules.map(mod => ({
@@ -75,13 +85,54 @@ const PermissionMetrixs = () => {
             CanApprove: false,
             CanExport: false,
         }));
-        setPermissions(initialPermissions);
-    }, [dropdowns.modules]);
+
+        if (!selectedRole) {
+            setPermissions(initialPermissions);
+            return;
+        }
+
+        const FETCH_URL = selectedBranch
+            ? `${API_WEB_URLS.MASTER}/0/token/RoleWisePermissionByBranchRole/${selectedBranch}/${selectedRole}`
+            : `${API_WEB_URLS.MASTER}/0/token/RoleWisePermission/Id/${selectedRole}`;
+
+        Fn_FillListData(dispatch, () => { }, "tempData", FETCH_URL)
+            .then((data: any) => {
+                const list = Array.isArray(data) ? data : (data?.Data || []);
+
+                if (list.length === 0) {
+                    setPermissions(initialPermissions);
+                    return;
+                }
+
+                const mappedPermissions = sourceModules.map(mod => {
+                    const fetchedPerm = list.find((p: any) => p.F_ModuleMaster === mod.Id);
+                    return {
+                        ModuleId: mod.Id || 0,
+                        ModuleName: mod.Name || "",
+                        CanView: fetchedPerm ? !!fetchedPerm.IsView : false,
+                        CanAdd: fetchedPerm ? !!fetchedPerm.IsAdd : false,
+                        CanEdit: fetchedPerm ? !!fetchedPerm.IsEdit : false,
+                        CanDelete: fetchedPerm ? !!fetchedPerm.IsDelete : false,
+                        CanApprove: fetchedPerm ? !!fetchedPerm.IsApprove : false,
+                        CanExport: fetchedPerm ? !!fetchedPerm.IsExport : false,
+                    };
+                });
+
+                setPermissions(mappedPermissions);
+            })
+            .catch(err => {
+                console.error("Failed to fetch role permissions:", err);
+                setPermissions(initialPermissions);
+            });
+
+    }, [dispatch, selectedRole, selectedBranch, dropdowns.modules]);
 
     const handleRoleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSelectedRole(e.target.value);
-        // TODO: In a real app, you would fetch existing permissions for this role here
-        // and update the 'permissions' state accordingly using Fn_DisplayData or similar.
+    };
+
+    const handleBranchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSelectedBranch(e.target.value);
     };
 
     const handleCheckboxToggle = (moduleId: number, field: keyof ModulePermission) => {
@@ -93,34 +144,51 @@ const PermissionMetrixs = () => {
         }));
     };
 
-    const handleSavePermissions = () => {
+    const handleSavePermissions = async () => {
         if (!selectedRole) {
             alert("Please select a role first.");
             return;
         }
 
-        // Prepare payload and simulate submission
-        const payload = {
-            RoleId: selectedRole,
-            Permissions: permissions
-        };
-        console.log("Saving permissions:", payload);
-        alert("Permissions saved successfully! (Simulation)");
-    };
+        const dataJsonArray = permissions.map(p => ({
+            F_ModuleMaster: p.ModuleId,
+            IsView: p.CanView,
+            IsAdd: p.CanAdd,
+            IsEdit: p.CanEdit,
+            IsDelete: p.CanDelete,
+            IsApprove: p.CanApprove,
+            IsExport: p.CanExport
+        }));
 
-    const handleResetTemplate = () => {
-        if (window.confirm("Are you sure you want to reset all permissions to default for this role?")) {
-            setPermissions(prev => prev.map(p => ({
-                ...p,
-                CanView: false,
-                CanAdd: false,
-                CanEdit: false,
-                CanDelete: false,
-                CanApprove: false,
-                CanExport: false,
-            })));
+        const formData = new FormData();
+        formData.append("F_RoleMaster", selectedRole);
+        formData.append("F_BranchMaster", selectedBranch);
+        formData.append("DataJSON", JSON.stringify(dataJsonArray));
+
+        const storedUser = localStorage.getItem("user");
+        const currentUser = storedUser ? JSON.parse(storedUser) : null;
+        const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+        formData.append("UserId", userId);
+
+        const apiSaveUrl = `RoleWisePermission/${userId}/token`;
+
+        try {
+            await Fn_AddEditData(
+                dispatch,
+                () => { }, // Placeholder for progress state setter 
+                { arguList: { id: 0, formData } },
+                apiSaveUrl,
+                true,
+                "memberid",
+                navigate,
+                null // null redirect url will stay on page
+            );
+        } catch (error) {
+            console.error("Failed to save permissions", error);
         }
     };
+
+
 
     return (
         <div className="page-body">
@@ -134,7 +202,7 @@ const PermissionMetrixs = () => {
                                     <Col md="4">
                                         <FormGroup>
                                             <Label className="fw-bold">
-                                                Select Role to Configure <span className="text-danger">*</span>
+                                                Select Role <span className="text-danger">*</span>
                                             </Label>
                                             <Input
                                                 type="select"
@@ -143,119 +211,139 @@ const PermissionMetrixs = () => {
                                                 className="form-select"
                                             >
                                                 <option value="">-- Select Role --</option>
-                                                {/* Fallback mock if API is empty */}
-                                                {dropdowns.roles.length === 0 && <option value="1">Accountant</option>}
                                                 {dropdowns.roles.map(role => (
                                                     <option key={role.Id} value={role.Id}>{role.Name || `Role ${role.Id}`}</option>
                                                 ))}
                                             </Input>
                                         </FormGroup>
                                     </Col>
+                                    <Col md="4">
+                                        <FormGroup>
+                                            <Label className="fw-bold">
+                                                Select Branch
+                                            </Label>
+                                            <Input
+                                                type="select"
+                                                value={selectedBranch}
+                                                onChange={handleBranchChange}
+                                                className="form-select"
+                                            >
+                                                <option value="">-- Select Branch --</option>
+                                                {dropdowns.branches.map(branch => (
+                                                    <option key={branch.Id} value={branch.Id}>{branch.Name || `Branch ${branch.Id}`}</option>
+                                                ))}
+                                            </Input>
+                                        </FormGroup>
+                                    </Col>
                                 </Row>
 
-                                <div className="table-responsive border rounded" style={{ maxHeight: "60vh", overflowY: "auto" }}>
-                                    <Table className="table-bordered table-striped mb-0 table-hover align-middle">
-                                        <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
-                                            <tr style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                <th className="py-3 px-3 shadow-none border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    Module Name
-                                                </th>
-                                                <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    <i className="fa fa-eye text-white-50 me-1"></i> View
-                                                </th>
-                                                <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    <i className="fa fa-plus text-primary-light me-1" style={{ color: "#8bb6ff" }}></i> Add
-                                                </th>
-                                                <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    <i className="fa fa-pencil text-warning me-1"></i> Edit
-                                                </th>
-                                                <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    <i className="fa fa-trash text-white-50 me-1"></i> Delete
-                                                </th>
-                                                <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    <i className="fa fa-check-square text-success me-1"></i> Approve
-                                                </th>
-                                                <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
-                                                    <i className="fa fa-file-text text-danger me-1"></i> Export
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {permissions.map((perm, index) => (
-                                                <tr key={perm.ModuleId}>
-                                                    <td className="px-3 fw-medium text-dark bg-white">
-                                                        {perm.ModuleName}
-                                                    </td>
-                                                    <td className="text-center bg-white">
-                                                        <Input
-                                                            type="checkbox"
-                                                            className="checkbox_animated"
-                                                            checked={perm.CanView}
-                                                            onChange={() => handleCheckboxToggle(perm.ModuleId, "CanView")}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center bg-white">
-                                                        <Input
-                                                            type="checkbox"
-                                                            className="checkbox_animated"
-                                                            checked={perm.CanAdd}
-                                                            onChange={() => handleCheckboxToggle(perm.ModuleId, "CanAdd")}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center bg-white">
-                                                        <Input
-                                                            type="checkbox"
-                                                            className="checkbox_animated"
-                                                            checked={perm.CanEdit}
-                                                            onChange={() => handleCheckboxToggle(perm.ModuleId, "CanEdit")}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center bg-white">
-                                                        <Input
-                                                            type="checkbox"
-                                                            className="checkbox_animated"
-                                                            checked={perm.CanDelete}
-                                                            onChange={() => handleCheckboxToggle(perm.ModuleId, "CanDelete")}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center bg-white">
-                                                        <Input
-                                                            type="checkbox"
-                                                            className="checkbox_animated"
-                                                            checked={perm.CanApprove}
-                                                            onChange={() => handleCheckboxToggle(perm.ModuleId, "CanApprove")}
-                                                        />
-                                                    </td>
-                                                    <td className="text-center bg-white">
-                                                        <Input
-                                                            type="checkbox"
-                                                            className="checkbox_animated"
-                                                            checked={perm.CanExport}
-                                                            onChange={() => handleCheckboxToggle(perm.ModuleId, "CanExport")}
-                                                        />
-                                                    </td>
+                                <fieldset disabled={!isEditingOpen}>
+                                    <div className="table-responsive border rounded" style={{ maxHeight: "60vh", overflowY: "auto" }}>
+                                        <Table className="table-bordered table-striped mb-0 table-hover align-middle">
+                                            <thead style={{ position: "sticky", top: 0, zIndex: 1 }}>
+                                                <tr style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                    <th className="py-3 px-3 shadow-none border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        Module Name
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        <i className="fa fa-eye text-white-50 me-1"></i> View
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        <i className="fa fa-plus text-primary-light me-1" style={{ color: "#8bb6ff" }}></i> Add
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        <i className="fa fa-pencil text-warning me-1"></i> Edit
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        <i className="fa fa-trash text-white-50 me-1"></i> Delete
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        <i className="fa fa-check-square text-success me-1"></i> Approve
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                        <i className="fa fa-file-text text-danger me-1"></i> Export
+                                                    </th>
                                                 </tr>
-                                            ))}
-                                            {permissions.length === 0 && (
-                                                <tr>
-                                                    <td colSpan={7} className="text-center text-muted py-4 bg-white">
-                                                        No modules available.
-                                                    </td>
-                                                </tr>
-                                            )}
-                                        </tbody>
-                                    </Table>
-                                </div>
+                                            </thead>
+                                            <tbody>
+                                                {permissions.map((perm, index) => (
+                                                    <tr key={perm.ModuleId}>
+                                                        <td className="px-3 fw-medium text-dark bg-white">
+                                                            {perm.ModuleName}
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
+                                                                checked={perm.CanView}
+                                                                onChange={() => handleCheckboxToggle(perm.ModuleId, "CanView")}
+                                                            />
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
+                                                                checked={perm.CanAdd}
+                                                                onChange={() => handleCheckboxToggle(perm.ModuleId, "CanAdd")}
+                                                            />
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
+                                                                checked={perm.CanEdit}
+                                                                onChange={() => handleCheckboxToggle(perm.ModuleId, "CanEdit")}
+                                                            />
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
+                                                                checked={perm.CanDelete}
+                                                                onChange={() => handleCheckboxToggle(perm.ModuleId, "CanDelete")}
+                                                            />
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
+                                                                checked={perm.CanApprove}
+                                                                onChange={() => handleCheckboxToggle(perm.ModuleId, "CanApprove")}
+                                                            />
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
+                                                                checked={perm.CanExport}
+                                                                onChange={() => handleCheckboxToggle(perm.ModuleId, "CanExport")}
+                                                            />
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {permissions.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan={7} className="text-center text-muted py-4 bg-white">
+                                                            No modules available.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </Table>
+                                    </div>
+                                </fieldset>
 
                                 <div className="d-flex align-items-center gap-3 mt-4 pt-3 border-top">
-                                    <Button color="primary" onClick={handleSavePermissions}>
+                                    <Button color="primary" onClick={handleSavePermissions} disabled={!isEditingOpen}>
                                         <i className="fa fa-save me-2"></i> Save Permissions
                                     </Button>
-                                    <Button color="light" className="text-dark border" onClick={handleResetTemplate}>
-                                        <i className="fa fa-refresh me-2"></i> Reset to Default Template
-                                    </Button>
-                                    <Button color="warning" className="text-white">
-                                        <i className="fa fa-files-o me-2"></i> Copy from Another Role
+                                    <Button
+                                        color="light"
+                                        className="text-dark border"
+                                        onClick={() => setIsEditingOpen(!isEditingOpen)}
+                                    >
+                                        <i className={`fa ${isEditingOpen ? "fa-lock" : "fa-pencil"} me-2`}></i>
+                                        {isEditingOpen ? "Lock" : "Edit"}
                                     </Button>
                                 </div>
                             </CardBody>

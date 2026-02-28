@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, ErrorMessage, FieldArray } from "formik";
 import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
-import { Fn_FillListData } from "../../store/Functions";
+import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
 import * as Yup from "yup";
@@ -15,70 +15,68 @@ interface BankAccount {
     BankName: string;
     AccountNumber: string;
     IFSCCode: string;
-    AccountType: string;
+    F_AccountTypeMaster: string;
 }
 
 interface CustomerFormValues {
-    FullName: string;
-    DOB: string;
+    Name: string;
+    DateOfBirth: string;
     Gender: string;
-    MobileNumber: string;
+    MobileNo: string;
     AlternateMobile: string;
-    EmailAddress: string;
-    AadhaarNumber: string;
-    PANNumber: string;
+    Email: string;
+    AadhaarNo: string;
+    PAN: string;
     CurrentAddress: string;
-    City: string;
-    State: string;
-    PINCode: string;
-    GPSLocation: string;
-    Occupation: string;
-    YearsInBusiness: string;
+    F_CityMaster: string;
+    F_StateMaster: string;
+    Pincode: string;
+    F_OccupationTypeMaster: string;
+    YearsInBusinessOrJob: string;
     MonthlyIncome: string;
     BusinessAddress: string;
     CustomerPhoto: any;
-    ITRAvailable: string;
-    FieldUnitCentre: string;
-    MemberGroup: string;
+    IsITRAvailable: string;
+    F_FieldUnitCentre: string;
+    F_MemberGroup: string;
     BankAccounts: BankAccount[];
 }
 
 const initialValues: CustomerFormValues = {
-    FullName: "",
-    DOB: "",
+    Name: "",
+    DateOfBirth: "",
     Gender: "",
-    MobileNumber: "",
+    MobileNo: "",
     AlternateMobile: "",
-    EmailAddress: "",
-    AadhaarNumber: "",
-    PANNumber: "",
+    Email: "",
+    AadhaarNo: "",
+    PAN: "",
     CurrentAddress: "",
-    City: "",
-    State: "",
-    PINCode: "",
-    GPSLocation: "",
-    Occupation: "",
-    YearsInBusiness: "",
+    F_CityMaster: "",
+    F_StateMaster: "",
+    Pincode: "",
+    F_OccupationTypeMaster: "",
+    YearsInBusinessOrJob: "",
     MonthlyIncome: "",
     BusinessAddress: "",
     CustomerPhoto: null,
-    ITRAvailable: "No",
-    FieldUnitCentre: "",
-    MemberGroup: "",
+    IsITRAvailable: "false",
+    F_FieldUnitCentre: "",
+    F_MemberGroup: "",
     BankAccounts: [
-        { BankName: "", AccountNumber: "", IFSCCode: "", AccountType: "Savings" }
+        { BankName: "", AccountNumber: "", IFSCCode: "", F_AccountTypeMaster: "" }
     ],
 };
 
 interface KYCFormValues {
-    IDProofType: string;
-    IDProofUpload: any;
-    IDProofBackSide: any;
-    AddressProofType: string;
-    AddressProofUpload: any;
+    F_ProofTypeMaster: string;
+    IDProofFront: any;
+    IDProofBack: any;
+    F_AddressProofTypeMaster: string;
+    AddressProofFile: any;
     Photograph: any;
-    SignatureUpload: any;
-    ITRIncomeProof: any;
+    SignatureFile: any;
+    ITRProofFile: any;
     CKYCStatus: string;
     CreditBureau: string;
     CreditScore: string;
@@ -88,14 +86,14 @@ interface KYCFormValues {
 }
 
 const initialKYCValues: KYCFormValues = {
-    IDProofType: "",
-    IDProofUpload: null,
-    IDProofBackSide: null,
-    AddressProofType: "",
-    AddressProofUpload: null,
+    F_ProofTypeMaster: "",
+    IDProofFront: null,
+    IDProofBack: null,
+    F_AddressProofTypeMaster: "",
+    AddressProofFile: null,
     Photograph: null,
-    SignatureUpload: null,
-    ITRIncomeProof: null,
+    SignatureFile: null,
+    ITRProofFile: null,
     CKYCStatus: "Not Checked",
     CreditBureau: "Not Fetched",
     CreditScore: "",
@@ -107,6 +105,7 @@ const initialKYCValues: KYCFormValues = {
 interface DropdownState {
     genders: Array<{ Id?: number; Name?: string }>;
     states: Array<{ Id?: number; Name?: string }>;
+    cities: Array<{ Id?: number; Name?: string }>;
     occupations: Array<{ Id?: number; Name?: string }>;
     fieldUnits: Array<{ Id?: number; Name?: string }>;
     memberGroups: Array<{ Id?: number; Name?: string }>;
@@ -128,6 +127,7 @@ const CustomerRegistration = () => {
     const [dropdowns, setDropdowns] = useState<DropdownState>({
         genders: [],
         states: [],
+        cities: [],
         occupations: [],
         fieldUnits: [],
         memberGroups: [],
@@ -136,28 +136,29 @@ const CustomerRegistration = () => {
         addressProofTypes: []
     });
 
-    const MASTER_URL = `${API_WEB_URLS.MASTER}/0/token`;
+    const API_URL_SAVE = `${API_WEB_URLS.BASE}Masters/0/token/CustomerMaster/Id/0`;
 
     const validationSchema = useMemo(
         () =>
             Yup.object({
-                FullName: Yup.string().trim().required("Full Name is required"),
-                DOB: Yup.date().required("Date of Birth is required").nullable(),
+                Name: Yup.string().trim().required("Name is required"),
+                DateOfBirth: Yup.date().required("Date of Birth is required").nullable(),
                 Gender: Yup.string().required("Gender is required"),
-                MobileNumber: Yup.string().matches(/^[0-9]{10}$/, "Must be a 10-digit number").required("Mobile Number is required"),
-                AadhaarNumber: Yup.string().matches(/^[0-9]{12}$/, "Must be a 12-digit number").required("Aadhaar Number is required"),
-                PANNumber: Yup.string().matches(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/, "Invalid PAN format").required("PAN Number is required"),
+                MobileNo: Yup.string().matches(/^[0-9]{10}$/, "Must be a 10-digit number").required("Mobile Number is required"),
+                AadhaarNo: Yup.string().matches(/^[0-9]{12}$/, "Must be a 12-digit number").required("Aadhaar Number is required"),
+                PAN: Yup.string().required("PAN Number is required"),
                 CurrentAddress: Yup.string().required("Current Address is required"),
-                City: Yup.string().required("City is required"),
-                State: Yup.string().required("State is required"),
-                PINCode: Yup.string().matches(/^[0-9]{6}$/, "Must be a 6-digit number").required("PIN Code is required"),
-                Occupation: Yup.string().required("Occupation is required"),
+                F_CityMaster: Yup.string().required("City is required"),
+                F_StateMaster: Yup.string().required("State is required"),
+                Pincode: Yup.string().matches(/^[0-9]{6}$/, "Must be a 6-digit number").required("PIN Code is required"),
+                F_OccupationTypeMaster: Yup.string().required("Occupation is required"),
                 MonthlyIncome: Yup.number().typeError("Must be a number").required("Monthly Income is required"),
                 BankAccounts: Yup.array().of(
                     Yup.object().shape({
                         BankName: Yup.string().required("Bank Name is required"),
                         AccountNumber: Yup.string().required("Account Number is required"),
                         IFSCCode: Yup.string().required("IFSC Code is required"),
+                        F_AccountTypeMaster: Yup.string().required("Account Type is required"),
                     })
                 ).min(1, "At least one bank account is required")
             }),
@@ -167,27 +168,27 @@ const CustomerRegistration = () => {
     const kycValidationSchema = useMemo(
         () =>
             Yup.object({
-                IDProofType: Yup.string().required("ID Proof Type is required"),
-                IDProofUpload: Yup.mixed().required("ID Proof is required"),
-                AddressProofType: Yup.string().required("Address Proof Type is required"),
-                AddressProofUpload: Yup.mixed().required("Address Proof is required"),
+                F_ProofTypeMaster: Yup.string().required("ID Proof Type is required"),
+                IDProofFront: Yup.mixed().required("ID Proof Front is required"),
+                F_AddressProofTypeMaster: Yup.string().required("Address Proof Type is required"),
+                AddressProofFile: Yup.mixed().required("Address Proof is required"),
                 Photograph: Yup.mixed().required("Photograph is required"),
-                SignatureUpload: Yup.mixed().required("Signature is required"),
+                SignatureFile: Yup.mixed().required("Signature is required"),
             }),
         []
     );
 
     useEffect(() => {
         nameRef.current?.focus();
-        Fn_FillListData(dispatch, setDropdowns, "genders", `${MASTER_URL}/GenderMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "states", `${MASTER_URL}/StateMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "occupations", `${MASTER_URL}/OccupationMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "fieldUnits", `${MASTER_URL}/FieldUnitMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "memberGroups", `${MASTER_URL}/MemberGroupMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "accountTypes", `${MASTER_URL}/AccountTypeMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "idProofTypes", `${MASTER_URL}/IDProofMaster/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "addressProofTypes", `${MASTER_URL}/AddressProofMaster/Id/0`);
-    }, [dispatch, MASTER_URL]);
+        
+        Fn_FillListData(dispatch, setDropdowns, "states", `Masters/0/token/StateMaster/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "occupations", `Masters/0/token/OccupationTypeMaster/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "fieldUnits", `Masters/0/token/FieldUnitCentre/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "memberGroups", `Masters/0/token/MemberGroup/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "accountTypes", `Masters/0/token/AccountTypeMaster/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "idProofTypes", `Masters/0/token/ProofTypeMaster/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "addressProofTypes", `Masters/0/token/AddressProofTypeMaster/Id/0`);
+    }, [dispatch]);
 
     const initialFormValues: CustomerFormValues = {
         ...initialValues,
@@ -199,9 +200,55 @@ const CustomerRegistration = () => {
         ...savedKYCData
     };
 
+    const handleStateChange = (
+        e: React.ChangeEvent<HTMLInputElement>,
+        handleChange: FormikProps<CustomerFormValues>["handleChange"],
+        setFieldValue: FormikProps<CustomerFormValues>["setFieldValue"]
+    ) => {
+        handleChange(e);
+        const selectedState = e.target.value;
+        if (selectedState) {
+            Fn_FillListData(dispatch, setDropdowns, "cities", `Masters/0/token/CityMasterByState/Id/${selectedState}`)
+                .catch((err) => console.error("Failed to fetch cities by state:", err));
+        } else {
+            setDropdowns((prev) => ({ ...prev, cities: [] }));
+        }
+        setFieldValue("F_CityMaster", "");
+    };
+
     const handleSubmit = async (values: CustomerFormValues, { setSubmitting }: FormikHelpers<CustomerFormValues>) => {
         try {
+            // Format BankJson according to required structure
+            const bankJson = values.BankAccounts.map(account => ({
+                BankName: account.BankName,
+                AccountNumber: account.AccountNumber,
+                IFSCCode: account.IFSCCode,
+                F_BankAccountTypeMaster: parseInt(account.F_AccountTypeMaster) || 0
+            }));
+
+            const formData = new FormData();
+            
+            // Append all fields
+            Object.keys(values).forEach(key => {
+                if (key !== 'BankAccounts') {
+                    const val = values[key as keyof CustomerFormValues];
+                    if (val instanceof File) {
+                        formData.append(key, val);
+                    } else {
+                        formData.append(key, String(val || ""));
+                    }
+                }
+            });
+            
+            // Append BankJson as JSON string
+            formData.append("BankJson", JSON.stringify(bankJson));
+            
+            // Add UserId
+            formData.append("UserId", "0");
+            
             console.log("Submitting Basic Info payload:", values);
+            console.log("Formatted BankJson:", JSON.stringify(bankJson, null, 2));
+            
             setSavedData(values); // Saving states into memory locally
             // After saving successfully hook, proceed to next tab:
             setActiveTab("2");
@@ -221,6 +268,96 @@ const CustomerRegistration = () => {
             console.error("KYC Submission failed:", error);
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleKYCSave = async (kycValues: KYCFormValues) => {
+        try {
+            // Combine Basic Info (savedData from Tab 1) + KYC data
+            const formData = new FormData();
+            
+            // --- Basic Info fields from Tab 1 ---
+            formData.append("Name", String(savedData.Name || ""));
+            formData.append("DateOfBirth", String(savedData.DateOfBirth || ""));
+            formData.append("Gender", String(savedData.Gender || ""));
+            formData.append("MobileNo", String(savedData.MobileNo || ""));
+            formData.append("AlternateMobile", String(savedData.AlternateMobile || ""));
+            formData.append("Email", String(savedData.Email || ""));
+            formData.append("AadhaarNo", String(savedData.AadhaarNo || ""));
+            formData.append("PAN", String(savedData.PAN || ""));
+            formData.append("CurrentAddress", String(savedData.CurrentAddress || ""));
+            formData.append("F_CityMaster", String(savedData.F_CityMaster || "0"));
+            formData.append("F_StateMaster", String(savedData.F_StateMaster || "0"));
+            formData.append("Pincode", String(savedData.Pincode || ""));
+            formData.append("F_OccupationTypeMaster", String(savedData.F_OccupationTypeMaster || "0"));
+            formData.append("YearsInBusinessOrJob", String(savedData.YearsInBusinessOrJob || "0"));
+            formData.append("MonthlyIncome", String(savedData.MonthlyIncome || "0"));
+            formData.append("BusinessAddress", String(savedData.BusinessAddress || ""));
+            formData.append("IsITRAvailable", String(savedData.IsITRAvailable || "false"));
+            formData.append("F_FieldUnitCentre", String(savedData.F_FieldUnitCentre || "0"));
+            formData.append("F_MemberGroup", String(savedData.F_MemberGroup || "0"));
+            
+            // CustomerPhoto (file from Tab 1)
+            if (savedData.CustomerPhoto instanceof File) {
+                formData.append("CustomerPhoto", savedData.CustomerPhoto);
+            }
+            
+            // BankJson
+            const bankJson = (savedData.BankAccounts || []).map(account => ({
+                BankName: account.BankName,
+                AccountNumber: account.AccountNumber,
+                IFSCCode: account.IFSCCode,
+                F_BankAccountTypeMaster: parseInt(account.F_AccountTypeMaster) || 0
+            }));
+            formData.append("BankJson", JSON.stringify(bankJson));
+            
+            // --- KYC fields from Tab 2 ---
+            formData.append("F_ProofTypeMaster", String(kycValues.F_ProofTypeMaster || "0"));
+            formData.append("F_AddressProofTypeMaster", String(kycValues.F_AddressProofTypeMaster || "0"));
+            
+            // File uploads from KYC
+            if (kycValues.IDProofFront instanceof File) {
+                formData.append("IDProofFront", kycValues.IDProofFront);
+            }
+            if (kycValues.IDProofBack instanceof File) {
+                formData.append("IDProofBack", kycValues.IDProofBack);
+            }
+            if (kycValues.AddressProofFile instanceof File) {
+                formData.append("AddressProofFile", kycValues.AddressProofFile);
+            }
+            if (kycValues.Photograph instanceof File) {
+                formData.append("Photograph", kycValues.Photograph);
+            }
+            if (kycValues.SignatureFile instanceof File) {
+                formData.append("SignatureFile", kycValues.SignatureFile);
+            }
+            if (kycValues.ITRProofFile instanceof File) {
+                formData.append("ITRProofFile", kycValues.ITRProofFile);
+            }
+            
+            // UserId
+            formData.append("UserId", "0");
+            
+            const API_URL_KYC_SAVE = `CustomerMaster/0/token`;
+            
+            console.log("Saving Customer + KYC payload to API:", API_URL_KYC_SAVE);
+            console.log("BankJson:", JSON.stringify(bankJson, null, 2));
+            
+            // Make the actual API call
+            await Fn_AddEditData(
+                dispatch,
+                () => undefined,
+                { arguList: { id: 0, formData } },
+                API_URL_KYC_SAVE,
+                true,
+                "memberid",
+                navigate,
+                "/customerRegistration"
+            );
+            setSavedKYCData(kycValues);
+        } catch (error) {
+            console.error("KYC Save failed:", error);
+            alert("Failed to save KYC data!");
         }
     };
 
@@ -263,16 +400,16 @@ const CustomerRegistration = () => {
                                                     <Row className="gy-0">
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
-                                                                <Label>Full Name <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="FullName" placeholder="As per Aadhaar/PAN" value={values.FullName} onChange={handleChange} onBlur={handleBlur} invalid={touched.FullName && !!errors.FullName} innerRef={nameRef} />
-                                                                <ErrorMessage name="FullName" component="div" className="text-danger small mt-1" />
+                                                                <Label>Name <span className="text-danger">*</span></Label>
+                                                                <Input type="text" name="Name" placeholder="As per Aadhaar/PAN" value={values.Name} onChange={handleChange} onBlur={handleBlur} invalid={touched.Name && !!errors.Name} innerRef={nameRef} />
+                                                                <ErrorMessage name="Name" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Date of Birth <span className="text-danger">*</span></Label>
-                                                                <Input type="date" name="DOB" value={values.DOB} onChange={handleChange} onBlur={handleBlur} invalid={touched.DOB && !!errors.DOB} />
-                                                                <ErrorMessage name="DOB" component="div" className="text-danger small mt-1" />
+                                                                <Input type="date" name="DateOfBirth" value={values.DateOfBirth} onChange={handleChange} onBlur={handleBlur} invalid={touched.DateOfBirth && !!errors.DateOfBirth} />
+                                                                <ErrorMessage name="DateOfBirth" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -281,14 +418,9 @@ const CustomerRegistration = () => {
                                                                 <Label>Gender <span className="text-danger">*</span></Label>
                                                                 <Input type="select" name="Gender" value={values.Gender} onChange={handleChange} onBlur={handleBlur} invalid={touched.Gender && !!errors.Gender}>
                                                                     <option value="">-- Select --</option>
-                                                                    {dropdowns.genders.length === 0 && (
-                                                                        <>
-                                                                            <option value="Male">Male</option>
-                                                                            <option value="Female">Female</option>
-                                                                            <option value="Other">Other</option>
-                                                                        </>
-                                                                    )}
-                                                                    {dropdowns.genders.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
+                                                                    <option value="Male">Male</option>
+                                                                    <option value="Female">Female</option>
+                                                                    <option value="Other">Other</option>
                                                                 </Input>
                                                                 <ErrorMessage name="Gender" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
@@ -296,8 +428,8 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Mobile Number <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="MobileNumber" placeholder="10-digit mobile" value={values.MobileNumber} onChange={handleChange} onBlur={handleBlur} invalid={touched.MobileNumber && !!errors.MobileNumber} />
-                                                                <ErrorMessage name="MobileNumber" component="div" className="text-danger small mt-1" />
+                                                                <Input type="text" name="MobileNo" placeholder="10-digit mobile" value={values.MobileNo} onChange={handleChange} onBlur={handleBlur} invalid={touched.MobileNo && !!errors.MobileNo} />
+                                                                <ErrorMessage name="MobileNo" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -311,23 +443,23 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Email Address</Label>
-                                                                <Input type="email" name="EmailAddress" placeholder="customer@email.com" value={values.EmailAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.EmailAddress && !!errors.EmailAddress} />
-                                                                <ErrorMessage name="EmailAddress" component="div" className="text-danger small mt-1" />
+                                                                <Input type="email" name="Email" placeholder="customer@email.com" value={values.Email} onChange={handleChange} onBlur={handleBlur} invalid={touched.Email && !!errors.Email} />
+                                                                <ErrorMessage name="Email" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Aadhaar Number <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="AadhaarNumber" placeholder="XXXX-XXXX-XXXX" value={values.AadhaarNumber} onChange={handleChange} onBlur={handleBlur} invalid={touched.AadhaarNumber && !!errors.AadhaarNumber} />
-                                                                <ErrorMessage name="AadhaarNumber" component="div" className="text-danger small mt-1" />
+                                                                <Input type="text" name="AadhaarNo" placeholder="XXXX-XXXX-XXXX" value={values.AadhaarNo} onChange={handleChange} onBlur={handleBlur} invalid={touched.AadhaarNo && !!errors.AadhaarNo} />
+                                                                <ErrorMessage name="AadhaarNo" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>PAN Number <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="PANNumber" placeholder="ABCDE1234F" value={values.PANNumber} onChange={handleChange} onBlur={handleBlur} invalid={touched.PANNumber && !!errors.PANNumber} />
-                                                                <ErrorMessage name="PANNumber" component="div" className="text-danger small mt-1" />
+                                                                <Input type="text" name="PAN" placeholder="ABCDE1234F" value={values.PAN} onChange={handleChange} onBlur={handleBlur} invalid={touched.PAN && !!errors.PAN} />
+                                                                <ErrorMessage name="PAN" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -341,55 +473,50 @@ const CustomerRegistration = () => {
 
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
-                                                                <Label>City <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="City" value={values.City} onChange={handleChange} onBlur={handleBlur} invalid={touched.City && !!errors.City} />
-                                                                <ErrorMessage name="City" component="div" className="text-danger small mt-1" />
-                                                            </FormGroup>
-                                                        </Col>
-                                                        <Col md="4">
-                                                            <FormGroup className="mb-0">
                                                                 <Label>State <span className="text-danger">*</span></Label>
-                                                                <Input type="select" name="State" value={values.State} onChange={handleChange} onBlur={handleBlur} invalid={touched.State && !!errors.State}>
+                                                                <Input type="select" name="F_StateMaster" value={values.F_StateMaster} onChange={(e) => handleStateChange(e, handleChange, setFieldValue)} onBlur={handleBlur} invalid={touched.F_StateMaster && !!errors.F_StateMaster}>
                                                                     <option value="">-- Select --</option>
                                                                     {dropdowns.states.length === 0 && <option value="1">Mock State</option>}
                                                                     {dropdowns.states.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
-                                                                <ErrorMessage name="State" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
+                                                            </FormGroup>
+                                                        </Col>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
+                                                                <Label>City <span className="text-danger">*</span></Label>
+                                                                <Input type="select" name="F_CityMaster" value={values.F_CityMaster} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_CityMaster && !!errors.F_CityMaster} disabled={!values.F_StateMaster}>
+                                                                    <option value="">-- Select City --</option>
+                                                                    {dropdowns.cities.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
+                                                                </Input>
+                                                                <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>PIN Code <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="PINCode" value={values.PINCode} onChange={handleChange} onBlur={handleBlur} invalid={touched.PINCode && !!errors.PINCode} />
-                                                                <ErrorMessage name="PINCode" component="div" className="text-danger small mt-1" />
+                                                                <Input type="text" name="Pincode" value={values.Pincode} onChange={handleChange} onBlur={handleBlur} invalid={touched.Pincode && !!errors.Pincode} />
+                                                                <ErrorMessage name="Pincode" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="4">
-                                                            <FormGroup className="mb-0">
-                                                                <Label>GPS Location</Label>
-                                                                <Input type="text" name="GPSLocation" placeholder="Lat, Long (auto-capture or manual)" value={values.GPSLocation} onChange={handleChange} onBlur={handleBlur} invalid={touched.GPSLocation && !!errors.GPSLocation} />
-                                                                <ErrorMessage name="GPSLocation" component="div" className="text-danger small mt-1" />
-                                                            </FormGroup>
-                                                        </Col>
-
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Occupation / Business Type <span className="text-danger">*</span></Label>
-                                                                <Input type="select" name="Occupation" value={values.Occupation} onChange={handleChange} onBlur={handleBlur} invalid={touched.Occupation && !!errors.Occupation}>
+                                                                <Input type="select" name="F_OccupationTypeMaster" value={values.F_OccupationTypeMaster} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_OccupationTypeMaster && !!errors.F_OccupationTypeMaster}>
                                                                     <option value="">-- Select --</option>
                                                                     {dropdowns.occupations.length === 0 && <option value="1">Salaried</option>}
                                                                     {dropdowns.occupations.length === 0 && <option value="2">Self-Employed</option>}
                                                                     {dropdowns.occupations.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
-                                                                <ErrorMessage name="Occupation" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="F_OccupationTypeMaster" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Years in Business / Employed</Label>
-                                                                <Input type="text" name="YearsInBusiness" placeholder="e.g. 5" value={values.YearsInBusiness} onChange={handleChange} onBlur={handleBlur} invalid={touched.YearsInBusiness && !!errors.YearsInBusiness} />
-                                                                <ErrorMessage name="YearsInBusiness" component="div" className="text-danger small mt-1" />
+                                                                <Input type="text" name="YearsInBusinessOrJob" placeholder="e.g. 5" value={values.YearsInBusinessOrJob} onChange={handleChange} onBlur={handleBlur} invalid={touched.YearsInBusinessOrJob && !!errors.YearsInBusinessOrJob} />
+                                                                <ErrorMessage name="YearsInBusinessOrJob" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -418,32 +545,32 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ITR Available?</Label>
-                                                                <Input type="select" name="ITRAvailable" value={values.ITRAvailable} onChange={handleChange} onBlur={handleBlur} invalid={touched.ITRAvailable && !!errors.ITRAvailable}>
-                                                                    <option value="No">No</option>
-                                                                    <option value="Yes">Yes</option>
+                                                                <Input type="select" name="IsITRAvailable" value={values.IsITRAvailable} onChange={handleChange} onBlur={handleBlur} invalid={touched.IsITRAvailable && !!errors.IsITRAvailable}>
+                                                                    <option value="false">No</option>
+                                                                    <option value="true">Yes</option>
                                                                 </Input>
-                                                                <ErrorMessage name="ITRAvailable" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="IsITRAvailable" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="4">
+                                                        <Col md="4" style={{ display: 'none' }}>
                                                             <FormGroup className="mb-0">
                                                                 <Label>Field Unit / Centre (MFI only)</Label>
-                                                                <Input type="select" name="FieldUnitCentre" value={values.FieldUnitCentre} onChange={handleChange} onBlur={handleBlur} invalid={touched.FieldUnitCentre && !!errors.FieldUnitCentre}>
+                                                                <Input type="select" name="F_FieldUnitCentre" value={values.F_FieldUnitCentre} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_FieldUnitCentre && !!errors.F_FieldUnitCentre}>
                                                                     <option value="">-- Select Centre --</option>
                                                                     {dropdowns.fieldUnits.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
-                                                                <ErrorMessage name="FieldUnitCentre" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="F_FieldUnitCentre" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
-                                                        <Col md="4">
+                                                        <Col md="4" style={{ display: 'none' }}>
                                                             <FormGroup className="mb-0">
                                                                 <Label>Member Group (MFI only)</Label>
-                                                                <Input type="select" name="MemberGroup" value={values.MemberGroup} onChange={handleChange} onBlur={handleBlur} invalid={touched.MemberGroup && !!errors.MemberGroup}>
+                                                                <Input type="select" name="F_MemberGroup" value={values.F_MemberGroup} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_MemberGroup && !!errors.F_MemberGroup}>
                                                                     <option value="">-- Select Group --</option>
                                                                     {dropdowns.memberGroups.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
-                                                                <ErrorMessage name="MemberGroup" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="F_MemberGroup" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -486,12 +613,18 @@ const CustomerRegistration = () => {
                                                                                             <Col md="2">
                                                                                                 <FormGroup className="mb-0">
                                                                                                     <Label>Account Type</Label>
-                                                                                                    <Input type="select" name={`BankAccounts[${index}].AccountType`} value={account.AccountType} onChange={handleChange} onBlur={handleBlur} invalid={rowTouched?.AccountType && !!rowErrors?.AccountType}>
-                                                                                                        <option value="Savings">Savings</option>
-                                                                                                        <option value="Current">Current</option>
-                                                                                                        <option value="CC/OD">CC/OD</option>
+                                                                                                    <Input type="select" name={`BankAccounts[${index}].F_AccountTypeMaster`} value={account.F_AccountTypeMaster} onChange={handleChange} onBlur={handleBlur} invalid={rowTouched?.F_AccountTypeMaster && !!rowErrors?.F_AccountTypeMaster}>
+                                                                                                        <option value="">-- Select --</option>
+                                                                                                        {dropdowns.accountTypes.length === 0 && (
+                                                                                                            <>
+                                                                                                                <option value="1">Savings</option>
+                                                                                                                <option value="2">Current</option>
+                                                                                                                <option value="3">CC/OD</option>
+                                                                                                            </>
+                                                                                                        )}
+                                                                                                        {dropdowns.accountTypes.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                                                     </Input>
-                                                                                                    <ErrorMessage name={`BankAccounts[${index}].AccountType`} component="div" className="text-danger small mt-1" />
+                                                                                                    <ErrorMessage name={`BankAccounts[${index}].F_AccountTypeMaster`} component="div" className="text-danger small mt-1" />
                                                                                                 </FormGroup>
                                                                                             </Col>
                                                                                             <Col md="1" className="text-end">
@@ -506,7 +639,7 @@ const CustomerRegistration = () => {
                                                                                 })}
                                                                                 <Row>
                                                                                     <Col xs="12">
-                                                                                        <Btn color="primary" outline type="button" onClick={() => push({ BankName: '', AccountNumber: '', IFSCCode: '', AccountType: 'Savings' })} className="d-flex align-items-center gap-2">
+                                                                                        <Btn color="primary" outline type="button" onClick={() => push({ BankName: '', AccountNumber: '', IFSCCode: '', F_AccountTypeMaster: '' })} className="d-flex align-items-center gap-2">
                                                                                             <i className="fa fa-plus"></i> Add Another Bank Account
                                                                                         </Btn>
                                                                                     </Col>
@@ -520,7 +653,7 @@ const CustomerRegistration = () => {
                                                     </Row>
                                                     <div className="d-flex align-items-center gap-2 mt-4 pt-3 border-top">
                                                         <Btn color="primary" type="submit" disabled={isSubmitting} className="d-flex align-items-center gap-2 px-4 shadow-sm">
-                                                            <i className="fa fa-save"></i> Save & Proceed to KYC
+                                                            <i className="fa fa-arrow-right"></i> Move to next tab
                                                         </Btn>
                                                         <Btn color="light" type="button" className="text-dark d-flex align-items-center gap-2 px-4 border">
                                                             <i className="fa fa-pencil-square-o"></i> Save as Draft
@@ -543,48 +676,48 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ID Proof Type <span className="text-danger">*</span></Label>
-                                                                <Input type="select" name="IDProofType" value={values.IDProofType} onChange={handleChange} onBlur={handleBlur} invalid={touched.IDProofType && !!errors.IDProofType}>
+                                                                <Input type="select" name="F_ProofTypeMaster" value={values.F_ProofTypeMaster} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_ProofTypeMaster && !!errors.F_ProofTypeMaster}>
                                                                     <option value="">-- Select --</option>
                                                                     {dropdowns.idProofTypes.length === 0 && <option value="1">Aadhaar Card</option>}
                                                                     {dropdowns.idProofTypes.length === 0 && <option value="2">Voter ID</option>}
                                                                     {dropdowns.idProofTypes.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
-                                                                <ErrorMessage name="IDProofType" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="F_ProofTypeMaster" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
-                                                                <Label>ID Proof Upload <span className="text-danger">*</span></Label>
-                                                                <Input type="file" name="IDProofUpload" onChange={(e) => setFieldValue('IDProofUpload', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofUpload && !!errors.IDProofUpload} />
-                                                                <ErrorMessage name="IDProofUpload" component="div" className="text-danger small mt-1" />
+                                                                <Label>ID Proof Front <span className="text-danger">*</span></Label>
+                                                                <Input type="file" name="IDProofFront" onChange={(e) => setFieldValue('IDProofFront', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofFront && !!errors.IDProofFront} />
+                                                                <ErrorMessage name="IDProofFront" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ID Proof Back Side</Label>
-                                                                <Input type="file" name="IDProofBackSide" onChange={(e) => setFieldValue('IDProofBackSide', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofBackSide && !!errors.IDProofBackSide} />
-                                                                <ErrorMessage name="IDProofBackSide" component="div" className="text-danger small mt-1" />
+                                                                <Input type="file" name="IDProofBack" onChange={(e) => setFieldValue('IDProofBack', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofBack && !!errors.IDProofBack} />
+                                                                <ErrorMessage name="IDProofBack" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Address Proof Type <span className="text-danger">*</span></Label>
-                                                                <Input type="select" name="AddressProofType" value={values.AddressProofType} onChange={handleChange} onBlur={handleBlur} invalid={touched.AddressProofType && !!errors.AddressProofType}>
+                                                                <Input type="select" name="F_AddressProofTypeMaster" value={values.F_AddressProofTypeMaster} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_AddressProofTypeMaster && !!errors.F_AddressProofTypeMaster}>
                                                                     <option value="">-- Select --</option>
                                                                     {dropdowns.addressProofTypes.length === 0 && <option value="1">Utility Bill</option>}
                                                                     {dropdowns.addressProofTypes.length === 0 && <option value="2">Ration Card</option>}
                                                                     {dropdowns.addressProofTypes.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
                                                                 </Input>
-                                                                <ErrorMessage name="AddressProofType" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="F_AddressProofTypeMaster" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Address Proof Upload <span className="text-danger">*</span></Label>
-                                                                <Input type="file" name="AddressProofUpload" onChange={(e) => setFieldValue('AddressProofUpload', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.AddressProofUpload && !!errors.AddressProofUpload} />
-                                                                <ErrorMessage name="AddressProofUpload" component="div" className="text-danger small mt-1" />
+                                                                <Input type="file" name="AddressProofFile" onChange={(e) => setFieldValue('AddressProofFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.AddressProofFile && !!errors.AddressProofFile} />
+                                                                <ErrorMessage name="AddressProofFile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
@@ -598,15 +731,15 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Signature Upload <span className="text-danger">*</span></Label>
-                                                                <Input type="file" name="SignatureUpload" onChange={(e) => setFieldValue('SignatureUpload', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.SignatureUpload && !!errors.SignatureUpload} />
-                                                                <ErrorMessage name="SignatureUpload" component="div" className="text-danger small mt-1" />
+                                                                <Input type="file" name="SignatureFile" onChange={(e) => setFieldValue('SignatureFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.SignatureFile && !!errors.SignatureFile} />
+                                                                <ErrorMessage name="SignatureFile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ITR / Income Proof</Label>
-                                                                <Input type="file" name="ITRIncomeProof" onChange={(e) => setFieldValue('ITRIncomeProof', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.ITRIncomeProof && !!errors.ITRIncomeProof} />
-                                                                <ErrorMessage name="ITRIncomeProof" component="div" className="text-danger small mt-1" />
+                                                                <Input type="file" name="ITRProofFile" onChange={(e) => setFieldValue('ITRProofFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.ITRProofFile && !!errors.ITRProofFile} />
+                                                                <ErrorMessage name="ITRProofFile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
 
@@ -670,6 +803,9 @@ const CustomerRegistration = () => {
                                                         </Col>
                                                     </Row>
                                                     <div className="d-flex align-items-center gap-2 mt-4 pt-3 border-top">
+                                                        <Btn color="success" type="button" onClick={() => handleKYCSave(values)} className="d-flex align-items-center gap-2 px-4 shadow-sm">
+                                                            <i className="fa fa-save"></i> Save KYC Data
+                                                        </Btn>
                                                         <Btn color="info" type="button" className="d-flex align-items-center gap-2 px-4 shadow-sm">
                                                             <i className="fa fa-check-circle"></i> Verify KYC Docs
                                                         </Btn>
@@ -691,15 +827,15 @@ const CustomerRegistration = () => {
                                             <div>
                                                 <h5 className="mb-4">Customer Preview Summary</h5>
                                                 <Row className="gy-3 mb-4">
-                                                    <Col md="4"><strong>Full Name:</strong> {savedData.FullName}</Col>
-                                                    <Col md="4"><strong>Mobile:</strong> {savedData.MobileNumber}</Col>
-                                                    <Col md="4"><strong>DOB:</strong> {savedData.DOB}</Col>
+                                                    <Col md="4"><strong>Full Name:</strong> {savedData.Name}</Col>
+                                                    <Col md="4"><strong>Mobile:</strong> {savedData.MobileNo}</Col>
+                                                    <Col md="4"><strong>DOB:</strong> {savedData.DateOfBirth}</Col>
                                                     <Col md="4"><strong>Gender:</strong> {savedData.Gender}</Col>
-                                                    <Col md="4"><strong>Aadhaar:</strong> {savedData.AadhaarNumber}</Col>
-                                                    <Col md="4"><strong>PAN:</strong> {savedData.PANNumber}</Col>
-                                                    <Col md="8"><strong>Current Address:</strong> {savedData.CurrentAddress}, {savedData.City}, {savedData.State} - {savedData.PINCode}</Col>
+                                                    <Col md="4"><strong>Aadhaar:</strong> {savedData.AadhaarNo}</Col>
+                                                    <Col md="4"><strong>PAN:</strong> {savedData.PAN}</Col>
+                                                    <Col md="8"><strong>Current Address:</strong> {savedData.CurrentAddress}, City ID: {savedData.F_CityMaster}, State ID: {savedData.F_StateMaster} - {savedData.Pincode}</Col>
                                                     <Col md="4"><strong>Monthly Income:</strong> ₹{savedData.MonthlyIncome}</Col>
-                                                    <Col md="4"><strong>Occupation:</strong> {savedData.Occupation}</Col>
+                                                    <Col md="4"><strong>Occupation:</strong> {savedData.F_OccupationTypeMaster}</Col>
                                                 </Row>
                                                 <div className="p-3 bg-light border rounded">
                                                     <h6>Saved Bank Accounts: {savedData.BankAccounts?.length || 0}</h6>

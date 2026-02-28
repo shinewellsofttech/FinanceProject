@@ -13,24 +13,31 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Btn } from "../../AbstractElements";
 
 interface FormValues {
-    RoleName: string;
+    Name: string;
+    Code: string;
     TransactionApprovalLimit: string;
-    CanViewBlackData: string;
+    IsViewBlackData: string;
     Description: string;
+    Status: string;
 }
 
 const initialValues: FormValues = {
-    RoleName: "",
+    Name: "",
+    Code: "",
     TransactionApprovalLimit: "",
-    CanViewBlackData: "No",
+    IsViewBlackData: "false",
     Description: "",
+    Status: "Active",
 };
 
 
 interface RoleState {
     id: number;
-    formData: Partial<FormValues>;
+    formData: Partial<FormValues> & {
+        IsActive?: boolean;
+    };
     isProgress?: boolean;
+    isEditingOpen?: boolean;
 }
 
 const UserRoleCreation = () => {
@@ -43,21 +50,24 @@ const UserRoleCreation = () => {
         id: 0,
         formData: { ...initialValues },
         isProgress: false,
+        isEditingOpen: true,
     });
 
 
     const isEditMode = roleState.id > 0;
 
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/UserRoleEdit/Id`;
     const API_URL_SAVE = `UserRoleMaster/0/token`;
 
     const validationSchema = useMemo(
         () =>
             Yup.object({
-                RoleName: Yup.string().trim().required("Role Name is required"),
+                Name: Yup.string().trim().required("Role Name is required"),
+                Code: Yup.string().trim().required("Role Code is required"),
                 TransactionApprovalLimit: Yup.number().typeError("Must be a number").min(0, "Cannot be negative"),
-                CanViewBlackData: Yup.string().trim().required("Selection is required"),
+                IsViewBlackData: Yup.string().trim().required("Selection is required"),
                 Description: Yup.string().trim(),
+                Status: Yup.string().trim().required("Status is required"),
             }),
         []
     );
@@ -81,6 +91,7 @@ const UserRoleCreation = () => {
                 ...prev,
                 id: 0,
                 formData: { ...initialValues },
+                isEditingOpen: true,
             }));
         }
     }, [dispatch, location.state, API_URL_EDIT]);
@@ -89,10 +100,13 @@ const UserRoleCreation = () => {
 
     const initialFormValues: FormValues = {
         ...initialValues,
-        RoleName: toStringOrEmpty(roleState.formData.RoleName),
+        Name: toStringOrEmpty(roleState.formData.Name),
+        Code: toStringOrEmpty(roleState.formData.Code),
         TransactionApprovalLimit: toStringOrEmpty(roleState.formData.TransactionApprovalLimit),
-        CanViewBlackData: toStringOrEmpty(roleState.formData.CanViewBlackData) || "No",
+        IsViewBlackData: roleState.formData.IsViewBlackData === "true" ? "true" : "false",
         Description: toStringOrEmpty(roleState.formData.Description),
+        Status: roleState.formData.IsActive === true || roleState.formData.Status === "Active" ? "Active" :
+            (roleState.formData.IsActive === false || roleState.formData.Status === "Inactive" ? "Inactive" : "Active"),
     };
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -100,20 +114,25 @@ const UserRoleCreation = () => {
             const formData = new FormData();
 
             formData.append("Id", String(roleState.id ?? 0));
-            formData.append("RoleName", values.RoleName || "");
+            formData.append("Name", values.Name || "");
+            formData.append("Code", values.Code || "");
             formData.append("TransactionApprovalLimit", values.TransactionApprovalLimit || "0");
-            formData.append("CanViewBlackData", values.CanViewBlackData || "No");
+            formData.append("IsViewBlackData", values.IsViewBlackData === "true" ? "true" : "false");
             formData.append("Description", values.Description || "");
+            formData.append("IsActive", values.Status === "Active" ? "true" : "false");
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
-            formData.append("UserId", currentUser?.uid ?? currentUser?.id ?? "0");
+            const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+            formData.append("UserId", userId);
+
+            const currentApiUrlSave = `UserRole/${userId}/token`;
 
             await Fn_AddEditData(
                 dispatch,
                 () => { }, // Placeholder callback
                 { arguList: { id: roleState.id, formData } },
-                API_URL_SAVE,
+                currentApiUrlSave,
                 true,
                 "memberid",
                 navigate,
@@ -143,83 +162,121 @@ const UserRoleCreation = () => {
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
                                         <CardBody>
-                                            <Row className="gy-0">
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Role Name <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="RoleName"
-                                                            placeholder="e.g. Branch Manager"
-                                                            value={values.RoleName}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.RoleName && !!errors.RoleName}
-                                                            innerRef={roleNameRef}
-                                                        />
-                                                        <ErrorMessage name="RoleName" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Transaction Approval Limit (₹)
-                                                        </Label>
-                                                        <Input
-                                                            type="number"
-                                                            name="TransactionApprovalLimit"
-                                                            placeholder="e.g. 100000"
-                                                            value={values.TransactionApprovalLimit}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.TransactionApprovalLimit && !!errors.TransactionApprovalLimit}
-                                                        />
-                                                        <ErrorMessage name="TransactionApprovalLimit" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                            <fieldset disabled={!roleState.isEditingOpen}>
+                                                <Row className="gy-0">
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Role Name <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="Name"
+                                                                placeholder="e.g. Branch Manager"
+                                                                value={values.Name}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Name && !!errors.Name}
+                                                                innerRef={roleNameRef}
+                                                            />
+                                                            <ErrorMessage name="Name" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Role Code <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="Code"
+                                                                placeholder="e.g. BM-01"
+                                                                value={values.Code}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Code && !!errors.Code}
+                                                            />
+                                                            <ErrorMessage name="Code" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Transaction Approval Limit (₹)
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                name="TransactionApprovalLimit"
+                                                                placeholder="e.g. 100000"
+                                                                value={values.TransactionApprovalLimit}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.TransactionApprovalLimit && !!errors.TransactionApprovalLimit}
+                                                            />
+                                                            <ErrorMessage name="TransactionApprovalLimit" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Can View Black Data?
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="CanViewBlackData"
-                                                            value={values.CanViewBlackData}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.CanViewBlackData && !!errors.CanViewBlackData}
-                                                        >
-                                                            <option value="Yes">Yes (Show Black + White data)</option>
-                                                            <option value="No">No (Show White data only)</option>
-                                                        </Input>
-                                                        <ErrorMessage name="CanViewBlackData" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4"></Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Can View Black Data?
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="IsViewBlackData"
+                                                                value={values.IsViewBlackData}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.IsViewBlackData && !!errors.IsViewBlackData}
+                                                            >
+                                                                <option value="true">Yes (Show Black + White data)</option>
+                                                                <option value="false">No (Show White data only)</option>
+                                                            </Input>
+                                                            <ErrorMessage name="IsViewBlackData" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="12">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Description
-                                                        </Label>
-                                                        <Input
-                                                            type="textarea"
-                                                            name="Description"
-                                                            rows={2}
-                                                            placeholder="Role description and responsibilities"
-                                                            value={values.Description}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.Description && !!errors.Description}
-                                                        />
-                                                        <ErrorMessage name="Description" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                            </Row>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Status <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="Status"
+                                                                value={values.Status}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Status && !!errors.Status}
+                                                            >
+                                                                <option value="Active">Active</option>
+                                                                <option value="Inactive">Inactive</option>
+                                                            </Input>
+                                                            <ErrorMessage name="Status" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+
+                                                    <Col md="12">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Description
+                                                            </Label>
+                                                            <Input
+                                                                type="textarea"
+                                                                name="Description"
+                                                                rows={2}
+                                                                placeholder="Role description and responsibilities"
+                                                                value={values.Description}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Description && !!errors.Description}
+                                                            />
+                                                            <ErrorMessage name="Description" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                </Row>
+                                            </fieldset>
 
                                             <div className="mt-4">
                                                 <Card className="shadow-none border mb-0">
@@ -284,14 +341,8 @@ const UserRoleCreation = () => {
 
                                         </CardBody>
                                         <CardFooter className="d-flex align-items-center gap-2">
-                                            <Btn color="primary" type="submit" disabled={isSubmitting}>
+                                            <Btn color="primary" type="submit" disabled={isSubmitting || !roleState.isEditingOpen}>
                                                 <i className="fa fa-save me-1"></i> {isEditMode ? "Update Role" : "Save Role"}
-                                            </Btn>
-                                            <Btn color="light" type="button" className="text-dark">
-                                                <i className="fa fa-pencil me-1"></i> Edit
-                                            </Btn>
-                                            <Btn color="danger" type="button">
-                                                <i className="fa fa-trash me-1"></i> Delete
                                             </Btn>
                                         </CardFooter>
                                     </Card>

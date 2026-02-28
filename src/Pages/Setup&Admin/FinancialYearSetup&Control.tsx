@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, ErrorMessage } from "formik";
 import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
-import { Fn_AddEditData, Fn_DisplayData } from "../../store/Functions";
+import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
 import * as Yup from "yup";
@@ -24,12 +24,20 @@ const initialValues: FormValues = {
     StartDate: "",
     EndDate: "",
     AutoFreezeAfterAudit: "Yes",
-    InterestProvisionFrequency: "Monthly",
+    InterestProvisionFrequency: "",
 };
+
+interface DropdownsState {
+    frequencies: any[];
+}
 
 interface FinancialYearState {
     id: number;
-    formData: Partial<FormValues>;
+    formData: Partial<FormValues> & {
+        Name?: string;
+        F_Periodicity?: number | string;
+        IsFreezeAfterAudit?: boolean;
+    };
     isProgress?: boolean;
 }
 
@@ -45,11 +53,15 @@ const FinancialYearSetupControl = () => {
         isProgress: false,
     });
 
+    const [dropdowns, setDropdowns] = useState<DropdownsState>({
+        frequencies: [],
+    });
+
     const isEditMode = fyState.id > 0;
 
     // TODO: Verify exact API endpoint URL formats
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/FinancialYearMaster/Id`;
-    const API_URL_SAVE = `FinancialYearMaster/0/token`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/FinancialYearMasterEdit/Id`;
+    const PERIODICITY_API_URL = `${API_WEB_URLS.MASTER}/0/token/Periodicity/Id/0`;
 
     const validationSchema = useMemo(
         () =>
@@ -68,7 +80,9 @@ const FinancialYearSetupControl = () => {
 
     useEffect(() => {
         nameRef.current?.focus();
-    }, []);
+        Fn_FillListData(dispatch, setDropdowns, "frequencies", PERIODICITY_API_URL)
+            .catch((err: any) => console.error("Failed to load periodicity:", err));
+    }, [dispatch, PERIODICITY_API_URL]);
 
     useEffect(() => {
         const locationState = location.state as { Id?: number } | undefined;
@@ -93,11 +107,13 @@ const FinancialYearSetupControl = () => {
 
     const initialFormValues: FormValues = {
         ...initialValues,
-        FinancialYearName: toStringOrEmpty(fyState.formData.FinancialYearName),
-        StartDate: toStringOrEmpty(fyState.formData.StartDate),
-        EndDate: toStringOrEmpty(fyState.formData.EndDate),
-        AutoFreezeAfterAudit: toStringOrEmpty(fyState.formData.AutoFreezeAfterAudit) || "Yes",
-        InterestProvisionFrequency: toStringOrEmpty(fyState.formData.InterestProvisionFrequency) || "Monthly",
+        FinancialYearName: toStringOrEmpty(fyState.formData.Name || fyState.formData.FinancialYearName),
+        StartDate: toStringOrEmpty(fyState.formData.StartDate).split("T")[0],
+        EndDate: toStringOrEmpty(fyState.formData.EndDate).split("T")[0],
+        AutoFreezeAfterAudit: fyState.formData.IsFreezeAfterAudit === true ? "Yes" :
+            fyState.formData.IsFreezeAfterAudit === false ? "No" :
+                (toStringOrEmpty(fyState.formData.AutoFreezeAfterAudit) || "Yes"),
+        InterestProvisionFrequency: toStringOrEmpty(fyState.formData.F_Periodicity || fyState.formData.InterestProvisionFrequency),
     };
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -105,21 +121,24 @@ const FinancialYearSetupControl = () => {
             const formData = new FormData();
 
             formData.append("Id", String(fyState.id ?? 0));
-            formData.append("FinancialYearName", values.FinancialYearName || "");
+            formData.append("Name", values.FinancialYearName || "");
             formData.append("StartDate", values.StartDate || "");
             formData.append("EndDate", values.EndDate || "");
-            formData.append("AutoFreezeAfterAudit", values.AutoFreezeAfterAudit || "Yes");
-            formData.append("InterestProvisionFrequency", values.InterestProvisionFrequency || "Monthly");
+            formData.append("IsFreezeAfterAudit", values.AutoFreezeAfterAudit === "Yes" ? "true" : "false");
+            formData.append("F_Periodicity", values.InterestProvisionFrequency || "");
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
-            formData.append("UserId", currentUser?.uid ?? currentUser?.id ?? "0");
+            const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+            formData.append("UserId", userId);
+
+            const currentApiUrlSave = `FinancialYear/${userId}/token`;
 
             await Fn_AddEditData(
                 dispatch,
                 () => { }, // Placeholder callback
                 { arguList: { id: fyState.id, formData } },
-                API_URL_SAVE,
+                currentApiUrlSave,
                 true,
                 "memberid",
                 navigate,
@@ -234,9 +253,12 @@ const FinancialYearSetupControl = () => {
                                                             onBlur={handleBlur}
                                                             invalid={touched.InterestProvisionFrequency && !!errors.InterestProvisionFrequency}
                                                         >
-                                                            <option value="Monthly">Monthly</option>
-                                                            <option value="Quarterly">Quarterly</option>
-                                                            <option value="Yearly">Yearly</option>
+                                                            <option value="">-- Select Frequency --</option>
+                                                            {dropdowns.frequencies.map((freq) => (
+                                                                <option key={freq.Id} value={freq.Id}>
+                                                                    {freq.Name}
+                                                                </option>
+                                                            ))}
                                                         </Input>
                                                         <ErrorMessage name="InterestProvisionFrequency" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>

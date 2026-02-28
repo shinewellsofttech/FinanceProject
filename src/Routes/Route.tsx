@@ -28,6 +28,8 @@ import EMISchedule from "../Pages/Operations/EMISchedule";
 import EMICollection from "../Pages/Operations/EMICollection";
 import LoanDisbursement from "../Pages/Operations/LoanDisbursement";
 import OverdueTrackingNPAClassification from "../Pages/Operations/OverdueTracking&NPAClassification";
+import PageList_ModuleMaster from "../Pages/Masters/PageList_ModuleMaster";
+import AddEdit_ModuleMaster from "../Pages/Masters/AddEdit_ModuleMaster";
 
 export const routes = [
 
@@ -65,6 +67,8 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/addEditStateMaster`, Component: <AddEdit_StateMaster /> },
   { path: `${process.env.PUBLIC_URL}/cityMaster`, Component: <PageList_CityMaster /> },
   { path: `${process.env.PUBLIC_URL}/addEditCityMaster`, Component: <AddEdit_CityMaster /> },
+  { path: `${process.env.PUBLIC_URL}/moduleMaster`, Component: <PageList_ModuleMaster /> },
+  { path: `${process.env.PUBLIC_URL}/addEditModuleMaster`, Component: <AddEdit_ModuleMaster /> },
 
   // Tools
   { path: `${process.env.PUBLIC_URL}/changePassword`, Component: <ChangePassword /> },

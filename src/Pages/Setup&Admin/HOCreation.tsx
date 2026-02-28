@@ -92,7 +92,7 @@ const HOCreation = () => {
     const COUNTRY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CountryMaster}/Id/0`;
     const STATE_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.StateMaster}/Id/0`;
     const CITY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CityMaster}/Id/0`;
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/HeadOffice/Id`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/HeadOfficeEdit/Id`;
 
     const validationSchema = useMemo(
         () =>

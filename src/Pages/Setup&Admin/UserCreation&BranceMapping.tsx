@@ -17,8 +17,8 @@ interface FormValues {
     EmployeeID: string;
     Username: string;
     Password: string;
-    AssignRole: string;
-    AssignBranch: string;
+    AssignRole: string[];
+    AssignBranch: string[];
     MobileNumber: string;
     EmailID: string;
     DateOfJoining: string;
@@ -30,8 +30,8 @@ const initialValues: FormValues = {
     EmployeeID: "",
     Username: "",
     Password: "",
-    AssignRole: "",
-    AssignBranch: "",
+    AssignRole: [],
+    AssignBranch: [],
     MobileNumber: "",
     EmailID: "",
     DateOfJoining: "",
@@ -45,7 +45,17 @@ interface DropdownState {
 
 interface UserState {
     id: number;
-    formData: Partial<FormValues>;
+    formData: Partial<FormValues> & {
+        Name?: string;
+        EmployeeCode?: string;
+        UserName?: string;
+        PasswordHash?: string;
+        F_UserRole?: string;
+        F_BranchOffice?: string;
+        MobileNo?: string;
+        Email?: string;
+        IsActive?: boolean;
+    };
     isProgress?: boolean;
 }
 
@@ -68,10 +78,10 @@ const UserCreationBranceMapping = () => {
 
     const isEditMode = userState.id > 0;
 
-    const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id/0`;
-    const BRANCH_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOfficeMaster/Id/0`;
+    const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id/0`;
+    const BRANCH_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOffice/Id/0`;
 
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/UserMaster/Id`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/UserMasterEdit/Id`;
     const API_URL_SAVE = `UserMaster/0/token`;
 
     const validationSchema = useMemo(
@@ -82,12 +92,10 @@ const UserCreationBranceMapping = () => {
                 Username: Yup.string().trim().required("Username/Login ID is required"),
                 Password: Yup.string()
                     .trim()
-                    .min(8, "Minimum 8 characters required")
-                    .matches(/[A-Z]/, "Requires at least one uppercase letter")
-                    .matches(/[!@#$%^&*(),.?":{}|<>]/, "Requires at least one special character")
+                    .min(6, "Minimum 6 characters required")
                     .required("Password is required"),
-                AssignRole: Yup.string().trim().required("Assign Role is required"),
-                AssignBranch: Yup.string().trim().required("Assign Branch is required"),
+                AssignRole: Yup.array().of(Yup.string()).min(1, "Assign Role is required"),
+                AssignBranch: Yup.array().of(Yup.string()).min(1, "Assign Branch is required"),
                 MobileNumber: Yup.string().trim().required("Mobile Number is required"),
                 EmailID: Yup.string().trim().email("Invalid email format").required("Email ID is required"),
                 DateOfJoining: Yup.string().trim(),
@@ -130,16 +138,17 @@ const UserCreationBranceMapping = () => {
 
     const initialFormValues: FormValues = {
         ...initialValues,
-        FullName: toStringOrEmpty(userState.formData.FullName),
-        EmployeeID: toStringOrEmpty(userState.formData.EmployeeID),
-        Username: toStringOrEmpty(userState.formData.Username),
-        Password: toStringOrEmpty(userState.formData.Password),
-        AssignRole: toStringOrEmpty(userState.formData.AssignRole),
-        AssignBranch: toStringOrEmpty(userState.formData.AssignBranch),
-        MobileNumber: toStringOrEmpty(userState.formData.MobileNumber),
-        EmailID: toStringOrEmpty(userState.formData.EmailID),
-        DateOfJoining: toStringOrEmpty(userState.formData.DateOfJoining),
-        UserStatus: toStringOrEmpty(userState.formData.UserStatus) || "Active",
+        FullName: toStringOrEmpty(userState.formData.Name || userState.formData.FullName),
+        EmployeeID: toStringOrEmpty(userState.formData.EmployeeCode || userState.formData.EmployeeID),
+        Username: toStringOrEmpty(userState.formData.UserName || userState.formData.Username),
+        Password: toStringOrEmpty(userState.formData.PasswordHash || userState.formData.Password),
+        AssignRole: toStringOrEmpty(userState.formData.F_UserRole || userState.formData.AssignRole).split(",").filter(Boolean),
+        AssignBranch: toStringOrEmpty(userState.formData.F_BranchOffice || userState.formData.AssignBranch).split(",").filter(Boolean),
+        MobileNumber: toStringOrEmpty(userState.formData.MobileNo || userState.formData.MobileNumber),
+        EmailID: toStringOrEmpty(userState.formData.Email || userState.formData.EmailID),
+        DateOfJoining: toStringOrEmpty(userState.formData.DateOfJoining).split("T")[0],
+        UserStatus: userState.formData.IsActive === true || userState.formData.UserStatus === "Active" ? "Active" :
+            (userState.formData.IsActive === false ? "Inactive" : "Active"),
     };
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -147,16 +156,16 @@ const UserCreationBranceMapping = () => {
             const formData = new FormData();
 
             formData.append("Id", String(userState.id ?? 0));
-            formData.append("FullName", values.FullName || "");
-            formData.append("EmployeeID", values.EmployeeID || "");
-            formData.append("Username", values.Username || "");
-            formData.append("Password", values.Password || "");
-            formData.append("AssignRole", values.AssignRole || "");
-            formData.append("AssignBranch", values.AssignBranch || "");
-            formData.append("MobileNumber", values.MobileNumber || "");
-            formData.append("EmailID", values.EmailID || "");
+            formData.append("Name", values.FullName || "");
+            formData.append("EmployeeCode", values.EmployeeID || "");
+            formData.append("UserName", values.Username || "");
+            formData.append("PasswordHash", values.Password || "");
+            formData.append("F_UserRole", values.AssignRole.join(","));
+            formData.append("F_BranchOffice", values.AssignBranch.join(","));
+            formData.append("MobileNo", values.MobileNumber || "");
+            formData.append("Email", values.EmailID || "");
             formData.append("DateOfJoining", values.DateOfJoining || "");
-            formData.append("UserStatus", values.UserStatus || "Active");
+            formData.append("IsActive", values.UserStatus === "Active" ? "true" : "false");
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
@@ -275,6 +284,7 @@ const UserCreationBranceMapping = () => {
                                                         </Label>
                                                         <Input
                                                             type="select"
+                                                            multiple
                                                             name="AssignRole"
                                                             value={values.AssignRole}
                                                             onChange={handleChange}
@@ -299,6 +309,7 @@ const UserCreationBranceMapping = () => {
                                                         </Label>
                                                         <Input
                                                             type="select"
+                                                            multiple
                                                             name="AssignBranch"
                                                             value={values.AssignBranch}
                                                             onChange={handleChange}
@@ -392,15 +403,6 @@ const UserCreationBranceMapping = () => {
                                         <CardFooter className="d-flex align-items-center gap-2">
                                             <Btn color="primary" type="submit" disabled={isSubmitting}>
                                                 <i className="fa fa-user-plus me-1"></i> {isEditMode ? "Update User" : "Create User"}
-                                            </Btn>
-                                            <Btn color="light" type="button" className="text-dark">
-                                                <i className="fa fa-pencil me-1"></i> Edit
-                                            </Btn>
-                                            <Btn color="warning" type="button" className="text-white">
-                                                <i className="fa fa-key me-1"></i> Reset Password
-                                            </Btn>
-                                            <Btn color="danger" type="button">
-                                                <i className="fa fa-times me-1"></i> Deactivate User
                                             </Btn>
                                         </CardFooter>
                                     </Card>

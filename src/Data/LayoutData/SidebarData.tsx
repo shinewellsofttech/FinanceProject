@@ -97,6 +97,14 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
+      {
+        id: 4,
+        title: "Module Master",
+        path: `${process.env.PUBLIC_URL}/moduleMaster`,
+        icon: "MapPin",
+        type: "link",
+        bookmark: true,
+      },
     ],
   },
   {

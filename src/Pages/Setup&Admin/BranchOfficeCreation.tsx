@@ -26,6 +26,7 @@ interface FormValues {
     F_StateMaster: string;
     ContactNumber: string;
     Email: string;
+    Status: string;
 }
 
 const initialValues: FormValues = {
@@ -42,6 +43,7 @@ const initialValues: FormValues = {
     F_StateMaster: "",
     ContactNumber: "",
     Email: "",
+    Status: "Active",
 };
 
 interface DropdownState {
@@ -52,8 +54,19 @@ interface DropdownState {
 
 interface BOState {
     id: number;
-    formData: Partial<FormValues>;
+    formData: Partial<FormValues> & {
+        Name?: string;
+        Code?: string;
+        F_RegionalOffice?: number | string;
+        ManagerName?: string;
+        OpeningDate?: string;
+        Address?: string;
+        ContactNo?: string;
+        IsActive?: boolean;
+        Status?: string;
+    };
     isProgress?: boolean;
+    isEditingOpen?: boolean;
 }
 
 const BranchOfficeCreation = () => {
@@ -66,7 +79,10 @@ const BranchOfficeCreation = () => {
         id: 0,
         formData: { ...initialValues },
         isProgress: false,
+        isEditingOpen: true,
     });
+
+    const [isMapped, setIsMapped] = useState(false);
 
     const [dropdowns, setDropdowns] = useState<DropdownState>({
         regions: [],
@@ -76,13 +92,13 @@ const BranchOfficeCreation = () => {
 
     const isEditMode = boState.id > 0;
 
-    // TODO: Confirm correct API URL for regions
-    const REGION_API_URL = `${API_WEB_URLS.MASTER}/0/token/RegionalOfficeMaster/Id/0`;
+    // Update: Correct API URL for regions according to what's mapped in RegionalOffice
+    const REGION_API_URL = `${API_WEB_URLS.MASTER}/0/token/RegionalOffice/Id/0`;
     const STATE_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.StateMaster}/Id/0`;
     const CITY_API_URL = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CityMaster}/Id/0`;
 
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/BranchOfficeMaster/Id`;
-    const API_URL_SAVE = `BranchOfficeMaster/0/token`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/BranchOfficeEdit/Id`;
+    const API_URL_SAVE = `BranchOffice/0/token`;
 
     const validationSchema = useMemo(
         () =>
@@ -100,6 +116,7 @@ const BranchOfficeCreation = () => {
                 F_StateMaster: Yup.string().trim().required("State is required"),
                 ContactNumber: Yup.string().trim().required("Contact Number is required"),
                 Email: Yup.string().trim().email("Invalid email format").required("Email is required"),
+                Status: Yup.string().trim().required("Status is required"),
             }),
         []
     );
@@ -118,13 +135,27 @@ const BranchOfficeCreation = () => {
     }, [dispatch, REGION_API_URL, STATE_API_URL, CITY_API_URL]);
 
     useEffect(() => {
+        if (boState.id > 0 && Object.keys(boState.formData).length > 2 && !isMapped && boState.formData.F_StateMaster) {
+            Fn_FillListData(
+                dispatch,
+                setDropdowns,
+                "cities",
+                `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.CityMaster}/Id/${boState.formData.F_StateMaster}`
+            ).catch((err) => console.error("Failed to fetch cities by state on edit:", err));
+            setIsMapped(true);
+        }
+    }, [boState.id, boState.formData, dispatch, isMapped]);
+
+    useEffect(() => {
         const locationState = location.state as { Id?: number } | undefined;
-        const recordId = locationState?.Id ?? 0;
+        // Defaulting to 1 for dev debug, but ideally we check recordId correctly
+        const recordId = (locationState?.Id && locationState.Id > 0) ? locationState.Id : 0;
 
         if (recordId > 0) {
             setBoState((prev) => ({
                 ...prev,
                 id: recordId,
+                isEditingOpen: false,
             }));
             Fn_DisplayData(dispatch, setBoState, recordId, API_URL_EDIT);
         } else {
@@ -132,7 +163,9 @@ const BranchOfficeCreation = () => {
                 ...prev,
                 id: 0,
                 formData: { ...initialValues },
+                isEditingOpen: true,
             }));
+            setIsMapped(false);
         }
     }, [dispatch, location.state, API_URL_EDIT]);
 
@@ -157,19 +190,21 @@ const BranchOfficeCreation = () => {
 
     const initialFormValues: FormValues = {
         ...initialValues,
-        BranchName: toStringOrEmpty(boState.formData.BranchName),
-        BranchCode: toStringOrEmpty(boState.formData.BranchCode),
-        ReportingRegion: toStringOrEmpty(boState.formData.ReportingRegion),
+        BranchName: toStringOrEmpty(boState.formData.Name ?? boState.formData.BranchName),
+        BranchCode: toStringOrEmpty(boState.formData.Code ?? boState.formData.BranchCode),
+        ReportingRegion: toStringOrEmpty(boState.formData.F_RegionalOffice ?? boState.formData.ReportingRegion),
         IFSCCode: toStringOrEmpty(boState.formData.IFSCCode),
-        BranchManagerName: toStringOrEmpty(boState.formData.BranchManagerName),
-        BranchOpeningDate: toStringOrEmpty(boState.formData.BranchOpeningDate),
+        BranchManagerName: toStringOrEmpty(boState.formData.ManagerName ?? boState.formData.BranchManagerName),
+        BranchOpeningDate: toStringOrEmpty(boState.formData.OpeningDate ?? boState.formData.BranchOpeningDate).split("T")[0],
         CashLimit: toStringOrEmpty(boState.formData.CashLimit),
         OpeningCashBalance: toStringOrEmpty(boState.formData.OpeningCashBalance) || "0",
-        BranchAddress: toStringOrEmpty(boState.formData.BranchAddress),
+        BranchAddress: toStringOrEmpty(boState.formData.Address ?? boState.formData.BranchAddress),
         F_CityMaster: toStringOrEmpty(boState.formData.F_CityMaster),
         F_StateMaster: toStringOrEmpty(boState.formData.F_StateMaster),
-        ContactNumber: toStringOrEmpty(boState.formData.ContactNumber),
+        ContactNumber: toStringOrEmpty(boState.formData.ContactNo ?? boState.formData.ContactNumber),
         Email: toStringOrEmpty(boState.formData.Email),
+        Status: boState.formData.IsActive === true || boState.formData.Status === "Active" ? "Active" :
+            (boState.formData.IsActive === false || boState.formData.Status === "Inactive" ? "Inactive" : "Active"),
     };
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
@@ -177,29 +212,34 @@ const BranchOfficeCreation = () => {
             const formData = new FormData();
 
             formData.append("Id", String(boState.id ?? 0));
-            formData.append("BranchName", values.BranchName || "");
-            formData.append("BranchCode", values.BranchCode || "");
-            formData.append("ReportingRegion", values.ReportingRegion || "");
+            formData.append("Name", values.BranchName || "");
+            formData.append("Code", values.BranchCode || "");
+            formData.append("F_RegionalOffice", values.ReportingRegion || "");
             formData.append("IFSCCode", values.IFSCCode || "");
-            formData.append("BranchManagerName", values.BranchManagerName || "");
-            formData.append("BranchOpeningDate", values.BranchOpeningDate || "");
+            formData.append("ManagerName", values.BranchManagerName || "");
+            formData.append("OpeningDate", values.BranchOpeningDate || "");
             formData.append("CashLimit", values.CashLimit || "0");
             formData.append("OpeningCashBalance", values.OpeningCashBalance || "0");
-            formData.append("BranchAddress", values.BranchAddress || "");
+            formData.append("Address", values.BranchAddress || "");
             formData.append("F_CityMaster", values.F_CityMaster || "");
             formData.append("F_StateMaster", values.F_StateMaster || "");
-            formData.append("ContactNumber", values.ContactNumber || "");
+            formData.append("ContactNo", values.ContactNumber || "");
             formData.append("Email", values.Email || "");
+            formData.append("IsActive", values.Status === "Active" ? "true" : "false");
 
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
-            formData.append("UserId", currentUser?.uid ?? currentUser?.id ?? "0");
+            const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+            formData.append("UserId", userId);
+
+            // Dynamically construct API save url based on image format: /api/V1/BranchOffice/{UserId}/{UserToken}
+            const currentApiUrlSave = `BranchOffice/${userId}/token`;
 
             await Fn_AddEditData(
                 dispatch,
                 () => { }, // Placeholder callback
                 { arguList: { id: boState.id, formData } },
-                API_URL_SAVE,
+                currentApiUrlSave,
                 true,
                 "memberid",
                 navigate,
@@ -230,274 +270,287 @@ const BranchOfficeCreation = () => {
                                     <Card>
                                         <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} Branch Office`} tagClass="card-title mb-0" />
                                         <CardBody>
-                                            <Row className="gy-0">
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Branch Name <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="BranchName"
-                                                            placeholder="e.g. Andheri Branch"
-                                                            value={values.BranchName}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.BranchName && !!errors.BranchName}
-                                                            innerRef={branchNameRef}
-                                                        />
-                                                        <ErrorMessage name="BranchName" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Branch Code <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="BranchCode"
-                                                            placeholder="Auto-generated: ABC-NZ01-BR001"
-                                                            value={values.BranchCode}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.BranchCode && !!errors.BranchCode}
-                                                        />
-                                                        <ErrorMessage name="BranchCode" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                            <fieldset disabled={!boState.isEditingOpen}>
+                                                <Row className="gy-0">
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Branch Name <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="BranchName"
+                                                                placeholder="e.g. Andheri Branch"
+                                                                value={values.BranchName}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.BranchName && !!errors.BranchName}
+                                                                innerRef={branchNameRef}
+                                                            />
+                                                            <ErrorMessage name="BranchName" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Branch Code <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="BranchCode"
+                                                                placeholder="Auto-generated: ABC-NZ01-BR001"
+                                                                value={values.BranchCode}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.BranchCode && !!errors.BranchCode}
+                                                            />
+                                                            <ErrorMessage name="BranchCode" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Reporting Regional Office <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="ReportingRegion"
-                                                            value={values.ReportingRegion}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.ReportingRegion && !!errors.ReportingRegion}
-                                                        >
-                                                            <option value="">-- Select Region --</option>
-                                                            {/* {dropdowns.regions.length === 0 && <option value="RO001">North Zone Office (RO001)</option>} */}
-                                                            {dropdowns.regions.map((regionOption) => (
-                                                                <option key={regionOption?.Id} value={regionOption?.Id ?? ""}>
-                                                                    {regionOption?.Name || `Region ${regionOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="ReportingRegion" component="div" className="text-danger small mt-1" />
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Reporting Regional Office <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="ReportingRegion"
+                                                                value={values.ReportingRegion}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.ReportingRegion && !!errors.ReportingRegion}
+                                                            >
+                                                                <option value="">-- Select Region --</option>
+                                                                {/* {dropdowns.regions.length === 0 && <option value="RO001">North Zone Office (RO001)</option>} */}
+                                                                {dropdowns.regions.map((regionOption) => (
+                                                                    <option key={regionOption?.Id} value={regionOption?.Id ?? ""}>
+                                                                        {regionOption?.Name || `Region ${regionOption?.Id ?? ""}`}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
+                                                            <ErrorMessage name="ReportingRegion" component="div" className="text-danger small mt-1" />
 
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            IFSC Code <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="IFSCCode"
-                                                            placeholder="ABCD0001234"
-                                                            value={values.IFSCCode}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.IFSCCode && !!errors.IFSCCode}
-                                                        />
-                                                        <ErrorMessage name="IFSCCode" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                IFSC Code <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="IFSCCode"
+                                                                placeholder="ABCD0001234"
+                                                                value={values.IFSCCode}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.IFSCCode && !!errors.IFSCCode}
+                                                            />
+                                                            <ErrorMessage name="IFSCCode" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Branch Manager Name <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="BranchManagerName"
-                                                            placeholder="Enter manager name"
-                                                            value={values.BranchManagerName}
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Branch Manager Name <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="BranchManagerName"
+                                                                placeholder="Enter manager name"
+                                                                value={values.BranchManagerName}
 
 
-                                                            
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.BranchManagerName && !!errors.BranchManagerName}
-                                                        />
-                                                        <ErrorMessage name="BranchManagerName" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Branch Opening Date <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="date"
-                                                            name="BranchOpeningDate"
-                                                            value={values.BranchOpeningDate}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.BranchOpeningDate && !!errors.BranchOpeningDate}
-                                                        />
-                                                        <ErrorMessage name="BranchOpeningDate" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Cash Limit (₹) <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="number"
-                                                            name="CashLimit"
-                                                            placeholder="500000"
-                                                            value={values.CashLimit}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.CashLimit && !!errors.CashLimit}
-                                                        />
-                                                        <ErrorMessage name="CashLimit" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Opening Cash Balance (₹) <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="number"
-                                                            name="OpeningCashBalance"
-                                                            placeholder="0"
-                                                            value={values.OpeningCashBalance}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.OpeningCashBalance && !!errors.OpeningCashBalance}
-                                                        />
-                                                        <ErrorMessage name="OpeningCashBalance" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.BranchManagerName && !!errors.BranchManagerName}
+                                                            />
+                                                            <ErrorMessage name="BranchManagerName" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Branch Opening Date <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="date"
+                                                                name="BranchOpeningDate"
+                                                                value={values.BranchOpeningDate}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.BranchOpeningDate && !!errors.BranchOpeningDate}
+                                                            />
+                                                            <ErrorMessage name="BranchOpeningDate" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="12">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Branch Address <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="textarea"
-                                                            name="BranchAddress"
-                                                            rows={2}
-                                                            placeholder="Full branch address"
-                                                            value={values.BranchAddress}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.BranchAddress && !!errors.BranchAddress}
-                                                        />
-                                                        <ErrorMessage name="BranchAddress" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Cash Limit (₹) <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                name="CashLimit"
+                                                                placeholder="500000"
+                                                                value={values.CashLimit}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.CashLimit && !!errors.CashLimit}
+                                                            />
+                                                            <ErrorMessage name="CashLimit" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Opening Cash Balance (₹) <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="number"
+                                                                name="OpeningCashBalance"
+                                                                placeholder="0"
+                                                                value={values.OpeningCashBalance}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.OpeningCashBalance && !!errors.OpeningCashBalance}
+                                                            />
+                                                            <ErrorMessage name="OpeningCashBalance" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            City <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="F_CityMaster"
-                                                            value={values.F_CityMaster}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.F_CityMaster && !!errors.F_CityMaster}
-                                                            disabled={!values.F_StateMaster}
-                                                        >
-                                                            <option value="">Select City</option>
-                                                            {dropdowns.cities.map((cityOption) => (
-                                                                <option key={cityOption?.Id} value={cityOption?.Id ?? ""}>
-                                                                    {cityOption?.Name || `City ${cityOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            State <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="select"
-                                                            name="F_StateMaster"
-                                                            value={values.F_StateMaster}
-                                                            onChange={(e) => handleStateChange(e, handleChange, setFieldValue)}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.F_StateMaster && !!errors.F_StateMaster}
-                                                        >
-                                                            <option value="">-- Select State --</option>
-                                                            {dropdowns.states.map((stateOption) => (
-                                                                <option key={stateOption?.Id} value={stateOption?.Id ?? ""}>
-                                                                    {stateOption?.Name || `State ${stateOption?.Id ?? ""}`}
-                                                                </option>
-                                                            ))}
-                                                        </Input>
-                                                        <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="12">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Branch Address <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="textarea"
+                                                                name="BranchAddress"
+                                                                rows={2}
+                                                                placeholder="Full branch address"
+                                                                value={values.BranchAddress}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.BranchAddress && !!errors.BranchAddress}
+                                                            />
+                                                            <ErrorMessage name="BranchAddress" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Contact Number <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="text"
-                                                            name="ContactNumber"
-                                                            placeholder="+91-XXXXXXXXXX"
-                                                            value={values.ContactNumber}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.ContactNumber && !!errors.ContactNumber}
-                                                        />
-                                                        <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
-                                                <Col md="4">
-                                                    <FormGroup className="mb-0">
-                                                        <Label>
-                                                            Email <span className="text-danger">*</span>
-                                                        </Label>
-                                                        <Input
-                                                            type="email"
-                                                            name="Email"
-                                                            placeholder="branch@abcfinance.com"
-                                                            value={values.Email}
-                                                            onChange={handleChange}
-                                                            onBlur={handleBlur}
-                                                            invalid={touched.Email && !!errors.Email}
-                                                        />
-                                                        <ErrorMessage name="Email" component="div" className="text-danger small mt-1" />
-                                                    </FormGroup>
-                                                </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                City <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="F_CityMaster"
+                                                                value={values.F_CityMaster}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.F_CityMaster && !!errors.F_CityMaster}
+                                                                disabled={!values.F_StateMaster}
+                                                            >
+                                                                <option value="">Select City</option>
+                                                                {dropdowns.cities.map((cityOption) => (
+                                                                    <option key={cityOption?.Id} value={cityOption?.Id ?? ""}>
+                                                                        {cityOption?.Name || `City ${cityOption?.Id ?? ""}`}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
+                                                            <ErrorMessage name="F_CityMaster" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                State <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="F_StateMaster"
+                                                                value={values.F_StateMaster}
+                                                                onChange={(e) => handleStateChange(e, handleChange, setFieldValue)}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.F_StateMaster && !!errors.F_StateMaster}
+                                                            >
+                                                                <option value="">-- Select State --</option>
+                                                                {dropdowns.states.map((stateOption) => (
+                                                                    <option key={stateOption?.Id} value={stateOption?.Id ?? ""}>
+                                                                        {stateOption?.Name || `State ${stateOption?.Id ?? ""}`}
+                                                                    </option>
+                                                                ))}
+                                                            </Input>
+                                                            <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
 
-                                            </Row>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Contact Number <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="text"
+                                                                name="ContactNumber"
+                                                                placeholder="+91-XXXXXXXXXX"
+                                                                value={values.ContactNumber}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.ContactNumber && !!errors.ContactNumber}
+                                                            />
+                                                            <ErrorMessage name="ContactNumber" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Email <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="email"
+                                                                name="Email"
+                                                                placeholder="branch@abcfinance.com"
+                                                                value={values.Email}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Email && !!errors.Email}
+                                                            />
+                                                            <ErrorMessage name="Email" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+
+                                                    <Col md="4">
+                                                        <FormGroup className="mb-0">
+                                                            <Label>
+                                                                Status <span className="text-danger">*</span>
+                                                            </Label>
+                                                            <Input
+                                                                type="select"
+                                                                name="Status"
+                                                                value={values.Status}
+                                                                onChange={handleChange}
+                                                                onBlur={handleBlur}
+                                                                invalid={touched.Status && !!errors.Status}
+                                                            >
+                                                                <option value="Active">Active</option>
+                                                                <option value="Inactive">Inactive</option>
+                                                            </Input>
+                                                            <ErrorMessage name="Status" component="div" className="text-danger small mt-1" />
+                                                        </FormGroup>
+                                                    </Col>
+
+                                                </Row>
+                                            </fieldset>
                                         </CardBody>
                                         <CardFooter className="d-flex align-items-center gap-2">
-                                            <Btn color="primary" type="submit" disabled={isSubmitting}>
+                                            <Btn color="primary" type="submit" disabled={isSubmitting || !boState.isEditingOpen}>
                                                 <i className="fa fa-plus me-1"></i> {isEditMode ? "Update Branch Office" : "Create Branch"}
-                                            </Btn>
-                                            <Btn color="light" type="button" className="text-dark">
-                                                <i className="fa fa-pencil me-1"></i> Edit
-                                            </Btn>
-                                            <Btn color="danger" type="button">
-                                                <i className="fa fa-minus-circle me-1"></i> Deactivate
-                                            </Btn>
-                                            <Btn color="info" type="button" className="text-white">
-                                                <i className="fa fa-users me-1"></i> Map Users
                                             </Btn>
                                         </CardFooter>
                                     </Card>

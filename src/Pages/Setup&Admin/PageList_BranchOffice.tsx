@@ -8,8 +8,8 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Fn_DeleteData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
-const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOfficeMaster/Id/0`;
-const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOfficeMaster/Id`;
+const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOffice/Id/0`;
+const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOffice/Id`;
 
 interface ListState {
   dataList: any[];
@@ -49,15 +49,8 @@ const PageList_BranchOffice = () => {
   };
 
   const handleDelete = (id: number | string) => {
-    if (!id) return;
-    if (window.confirm("Are you sure you want to delete this branch office?")) {
-      Fn_DeleteData(dispatch, setState as any, Number(id), DELETE_API_URL, LIST_API_URL)
-        .then(() => loadData())
-        .catch((error) => {
-          console.error("Failed to delete:", error);
-          alert("Failed to delete. Please try again.");
-        });
-    }
+    // Delete action removed as per requirements.
+    console.log("Delete action is disabled.");
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -70,9 +63,9 @@ const PageList_BranchOffice = () => {
     if (!search) return list;
     return list.filter(
       (item: any) =>
-        String(item?.BranchName ?? "").toLowerCase().includes(search) ||
-        String(item?.BranchCode ?? "").toLowerCase().includes(search) ||
-        String(item?.BranchAddress ?? "").toLowerCase().includes(search)
+        String(item?.Name ?? "").toLowerCase().includes(search) ||
+        String(item?.Code ?? "").toLowerCase().includes(search) ||
+        String(item?.Address ?? "").toLowerCase().includes(search)
     );
   }, [state.dataList, state.filterText]);
 
@@ -118,6 +111,7 @@ const PageList_BranchOffice = () => {
                           <th>Branch Name</th>
                           <th>Branch Code</th>
                           <th>Address</th>
+                          <th>Status</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -132,15 +126,13 @@ const PageList_BranchOffice = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.BranchName ?? "-"}</td>
-                              <td>{item?.BranchCode ?? "-"}</td>
-                              <td>{item?.BranchAddress ?? "-"}</td>
+                              <td>{item?.Name ?? "-"}</td>
+                              <td>{item?.Code ?? "-"}</td>
+                              <td>{item?.Address ?? "-"}</td>
+                              <td>{item?.IsActive ? "Active" : "Inactive"}</td>
                               <td>
                                 <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />
-                                </Btn>
-                                <Btn color="danger" size="sm" onClick={() => handleDelete(item?.Id)}>
-                                  <i className="fa fa-trash" />
                                 </Btn>
                               </td>
                             </tr>

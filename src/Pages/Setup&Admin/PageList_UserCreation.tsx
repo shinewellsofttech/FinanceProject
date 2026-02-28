@@ -13,6 +13,8 @@ const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserMaster/Id`;
 
 interface ListState {
   dataList: any[];
+  roles: any[];
+  branches: any[];
   isProgress: boolean;
   filterText: string;
 }
@@ -23,17 +25,28 @@ const PageList_UserCreation = () => {
 
   const [state, setState] = useState<ListState>({
     dataList: [],
+    roles: [],
+    branches: [],
     isProgress: true,
     filterText: "",
   });
 
+  const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id/0`;
+  const BRANCH_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOffice/Id/0`;
+
   const loadData = useCallback(() => {
     setState((prev) => ({ ...prev, isProgress: true }));
-    Fn_FillListData(dispatch, setState, "dataList", LIST_API_URL).catch((error) => {
-      console.error("Failed to load user list:", error);
+
+    Promise.all([
+      Fn_FillListData(dispatch, setState, "dataList", LIST_API_URL),
+      Fn_FillListData(dispatch, setState, "roles", ROLE_API_URL),
+      Fn_FillListData(dispatch, setState, "branches", BRANCH_API_URL)
+    ]).catch((error) => {
+      console.error("Failed to load user list or masters:", error);
+    }).finally(() => {
       setState((prev) => ({ ...prev, isProgress: false }));
     });
-  }, [dispatch]);
+  }, [dispatch, ROLE_API_URL, BRANCH_API_URL]);
 
   useEffect(() => {
     loadData();
@@ -63,6 +76,7 @@ const PageList_UserCreation = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({ ...prev, filterText: e.target.value }));
   };
+  
 
   const filteredList = useMemo(() => {
     const list = Array.isArray(state.dataList) ? state.dataList : [];
@@ -70,10 +84,10 @@ const PageList_UserCreation = () => {
     if (!search) return list;
     return list.filter(
       (item: any) =>
-        String(item?.FullName ?? "").toLowerCase().includes(search) ||
-        String(item?.Username ?? "").toLowerCase().includes(search) ||
-        String(item?.MobileNumber ?? "").toLowerCase().includes(search) ||
-        String(item?.EmailID ?? "").toLowerCase().includes(search)
+        String(item?.Name ?? "").toLowerCase().includes(search) ||
+        String(item?.UserName ?? "").toLowerCase().includes(search) ||
+        String(item?.MobileNo ?? "").toLowerCase().includes(search) ||
+        String(item?.Email ?? "").toLowerCase().includes(search)
     );
   }, [state.dataList, state.filterText]);
 
@@ -120,6 +134,8 @@ const PageList_UserCreation = () => {
                           <th>Username</th>
                           <th>Mobile</th>
                           <th>Email</th>
+                          <th>Branch</th>
+                          <th>Role</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
@@ -134,10 +150,20 @@ const PageList_UserCreation = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.FullName ?? "-"}</td>
-                              <td>{item?.Username ?? "-"}</td>
-                              <td>{item?.MobileNumber ?? "-"}</td>
-                              <td>{item?.EmailID ?? "-"}</td>
+                              <td>{item?.Name ?? "-"}</td>
+                              <td>{item?.UserName ?? "-"}</td>
+                              <td>{item?.MobileNo ?? "-"}</td>
+                              <td>{item?.Email ?? "-"}</td>
+                              <td>
+                                {item?.F_BranchOffice
+                                  ? String(item.F_BranchOffice).split(",").map(id => state.branches.find(b => String(b.Id) === String(id))?.Name || id).join(", ")
+                                  : "-"}
+                              </td>
+                              <td>
+                                {item?.F_UserRole
+                                  ? String(item.F_UserRole).split(",").map(id => state.roles.find(r => String(r.Id) === String(id))?.Name || id).join(", ")
+                                  : "-"}
+                              </td>
                               <td>
                                 <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />

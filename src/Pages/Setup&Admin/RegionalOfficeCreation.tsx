@@ -71,7 +71,7 @@ const RegionalOfficeCreation = () => {
     const isEditMode = roState.id > 0;
 
     const HO_API_URL = `${API_WEB_URLS.MASTER}/0/token/HeadOffice/Id/0`;
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/RegionalOffice/Id`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/RegionalOfficeEdit/Id`;
     const API_URL_SAVE = `RegionalOffice/0/token`;
 
     const validationSchema = useMemo(

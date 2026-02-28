@@ -37,7 +37,7 @@ const MakerCheckerConfiguration = () => {
         transactions: [],
     });
 
-    const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRoleMaster/Id/0`;
+    const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id/0`;
     const TRANSACTION_API_URL = `${API_WEB_URLS.MASTER}/0/token/TransactionTypeMaster/Id/0`; // Assuming there might be a master for this
 
     useEffect(() => {
