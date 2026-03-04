@@ -28,6 +28,11 @@ import EMISchedule from "../Pages/Operations/EMISchedule";
 import EMICollection from "../Pages/Operations/EMICollection";
 import LoanDisbursement from "../Pages/Operations/LoanDisbursement";
 import OverdueTrackingNPAClassification from "../Pages/Operations/OverdueTracking&NPAClassification";
+import COAManualGLEntry from "../Pages/Operations/COA&ManualGLEntry";
+import DayClosing from "../Pages/Operations/DayClosing";
+import LoanClosing from "../Pages/Operations/LoanClosing";
+import Foreclosure from "../Pages/Operations/Foreclosure";
+import AuctionManagement from "../Pages/Operations/AuctionManagement";
 import PageList_ModuleMaster from "../Pages/Masters/PageList_ModuleMaster";
 import AddEdit_ModuleMaster from "../Pages/Masters/AddEdit_ModuleMaster";
 
@@ -59,6 +64,11 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/emiCollection`, Component: <EMICollection /> },
   { path: `${process.env.PUBLIC_URL}/loanDisbursement`, Component: <LoanDisbursement /> },
   { path: `${process.env.PUBLIC_URL}/overdueTrackingNPAClassification`, Component: <OverdueTrackingNPAClassification /> },
+  { path: `${process.env.PUBLIC_URL}/coaManualGLEntry`, Component: <COAManualGLEntry /> },
+  { path: `${process.env.PUBLIC_URL}/dayClosing`, Component: <DayClosing /> },
+  { path: `${process.env.PUBLIC_URL}/loanClosing`, Component: <LoanClosing /> },
+  { path: `${process.env.PUBLIC_URL}/foreclosure`, Component: <Foreclosure /> },
+  { path: `${process.env.PUBLIC_URL}/auctionManagement`, Component: <AuctionManagement /> },
 
   // Masters
   { path: `${process.env.PUBLIC_URL}/countryMaster`, Component: <PageList_CountryMaster /> },

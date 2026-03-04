@@ -129,17 +129,6 @@ const EMICollection = () => {
                                                 Cashier / Loan Officer - Collections | Table: tbl_receipts, tbl_emi_schedule
                                             </p>
 
-                                            <Alert color="warning" className="d-flex align-items-start gap-2 py-2 mb-3" style={{ backgroundColor: "#fff3cd" }}>
-                                                <i className="fa fa-wrench mt-1 text-warning" aria-hidden="true" />
-                                                <div className="small">
-                                                    <strong>Dev Note:</strong> On save: (1) Update tbl_emi_schedule EMI status to PAID/PARTIALLY PAID.
-                                                    (2) Create GL entry: Cash/Bank Dr → Interest Income Cr + Loan Portfolio Cr.
-                                                    (3) Update loan outstanding. (4) Log in audit trail.
-                                                    URT (Unique Reference Transaction) required for online payments to prevent duplicate entry.
-                                                    Receipt Number format: [BRANCH_CODE] RCP [DATE] [SEQ].
-                                                </div>
-                                            </Alert>
-
                                             <Row>
                                                 <Col md="6">
                                                     <FormGroup className="mb-2">
@@ -284,7 +273,7 @@ const EMICollection = () => {
                                                                 invalid={touched.ChequeDDNumber && !!errors.ChequeDDNumber}
                                                             />
                                                             <ErrorMessage name="ChequeDDNumber" component="div" className="text-danger small mt-1" />
-                                                            </FormGroup>
+                                                        </FormGroup>
                                                     )}
 
                                                     <FormGroup className="mb-2">
@@ -297,7 +286,7 @@ const EMICollection = () => {
                                                             onChange={handleChange}
                                                             onBlur={handleBlur}
                                                         />
-                                                        </FormGroup>
+                                                    </FormGroup>
 
                                                     <FormGroup className="mb-2">
                                                         <Label>Interest Received (₹) — Auto</Label>

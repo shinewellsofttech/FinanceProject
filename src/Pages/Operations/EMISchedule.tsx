@@ -76,17 +76,6 @@ const EMISchedule = () => {
                                     System → Auto-Generated after Sanction | Table: tbl_emi_schedule | Read-only view for users
                                 </p>
 
-                                <Alert color="warning" className="d-flex align-items-start gap-2 py-2 mb-3" style={{ backgroundColor: "#fff3cd" }}>
-                                    <i className="fa fa-wrench mt-1 text-warning" aria-hidden="true" />
-                                    <div className="small">
-                                        <strong>Dev Note:</strong> EMI schedule is system-generated — users don&apos;t fill this form, they VIEW it.
-                                        Generated when loan status moves to SANCTIONED.
-                                        Table: tbl_emi_schedule(loan_id, emi_no, due_date, principal, interest, total_emi, balance_outstanding, status, paid_date, paid_amount).
-                                        Status values: PENDING / PAID / PARTIALLY_PAID / OVERDUE / WAIVED.
-                                        Re-generate schedule if prepayment or interest rate change occurs.
-                                    </div>
-                                </Alert>
-
                                 <Row className="mb-4">
                                     <Col md="6">
                                         <FormGroup>

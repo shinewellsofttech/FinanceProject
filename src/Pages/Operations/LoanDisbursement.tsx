@@ -112,18 +112,6 @@ const LoanDisbursement = () => {
                                                 After Sanction → Disburse Loan Amount | Requires Approval (Maker-Checker)
                                             </p>
 
-                                            <Alert color="warning" className="d-flex align-items-start gap-2 py-2 mb-3" style={{ backgroundColor: "#fff3cd" }}>
-                                                <i className="fa fa-exclamation-circle mt-1 text-warning" aria-hidden="true" />
-                                                <div className="small">
-                                                    <strong>Dev Note:</strong> Disbursement changes loan status to ACTIVE.
-                                                    Processing Fee deducted from disbursement amount before transfer.
-                                                    Net disbursed = Sanctioned Amount - Processing Fee - Insurance Premium (if any).
-                                                    GL entry: Loan Portfolio A/c Dr → Bank/Cash A/c Cr.
-                                                    Processing Fee: Bank A/c Dr → Processing Fee Income A/c Cr.
-                                                    Table: tbl_disbursements. Black/White flag stored here.
-                                                </div>
-                                            </Alert>
-
                                             <Row>
                                                 <Col md="6">
                                                     <FormGroup className="mb-2">

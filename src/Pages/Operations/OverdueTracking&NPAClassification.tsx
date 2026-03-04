@@ -34,25 +34,15 @@ const OverdueTrackingNPAClassification = () => {
     const [portfolioOutstanding, setPortfolioOutstanding] = useState("");
     const [provisionAmount, setProvisionAmount] = useState("");
 
-    return (                                                                                            
+    return (
         <div className="page-body">
             <Breadcrumbs mainTitle="Overdue Tracking & NPA Classification" parent="Operations" />
             <Container fluid>
                 <Row>
                     <Col xs="12">
 
-                    
-                        {/* NPA Classification Rules */}
-                        <Alert color="warning" className="d-flex align-items-start gap-2 py-2 mb-2" style={{ backgroundColor: "#fff3cd" }}>
-                            <i className="fa fa-wrench mt-1 text-warning" aria-hidden="true" />
-                            <div className="small">
-                                <strong>Dev Note:</strong> NPA classification runs as a daily scheduled job.
-                                DPD (Days Past Due) = Today - EMI Due Date (for unpaid EMIs); updates tbl_loan_accounts.npa_status and tbl_loan_accounts.dpd daily.
-                                Penal interest auto-accrues: Penal_Amount = Outstanding × Penal_Rate% / 365 × DPD.
-                                Provisioning percentages are regulatory — store in config table.
-                            </div>
-                        </Alert>
 
+                        {/* NPA Classification Rules */}
                         <Card className="mb-4">
                             <CardBody>
                                 <h6 className="mb-3 text-primary">
@@ -160,16 +150,6 @@ const OverdueTrackingNPAClassification = () => {
                         </Card>
 
                         {/* Provisioning Entry (Accountant) */}
-                        <Alert color="warning" className="d-flex align-items-start gap-2 py-2 mb-2" style={{ backgroundColor: "#fff3cd" }}>
-                            <i className="fa fa-wrench mt-1 text-warning" aria-hidden="true" />
-                            <div className="small">
-                                <strong>Dev Note:</strong> Provisioning entries are monthly Journal Entries in GL.
-                                Formula: Provision Amount = Outstanding × Provision Rate%.
-                                GL Entry: Provision for Bad Debts A/c Dr — NPA Provision Reserve A/c Cr.
-                                This is separate from NPA classification — classification is auto-daily; provisioning is monthly manual/auto entry with checker approval.
-                            </div>
-                        </Alert>
-
                         <Card>
                             <CardBody>
                                 <h6 className="mb-3 text-primary">
