@@ -15,6 +15,7 @@ import {
     Row,
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 import { handleEnterToNextField } from "../../utils/formUtils";
 
@@ -103,14 +104,12 @@ const LoanDisbursement = () => {
                             }: FormikProps<LoanDisbursementFormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
+                                        <CardHeaderCommon
+                                            title="Form 3: Loan Disbursement"
+                                            span={[{ text: "After Sanction → Disburse Loan Amount | Requires Approval (Maker-Checker)" }]}
+                                            tagClass="card-title mb-0"
+                                        />
                                         <CardBody>
-                                            <div className="d-flex align-items-center gap-2 mb-1">
-                                                <i className="fa fa-credit-card text-success" style={{ fontSize: "1.25rem" }} aria-hidden="true" />
-                                                <h5 className="card-title mb-0 text-success fw-bold">Form 3: Loan Disbursement</h5>
-                                            </div>
-                                            <p className="text-muted small mb-3">
-                                                After Sanction → Disburse Loan Amount | Requires Approval (Maker-Checker)
-                                            </p>
 
                                             <Row>
                                                 <Col md="6">

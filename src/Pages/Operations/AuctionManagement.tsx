@@ -14,6 +14,7 @@ import {
     Row,
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 import { handleEnterToNextField } from "../../utils/formUtils";
 
@@ -86,23 +87,6 @@ const AuctionManagement = () => {
             <Breadcrumbs mainTitle="Auction Management" parent="Operations" />
             <Container fluid>
 
-                {/* ── Dark green header card ── */}
-                <Card className="mb-3" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                    <div style={{ backgroundColor: "#1e6e3e", padding: "14px 20px" }}>
-                        <div className="d-flex align-items-center gap-2">
-                            <span style={{ fontSize: "1.3rem" }}>🔨</span>
-                            <div>
-                                <h5 className="mb-0 text-white fw-bold" style={{ fontSize: "1.05rem" }}>
-                                    Form 9: Auction Management (Gold Loan NPA)
-                                </h5>
-                                <p className="mb-0 text-white-50 small">
-                                    HO / Branch Manager → For Gold Loans in NPA → Auction Process
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
                 {/* ── Main Form ── */}
                 <Formik<AuctionFormValues>
                     initialValues={initialValues}
@@ -124,6 +108,11 @@ const AuctionManagement = () => {
                         return (
                             <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                 <Card>
+                                    <CardHeaderCommon
+                                        title="Form 9: Auction Management (Gold Loan NPA)"
+                                        span={[{ text: "HO / Branch Manager → For Gold Loans in NPA → Auction Process" }]}
+                                        tagClass="card-title mb-0"
+                                    />
                                     <CardBody>
 
                                         {/* Row 1: Loan Account (Gold) + DPD as on Date */}

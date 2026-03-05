@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Alert, Card, CardBody, Col, Container, FormGroup, Input, Label, Row, Table } from "reactstrap";
+import { Card, CardBody, CardFooter, Col, Container, FormGroup, Input, Label, Row, Table } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 
 type EMIStatus = "PENDING" | "PAID" | "PARTIALLY_PAID" | "OVERDUE" | "WAIVED";
@@ -67,14 +68,12 @@ const EMISchedule = () => {
                 <Row>
                     <Col xs="12">
                         <Card>
+                            <CardHeaderCommon
+                                title="Form 1: EMI Schedule (Auto-Generated)"
+                                span={[{ text: "System → Auto-Generated after Sanction | Table: tbl_emi_schedule | Read-only view for users" }]}
+                                tagClass="card-title mb-0"
+                            />
                             <CardBody>
-                                <div className="d-flex align-items-center gap-2 mb-1">
-                                    <i className="fa fa-calendar-check-o text-success" style={{ fontSize: "1.25rem" }} aria-hidden="true" />
-                                    <h5 className="card-title mb-0 text-success fw-bold">Form 1: EMI Schedule (Auto-Generated)</h5>
-                                </div>
-                                <p className="text-muted small mb-2">
-                                    System → Auto-Generated after Sanction | Table: tbl_emi_schedule | Read-only view for users
-                                </p>
 
                                 <Row className="mb-4">
                                     <Col md="6">
@@ -112,7 +111,7 @@ const EMISchedule = () => {
                                     <>
                                         <div className="table-responsive">
                                             <Table bordered hover striped className="mb-0">
-                                                <thead style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                                <thead className="table-dark">
                                                     <tr>
                                                         <th className="border-0">EMI #</th>
                                                         <th className="border-0">Due Date</th>

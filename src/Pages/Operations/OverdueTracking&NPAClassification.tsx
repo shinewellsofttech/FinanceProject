@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Alert, Card, CardBody, Col, Container, FormGroup, Input, Label, Row, Table } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 
 interface NPARuleRow {
@@ -44,13 +45,14 @@ const OverdueTrackingNPAClassification = () => {
 
                         {/* NPA Classification Rules */}
                         <Card className="mb-4">
+                            <CardHeaderCommon
+                                title="NPA Classification Rules"
+                                tagClass="card-title mb-0"
+                            />
                             <CardBody>
-                                <h6 className="mb-3 text-primary">
-                                    <i className="fa fa-list-alt me-2" aria-hidden="true" /> NPA Classification Rules
-                                </h6>
                                 <div className="table-responsive">
                                     <Table bordered hover size="sm">
-                                        <thead style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                        <thead className="table-dark">
                                             <tr>
                                                 <th className="border-0">DPD Range</th>
                                                 <th className="border-0">Classification</th>
@@ -75,10 +77,11 @@ const OverdueTrackingNPAClassification = () => {
 
                         {/* Overdue Search / Dashboard Filter */}
                         <Card className="mb-4">
+                            <CardHeaderCommon
+                                title="Overdue Search / Dashboard Filter"
+                                tagClass="card-title mb-0"
+                            />
                             <CardBody>
-                                <h6 className="mb-3 text-primary">
-                                    <i className="fa fa-search me-2" aria-hidden="true" /> Overdue Search / Dashboard Filter
-                                </h6>
                                 <Row>
                                     <Col md="4">
                                         <FormGroup className="mb-2">
@@ -151,10 +154,11 @@ const OverdueTrackingNPAClassification = () => {
 
                         {/* Provisioning Entry (Accountant) */}
                         <Card>
+                            <CardHeaderCommon
+                                title="Provisioning Entry (Accountant)"
+                                tagClass="card-title mb-0"
+                            />
                             <CardBody>
-                                <h6 className="mb-3 text-primary">
-                                    <i className="fa fa-calculator me-2" aria-hidden="true" /> Provisioning Entry (Accountant)
-                                </h6>
                                 <Row>
                                     <Col md="6">
                                         <FormGroup className="mb-2">
@@ -185,7 +189,7 @@ const OverdueTrackingNPAClassification = () => {
                                         </FormGroup>
                                     </Col>
                                 </Row>
-                                <Alert color="success" className="py-2 mb-3 small" style={{ backgroundColor: "#d4edda" }}>
+                                <Alert color="success" className="py-2 mb-3 small">
                                     <strong>Provisioning GL Entry (Monthly):</strong><br />
                                     Provision for Bad Debts A/c Dr ₹ [Amount]<br />
                                     To NPA Provision Reserve A/c Cr ₹ [Amount]

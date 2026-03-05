@@ -14,6 +14,7 @@ import {
     Row,
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 import { handleEnterToNextField } from "../../utils/formUtils";
 
@@ -80,23 +81,6 @@ const DayClosing = () => {
             <Breadcrumbs mainTitle="Day Closing" parent="Operations" />
             <Container fluid>
 
-                {/* ── Dark green header card ── */}
-                <Card className="mb-3" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                    <div style={{ backgroundColor: "#1e6e3e", padding: "14px 20px" }}>
-                        <div className="d-flex align-items-center gap-2">
-                            <span style={{ fontSize: "1.3rem" }}>🔒</span>
-                            <div>
-                                <h5 className="mb-0 text-white fw-bold" style={{ fontSize: "1.05rem" }}>
-                                    Form 6: Day Closing / Branch Balancing
-                                </h5>
-                                <p className="mb-0 text-white-50 small">
-                                    Branch Manager → End of Day | Must be done before next business day starts
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
                 {/* ── Main Form ── */}
                 <Formik<DayClosingFormValues>
                     initialValues={initialValues}
@@ -123,6 +107,11 @@ const DayClosing = () => {
                         return (
                             <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                 <Card>
+                                    <CardHeaderCommon
+                                        title="Form 6: Day Closing / Branch Balancing"
+                                        span={[{ text: "Branch Manager → End of Day | Must be done before next business day starts" }]}
+                                        tagClass="card-title mb-0"
+                                    />
                                     <CardBody>
 
                                         {/* Row 1: Branch + Closing Date */}

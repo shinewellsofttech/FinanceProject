@@ -15,6 +15,7 @@ import {
     Row,
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 import { handleEnterToNextField } from "../../utils/formUtils";
 
@@ -120,14 +121,12 @@ const EMICollection = () => {
                             }: FormikProps<EMICollectionFormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
+                                        <CardHeaderCommon
+                                            title="Form 2: EMI Collection / Receipt Entry"
+                                            span={[{ text: "Cashier / Loan Officer - Collections | Table: tbl_receipts, tbl_emi_schedule" }]}
+                                            tagClass="card-title mb-0"
+                                        />
                                         <CardBody>
-                                            <div className="d-flex align-items-center gap-2 mb-1">
-                                                <i className="fa fa-money text-primary" style={{ fontSize: "1.25rem" }} aria-hidden="true" />
-                                                <h5 className="card-title mb-0 fw-bold">Form 2: EMI Collection / Receipt Entry</h5>
-                                            </div>
-                                            <p className="text-muted small mb-3">
-                                                Cashier / Loan Officer - Collections | Table: tbl_receipts, tbl_emi_schedule
-                                            </p>
 
                                             <Row>
                                                 <Col md="6">

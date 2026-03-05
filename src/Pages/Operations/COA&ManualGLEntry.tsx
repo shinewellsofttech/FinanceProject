@@ -15,6 +15,7 @@ import {
     Table,
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 import { handleEnterToNextField } from "../../utils/formUtils";
 
@@ -129,33 +130,17 @@ const COAManualGLEntry = () => {
             <Breadcrumbs mainTitle="COA & Manual GL Entry" parent="Operations" />
             <Container fluid>
 
-                {/* ── Form header card (dark green, like image) ── */}
-                <Card className="mb-3" style={{ borderRadius: "6px", overflow: "hidden" }}>
-                    <div style={{ backgroundColor: "#1e6e3e", padding: "14px 20px" }}>
-                        <div className="d-flex align-items-center gap-2">
-                            <span style={{ fontSize: "1.3rem" }}>📒</span>
-                            <div>
-                                <h5 className="mb-0 text-white fw-bold" style={{ fontSize: "1.05rem" }}>
-                                    Form 5: Chart of Accounts (COA) &amp; Manual GL Entry
-                                </h5>
-                                <p className="mb-0 text-white-50 small">
-                                    Accountant / HO Admin → Accounting Module | Table: tbl_chart_of_accounts, tbl_gl_entries
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </Card>
-
                 {/* ── Key GL Accounts (Pre-seeded) ── */}
                 <Card className="mb-4">
+                    <CardHeaderCommon
+                        title="Form 5: Chart of Accounts (COA) & Manual GL Entry — Key GL Accounts"
+                        span={[{ text: "Accountant / HO Admin → Accounting Module | Table: tbl_chart_of_accounts, tbl_gl_entries" }]}
+                        tagClass="card-title mb-0"
+                    />
                     <CardBody>
-                        <h6 className="mb-3 fw-bold" style={{ color: "#555" }}>
-                            <i className="fa fa-archive me-2" aria-hidden="true" />
-                            Key GL Accounts (Pre-seeded)
-                        </h6>
                         <div className="table-responsive">
                             <Table bordered hover size="sm" className="mb-0">
-                                <thead style={{ backgroundColor: "#1e3d73", color: "white" }}>
+                                <thead className="table-dark">
                                     <tr>
                                         <th className="border-0">Ledger Name</th>
                                         <th className="border-0">Alias</th>
