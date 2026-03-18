@@ -8,8 +8,8 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Fn_DeleteData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
-const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/LoanSchemeMaster/Id/0`;
-const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/LoanSchemeMaster/Id`;
+const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/AccountTypeSchemeData/Id/0`;
+const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/AccountTypeSchemeData/Id`;
 
 interface ListState {
   dataList: any[];
@@ -70,8 +70,7 @@ const PageList_LoanScheme = () => {
     if (!search) return list;
     return list.filter(
       (item: any) =>
-        String(item?.SchemeName ?? "").toLowerCase().includes(search) ||
-        String(item?.SchemeCode ?? "").toLowerCase().includes(search)
+        String(item?.Name ?? "").toLowerCase().includes(search)
     );
   }, [state.dataList, state.filterText]);
 
@@ -89,7 +88,7 @@ const PageList_LoanScheme = () => {
                     <Label className="me-2 mb-0">Search:</Label>
                     <Input
                       type="search"
-                      placeholder="Search by scheme name or code..."
+                      placeholder="Search by scheme name..."
                       value={state.filterText}
                       onChange={handleSearchChange}
                     />
@@ -115,16 +114,18 @@ const PageList_LoanScheme = () => {
                         <tr>
                           <th>#</th>
                           <th>Scheme Name</th>
-                          <th>Scheme Code</th>
+                          <th>Account Type</th>
                           <th>Loan Type</th>
                           <th>Interest Rate %</th>
+                          <th>Min Amount</th>
+                          <th>Max Amount</th>
                           <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredList.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="text-center py-4">
+                            <td colSpan={8} className="text-center py-4">
                               No records found.
                             </td>
                           </tr>
@@ -132,10 +133,12 @@ const PageList_LoanScheme = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.SchemeName ?? "-"}</td>
-                              <td>{item?.SchemeCode ?? "-"}</td>
-                              <td>{item?.LoanTypeName ?? item?.LoanType ?? "-"}</td>
+                              <td>{item?.Name ?? "-"}</td>
+                              <td>{item?.AccountTypeName ?? item?.F_AccountType ?? "-"}</td>
+                              <td>{item?.LoanTypeName ?? item?.F_LoanType ?? "-"}</td>
                               <td>{item?.InterestRate ?? "-"}</td>
+                              <td>{item?.MinAmount ?? "-"}</td>
+                              <td>{item?.MaxAmount ?? "-"}</td>
                               <td>
                                 <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />

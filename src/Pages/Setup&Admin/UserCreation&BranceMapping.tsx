@@ -57,6 +57,7 @@ interface UserState {
         IsActive?: boolean;
     };
     isProgress?: boolean;
+    isEditingOpen?: boolean;
 }
 
 const UserCreationBranceMapping = () => {
@@ -69,6 +70,7 @@ const UserCreationBranceMapping = () => {
         id: 0,
         formData: { ...initialValues },
         isProgress: false,
+        isEditingOpen: true,
     });
 
     const [dropdowns, setDropdowns] = useState<DropdownState>({
@@ -123,6 +125,7 @@ const UserCreationBranceMapping = () => {
             setUserState((prev) => ({
                 ...prev,
                 id: recordId,
+                isEditingOpen: false,
             }));
             Fn_DisplayData(dispatch, setUserState, recordId, API_URL_EDIT);
         } else {
@@ -204,7 +207,9 @@ const UserCreationBranceMapping = () => {
                             {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
+                                        <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} User`} tagClass="card-title mb-0" />
                                         <CardBody>
+                                            <fieldset disabled={!userState.isEditingOpen}>
                                             <Row className="gy-0">
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
@@ -399,10 +404,20 @@ const UserCreationBranceMapping = () => {
                                                     </FormGroup>
                                                 </Col>
                                             </Row>
+                                            </fieldset>
                                         </CardBody>
                                         <CardFooter className="d-flex align-items-center gap-2">
-                                            <Btn color="primary" type="submit" disabled={isSubmitting}>
-                                                <i className="fa fa-user-plus me-1"></i> {isEditMode ? "Update User" : "Create User"}
+                                            <Btn color="primary" type="submit" disabled={isSubmitting || !userState.isEditingOpen}>
+                                                <i className="fa fa-user-plus me-1" /> {isEditMode ? "Update User" : "Create User"}
+                                            </Btn>
+                                            <Btn
+                                                color="light"
+                                                type="button"
+                                                className="text-dark"
+                                                onClick={() => setUserState(prev => ({ ...prev, isEditingOpen: !prev.isEditingOpen }))}
+                                                disabled={!isEditMode}
+                                            >
+                                                <i className="fa fa-pencil me-1" /> {userState.isEditingOpen ? "Lock" : "Edit"}
                                             </Btn>
                                         </CardFooter>
                                     </Card>

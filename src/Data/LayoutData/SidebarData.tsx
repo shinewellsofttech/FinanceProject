@@ -105,6 +105,14 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
+      {
+        id: 5,
+        title: "Member Account",
+        path: `${process.env.PUBLIC_URL}/memberAccountList`,
+        icon: "MapPin",
+        type: "link",
+        bookmark: true,
+      },
     ],
   },
   {
@@ -219,6 +227,14 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
+      {
+        id: 10,
+        title: "Repayment Form",
+        path: `${process.env.PUBLIC_URL}/repaymentForm`,
+        icon: "DollarSign",
+        type: "link",
+        bookmark: true,
+      }
     ],
   },
   {

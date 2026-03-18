@@ -33,8 +33,11 @@ import DayClosing from "../Pages/Operations/DayClosing";
 import LoanClosing from "../Pages/Operations/LoanClosing";
 import Foreclosure from "../Pages/Operations/Foreclosure";
 import AuctionManagement from "../Pages/Operations/AuctionManagement";
+import RepaymentForm from "../Pages/Operations/RepaymentForm";
 import PageList_ModuleMaster from "../Pages/Masters/PageList_ModuleMaster";
 import AddEdit_ModuleMaster from "../Pages/Masters/AddEdit_ModuleMaster";
+import PageList_MemberAccount from "../Pages/Masters/PageList_MemberAccount";
+import AddEdit_MemberAccount from "../Pages/Masters/AddEdit_MemberAccount";
 
 export const routes = [
 
@@ -69,6 +72,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/loanClosing`, Component: <LoanClosing /> },
   { path: `${process.env.PUBLIC_URL}/foreclosure`, Component: <Foreclosure /> },
   { path: `${process.env.PUBLIC_URL}/auctionManagement`, Component: <AuctionManagement /> },
+  { path: `${process.env.PUBLIC_URL}/repaymentForm`, Component: <RepaymentForm /> },
 
   // Masters
   { path: `${process.env.PUBLIC_URL}/countryMaster`, Component: <PageList_CountryMaster /> },
@@ -79,6 +83,8 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/addEditCityMaster`, Component: <AddEdit_CityMaster /> },
   { path: `${process.env.PUBLIC_URL}/moduleMaster`, Component: <PageList_ModuleMaster /> },
   { path: `${process.env.PUBLIC_URL}/addEditModuleMaster`, Component: <AddEdit_ModuleMaster /> },
+  { path: `${process.env.PUBLIC_URL}/memberAccountList`, Component: <PageList_MemberAccount /> },
+  { path: `${process.env.PUBLIC_URL}/addEditMemberAccount`, Component: <AddEdit_MemberAccount /> }, 
 
   // Tools
   { path: `${process.env.PUBLIC_URL}/changePassword`, Component: <ChangePassword /> },

@@ -39,6 +39,7 @@ interface CustomerFormValues {
     IsITRAvailable: string;
     F_FieldUnitCentre: string;
     F_MemberGroup: string;
+    F_Branch: string;
     BankAccounts: BankAccount[];
 }
 
@@ -63,6 +64,7 @@ const initialValues: CustomerFormValues = {
     IsITRAvailable: "false",
     F_FieldUnitCentre: "",
     F_MemberGroup: "",
+    F_Branch: "",
     BankAccounts: [
         { BankName: "", AccountNumber: "", IFSCCode: "", F_AccountTypeMaster: "" }
     ],
@@ -109,6 +111,7 @@ interface DropdownState {
     occupations: Array<{ Id?: number; Name?: string }>;
     fieldUnits: Array<{ Id?: number; Name?: string }>;
     memberGroups: Array<{ Id?: number; Name?: string }>;
+    branches: Array<{ Id?: number; Name?: string }>;
     accountTypes: Array<{ Id?: number; Name?: string }>;
     idProofTypes: Array<{ Id?: number; Name?: string }>;
     addressProofTypes: Array<{ Id?: number; Name?: string }>;
@@ -131,6 +134,7 @@ const CustomerRegistration = () => {
         occupations: [],
         fieldUnits: [],
         memberGroups: [],
+        branches: [],
         accountTypes: [],
         idProofTypes: [],
         addressProofTypes: []
@@ -185,6 +189,7 @@ const CustomerRegistration = () => {
         Fn_FillListData(dispatch, setDropdowns, "occupations", `Masters/0/token/OccupationTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "fieldUnits", `Masters/0/token/FieldUnitCentre/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "memberGroups", `Masters/0/token/MemberGroup/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "branches", `Masters/0/token/BranchMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "accountTypes", `Masters/0/token/AccountTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "idProofTypes", `Masters/0/token/ProofTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "addressProofTypes", `Masters/0/token/AddressProofTypeMaster/Id/0`);
@@ -296,6 +301,7 @@ const CustomerRegistration = () => {
             formData.append("IsITRAvailable", String(savedData.IsITRAvailable || "false"));
             formData.append("F_FieldUnitCentre", String(savedData.F_FieldUnitCentre || "0"));
             formData.append("F_MemberGroup", String(savedData.F_MemberGroup || "0"));
+            formData.append("F_Branch", String(savedData.F_Branch || "0"));
             
             // CustomerPhoto (file from Tab 1)
             if (savedData.CustomerPhoto instanceof File) {
@@ -553,7 +559,18 @@ const CustomerRegistration = () => {
                                                             </FormGroup>
                                                         </Col>
 
-                                                        <Col md="4" style={{ display: 'none' }}>
+                                                        <Col md="4">
+                                                             <FormGroup className="mb-0">
+                                                                 <Label>Branch</Label>
+                                                                 <Input type="select" name="F_Branch" value={values.F_Branch} onChange={handleChange} onBlur={handleBlur}>
+                                                                     <option value="">-- Select Branch --</option>
+                                                                     {dropdowns.branches.map(opt => <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>)}
+                                                                 </Input>
+                                                                 <ErrorMessage name="F_Branch" component="div" className="text-danger small mt-1" />
+                                                             </FormGroup>
+                                                         </Col>
+
+                                                         <Col md="4" style={{ display: 'none' }}>
                                                             <FormGroup className="mb-0">
                                                                 <Label>Field Unit / Centre (MFI only)</Label>
                                                                 <Input type="select" name="F_FieldUnitCentre" value={values.F_FieldUnitCentre} onChange={handleChange} onBlur={handleBlur} invalid={touched.F_FieldUnitCentre && !!errors.F_FieldUnitCentre}>

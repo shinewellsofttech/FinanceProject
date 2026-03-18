@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { Col, Container, Form, FormGroup, Input, Label, Row } from "reactstrap";
+import { Col, Container, Form, FormGroup, Input, Label, Row, Modal, ModalHeader, ModalBody, ModalFooter } from "reactstrap";
 import { Btn, H3, H4, Image, P } from "../../AbstractElements";
 import { dynamicImage } from "../../Service";
 import { CreateAccount, DoNotAccount, ForgotPassword, Href, Password, RememberPassword, SignIn, SignInAccount, SignInWith } from "../../utils/Constant";
@@ -9,80 +9,20 @@ import SocialApp from "./SocialApp";
 import { API_HELPER } from "../../helpers/ApiHelper";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
-const USER_MASTER_LIST_URL = `${API_WEB_URLS.BASE}${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.UserMaster}/Id/0`;
-const GET_COMPANIES_BY_USER_URL = (userId: string | number) =>
-  `${API_WEB_URLS.BASE}${API_WEB_URLS.MASTER}/0/token/GetCompaniesByUserId/Id/${userId}`;
-const LOGIN_URL = `${API_WEB_URLS.BASE}UserLogin/0/token`;
-
-const getDataList = (response: any) =>
-  response?.data?.dataList ?? response?.data?.data?.dataList ?? (Array.isArray(response?.data) ? response.data : []);
+const LOGIN_URL = `${API_WEB_URLS.BASE}AdminLogin/0/token`;
 
 const Login = () => {
   const [show, setShow] = useState(false);
-  const [userList, setUserList] = useState<any[]>([]);
-  const [companyList, setCompanyList] = useState<any[]>([]);
-  const [f_UserMaster, setF_UserMaster] = useState("");
-  const [f_CompanyMaster, setF_CompanyMaster] = useState("");
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
-  const [loadingUsers, setLoadingUsers] = useState(true);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [showBranchModal, setShowBranchModal] = useState(false);
+  const [branchList, setBranchList] = useState<{ id: string; name: string }[]>([]);
+  const [selectedBranchId, setSelectedBranchId] = useState("");
+  const [tempUserData, setTempUserData] = useState<any>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoadingUsers(true);
-    fetch(USER_MASTER_LIST_URL)
-      .then((res) => res.json())
-      .then((data) => {
-        if (!cancelled) {
-          const list = getDataList(data);
-          setUserList(Array.isArray(list) ? list : []);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setUserList([]);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingUsers(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const fetchCompaniesByUser = useCallback((userId: string) => {
-    if (!userId || userId === "0") {
-      setCompanyList([]);
-      setF_CompanyMaster("");
-      return;
-    }
-    setLoadingCompanies(true);
-    setF_CompanyMaster("");
-    fetch(GET_COMPANIES_BY_USER_URL(userId))
-      .then((res) => res.json())
-      .then((data) => {
-        const list = getDataList(data);
-        setCompanyList(Array.isArray(list) ? list : []);
-      })
-      .catch(() => setCompanyList([]))
-      .finally(() => setLoadingCompanies(false));
-  }, []);
-
-  useEffect(() => {
-    fetchCompaniesByUser(f_UserMaster);
-  }, [f_UserMaster, fetchCompaniesByUser]);
 
   const SimpleLoginHandle = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!f_UserMaster || f_UserMaster === "0") {
-      toast.error("Please select User.");
-      return;
-    }
-    if (!f_CompanyMaster || f_CompanyMaster === "0") {
-      toast.error("Please select Company.");
-      return;
-    }
     if (!userName.trim()) {
       toast.error("User Name is required.");
       return;
@@ -92,20 +32,46 @@ const Login = () => {
       return;
     }
     const formData = new FormData();
-    formData.append("F_UserMaster", String(f_UserMaster));
-    formData.append("F_CompanyMaster", String(f_CompanyMaster));
     formData.append("UserName", userName.trim());
     formData.append("UserPassword", password);
+
     try {
       const response = await API_HELPER.apiPOST_Multipart(LOGIN_URL, formData);
-      const userData = response?.data?.response?.[0];
-      const isSuccess = response?.success === true && response?.status === 200 && userData?.Id;
-      const loginMessage = userData?.Message;
-      if (isSuccess && (loginMessage === "Login Successful" || userData?.LoginStatus === 1)) {
-        localStorage.setItem("authUser", JSON.stringify(userData));
-        localStorage.setItem("login", JSON.stringify(true));
-        toast.success(loginMessage || "Login Successful");
-        navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
+      const userData = response?.data?.response?.[0] || response?.data?.dataList?.[0] || response?.data?.[0] || response?.data;
+      const isSuccess = response?.success === true && response?.status === 200 && (userData?.Id || userData?.UserId || userData?.LoginStatus === 1);
+      const loginMessage = userData?.Message || response?.message;
+      if (isSuccess && (loginMessage === "Login Successful" || userData?.LoginStatus === 1 || userData?.Id)) {
+        const branchIds = userData?.F_BranchOffice ? String(userData.F_BranchOffice).split(",").map(s => s.trim()).filter(Boolean) : [];
+        const branchNames = userData?.BranchOfficeNames ? String(userData.BranchOfficeNames).split(",").map(s => s.trim()).filter(Boolean) : [];
+        
+        let branches = [];
+        for (let i = 0; i < Math.max(branchIds.length, branchNames.length); i++) {
+          if (branchIds[i] || branchNames[i]) {
+            branches.push({
+              id: branchIds[i] || "",
+              name: branchNames[i] || `Branch ${branchIds[i] || i}`
+            });
+          }
+        }
+
+        if (branches.length > 1) {
+          setBranchList(branches);
+          setTempUserData(userData);
+          setShowBranchModal(true);
+          toast.success("Please select a branch to continue.");
+        } else {
+          localStorage.setItem("authUser", JSON.stringify(userData));
+          if (branches.length === 1) {
+            localStorage.setItem("selectedBranch", JSON.stringify(branches[0]));
+            localStorage.setItem("F_BranchOffice", branches[0].id);
+          } else {
+            localStorage.setItem("selectedBranch", JSON.stringify({ id: "", name: "Default Branch" }));
+            localStorage.setItem("F_BranchOffice", "");
+          }
+          localStorage.setItem("login", JSON.stringify(true));
+          toast.success(loginMessage || "Login Successful");
+          navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
+        }
       } else {
         toast.error(response?.message || loginMessage || "Login failed");
       }
@@ -113,6 +79,23 @@ const Login = () => {
       console.error("Login error:", error);
       toast.error("Unable to login. Please try again.");
     }
+  };
+
+  const handleBranchSelect = () => {
+    if (!selectedBranchId) {
+      toast.error("Please select a branch.");
+      return;
+    }
+    const selectedBranch = branchList.find(b => b.id === selectedBranchId);
+    if (!selectedBranch) return;
+
+    localStorage.setItem("authUser", JSON.stringify(tempUserData));
+    localStorage.setItem("selectedBranch", JSON.stringify(selectedBranch));
+    localStorage.setItem("F_BranchOffice", selectedBranch.id);
+    localStorage.setItem("login", JSON.stringify(true));
+    setShowBranchModal(false);
+    toast.success("Login Successful");
+    navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
   };
 
   return (
@@ -162,43 +145,7 @@ const Login = () => {
               <div className="login-main">
                 <Form className="theme-form" onSubmit={(e) => SimpleLoginHandle(e)}>
                   <H3>{SignInAccount}</H3>
-                  <P>{"Select user, company and enter credentials to login"}</P>
-                  <FormGroup>
-                    <Label className="col-form-label">User Master <span className="text-danger">*</span></Label>
-                    <Input
-                      type="select"
-                      required
-                      value={f_UserMaster}
-                      onChange={(e) => setF_UserMaster(e.target.value)}
-                      disabled={loadingUsers}
-                    >
-                      <option value="">Select User</option>
-                      {userList.map((u: any) => (
-                        <option key={u?.Id} value={u?.Id}>
-                          {u?.UserName ?? u?.Name ?? u?.Email ?? `User ${u?.Id}`}
-                        </option>
-                      ))}
-                    </Input>
-                  </FormGroup>
-                  <FormGroup>
-                    <Label className="col-form-label">Company <span className="text-danger">*</span></Label>
-                    <Input
-                      type="select"
-                      required
-                      value={f_CompanyMaster}
-                      onChange={(e) => setF_CompanyMaster(e.target.value)}
-                      disabled={!f_UserMaster || loadingCompanies}
-                    >
-                      <option value="">Select Company</option>
-                      {companyList
-                        .filter((c: any) => c?.F_CompanyMaster != null && c?.F_CompanyMaster !== "")
-                        .map((c: any, idx: number) => (
-                          <option key={c?.Id ?? idx} value={String(c.F_CompanyMaster)}>
-                            {c?.CompanyName ?? c?.Name ?? `Company ${c.F_CompanyMaster}`}
-                          </option>
-                        ))}
-                    </Input>
-                  </FormGroup>
+                  <P>{"Enter your credentials to login"}</P>
                   <FormGroup>
                     <Label className="col-form-label">User Name <span className="text-danger">*</span></Label>
                     <Input
@@ -227,33 +174,42 @@ const Login = () => {
                     </div>
                   </FormGroup>
                   <FormGroup className="mb-0 form-sub-title">
-                    {/* <div className="checkbox p-0">
-                      <Input id="checkbox1" type="checkbox" />
-                      <Label className="text-muted" htmlFor="checkbox1">
-                        {RememberPassword}
-                      </Label>
-                    </div>
-                    <Link to={`${process.env.PUBLIC_URL}/pages/samplepage`}>{ForgotPassword}</Link> */}
                     <div className="text-end mt-3 login-submit-wrap">
                       <Btn color="primary" block className="w-100 login-submit-btn" type="submit">
                         {SignIn}
                       </Btn>
                     </div>
                   </FormGroup>
-                  {/* <H4 className="text-muted mt-4 or">{SignInWith}</H4>
-                  <SocialApp />
-                  <P className="mt-4 mb-0 text-center">
-                    {DoNotAccount}
-                    <Link className="ms-2" to={`${process.env.PUBLIC_URL}/pages/samplepage`}>
-                      {CreateAccount}
-                    </Link>
-                  </P> */}
                 </Form>
               </div>
             </div>
           </div>
         </Col>
       </Row>
+
+      <Modal isOpen={showBranchModal} toggle={() => setShowBranchModal(false)} backdrop="static" keyboard={false}>
+        <ModalHeader>Select Branch</ModalHeader>
+        <ModalBody>
+          <FormGroup className="mb-0">
+            <Label>Available Branches <span className="text-danger">*</span></Label>
+            <Input
+              type="select"
+              value={selectedBranchId}
+              onChange={(e) => setSelectedBranchId(e.target.value)}
+            >
+              <option value="">-- Select Branch --</option>
+              {branchList.map((branch) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </Input>
+          </FormGroup>
+        </ModalBody>
+        <ModalFooter>
+          <Btn color="primary" onClick={handleBranchSelect}>Continue to Login</Btn>
+        </ModalFooter>
+      </Modal>
     </Container>
   );
 };
