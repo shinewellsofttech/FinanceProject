@@ -84,6 +84,7 @@ const RepaymentForm = () => {
             fd.append("PaymentDate",           values.PaymentDate);
             fd.append("Amount",                values.Amount);
             fd.append("UserId",                loggedUserId);
+            fd.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
 
             await Fn_AddEditData(
                 dispatch,

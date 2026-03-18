@@ -231,6 +231,7 @@ const BranchOfficeCreation = () => {
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
             const userId = currentUser?.uid ?? currentUser?.id ?? "0";
             formData.append("UserId", userId);
+            formData.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
 
             // Dynamically construct API save url based on image format: /api/V1/BranchOffice/{UserId}/{UserToken}
             const currentApiUrlSave = `BranchOffice/${userId}/token`;

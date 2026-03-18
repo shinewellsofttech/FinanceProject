@@ -125,6 +125,7 @@ const UserRoleCreation = () => {
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
             const userId = currentUser?.uid ?? currentUser?.id ?? "0";
             formData.append("UserId", userId);
+            formData.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
 
             const currentApiUrlSave = `UserRole/${userId}/token`;
 

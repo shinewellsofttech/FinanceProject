@@ -359,6 +359,7 @@ const HOCreation = () => {
             const storedUser = localStorage.getItem("user");
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
             formData.append("UserId", currentUser?.uid ?? currentUser?.id ?? "0");
+            formData.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
 
             await Fn_AddEditData(
                 dispatch,

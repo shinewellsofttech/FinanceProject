@@ -343,6 +343,7 @@ const CustomerRegistration = () => {
             
             // UserId
             formData.append("UserId", "0");
+            formData.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
             
             const API_URL_KYC_SAVE = `CustomerMaster/0/token`;
             

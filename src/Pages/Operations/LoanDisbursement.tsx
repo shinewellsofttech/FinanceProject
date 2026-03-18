@@ -85,6 +85,7 @@ const LoanDisbursement = () => {
             fd.append("F_DisbursementType",    values.F_DisbursementType);
             fd.append("Remarks",               values.Remarks || "");
             fd.append("UserId",                loggedUserId);
+            fd.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
 
             await Fn_AddEditData(
                 dispatch,

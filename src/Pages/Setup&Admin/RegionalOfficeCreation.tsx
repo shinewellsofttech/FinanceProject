@@ -149,6 +149,7 @@ const RegionalOfficeCreation = () => {
             const currentUser = storedUser ? JSON.parse(storedUser) : null;
             const userId = currentUser?.uid ?? currentUser?.id ?? "0";
             const userToken = currentUser?.token ?? "token";
+            formData.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
 
             // Adjust API URL dynamically according to swagger specs: /api/V1/RegionalOffice/{UserId}/{UserToken}
             const localApiUrlSave = `RegionalOffice/${userId}/${userToken}`;
