@@ -189,7 +189,7 @@ const CustomerRegistration = () => {
         Fn_FillListData(dispatch, setDropdowns, "occupations", `Masters/0/token/OccupationTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "fieldUnits", `Masters/0/token/FieldUnitCentre/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "memberGroups", `Masters/0/token/MemberGroup/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "branches", `Masters/0/token/BranchMaster/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "branches", `Masters/0/token/BranchOffice/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "accountTypes", `Masters/0/token/AccountTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "idProofTypes", `Masters/0/token/ProofTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "addressProofTypes", `Masters/0/token/AddressProofTypeMaster/Id/0`);

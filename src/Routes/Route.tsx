@@ -18,7 +18,7 @@ import PermissionMetrixs from "../Pages/Setup&Admin/PermissionMetrixs";
 import MakerCheckerConfiguration from "../Pages/Setup&Admin/Maker-Cheker-Configration";
 import FinancialYearSetupControl from "../Pages/Setup&Admin/FinancialYearSetup&Control";
 import PageList_LoanScheme from "../Pages/Customer&Loan/PageList_LoanScheme";
-import LoanSchemeConfiguration from "../Pages/Customer&Loan/LoanSchemeConfrigration";
+import AccountTypeScheme from "../Pages/Customer&Loan/LoanSchemeConfrigration";
 import PageList_CustomerRegistration from "../Pages/Customer&Loan/PageList_CustomerRegistration";
 import CustomerRegistration from "../Pages/Customer&Loan/CustomerRegistration";
 import PageList_LoanApplication from "../Pages/Customer&Loan/PageList_LoanApplication";
@@ -55,7 +55,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/makerCheckerConfig`, Component: <MakerCheckerConfiguration /> },
   { path: `${process.env.PUBLIC_URL}/financialYearSetup`, Component: <FinancialYearSetupControl /> },
   { path: `${process.env.PUBLIC_URL}/loanSchemeList`, Component: <PageList_LoanScheme /> },
-  { path: `${process.env.PUBLIC_URL}/loanSchemeConfig`, Component: <LoanSchemeConfiguration /> },
+  { path: `${process.env.PUBLIC_URL}/accountTypeScheme`, Component: <AccountTypeScheme /> },
   { path: `${process.env.PUBLIC_URL}/customerList`, Component: <PageList_CustomerRegistration /> },
   { path: `${process.env.PUBLIC_URL}/customerRegistration`, Component: <CustomerRegistration /> },
   { path: `${process.env.PUBLIC_URL}/loanApplicationList`, Component: <PageList_LoanApplication /> },

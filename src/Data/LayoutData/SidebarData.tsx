@@ -120,7 +120,7 @@ export const MenuList: MenuItem[] = [
     Items: [
       {
         id: 1,
-        title: "Loan Scheme Config",
+        title: "Account Type Scheme",
         path: `${process.env.PUBLIC_URL}/loanSchemeList`,
         icon: "FileText",
         type: "link",

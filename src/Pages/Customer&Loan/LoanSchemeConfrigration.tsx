@@ -26,12 +26,12 @@ interface FormValues {
     MultipleAmount: string;
     MinMemberValue: string;
     MaxMemberValue: string;
-    MinTenureMonths: string;
-    MaxTenureMonths: string;
+    MinTenure: string;
+    MaxTenure: string;
     InterestRate: string;
     PenaltyRate: string;
-    GracePeriodMonths: string;
-    MoratoriumMonths: string;
+    GracePeriod: string;
+    Moratorium: string;
     PreMaturityAfter: string;
     IsFixedTerm: boolean;
     IsInterestBased: boolean;
@@ -65,12 +65,12 @@ const initialValues: FormValues = {
     MultipleAmount: "",
     MinMemberValue: "",
     MaxMemberValue: "",
-    MinTenureMonths: "",
-    MaxTenureMonths: "",
+    MinTenure: "",
+    MaxTenure: "",
     InterestRate: "",
     PenaltyRate: "",
-    GracePeriodMonths: "",
-    MoratoriumMonths: "",
+    GracePeriod: "",
+    Moratorium: "",
     PreMaturityAfter: "",
     IsFixedTerm: false,
     IsInterestBased: false,
@@ -111,7 +111,7 @@ const API_URL_SAVE = `AccountTypeScheme/0/token`;
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-const LoanSchemeConfiguration = () => {
+const AccountTypeScheme = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const location = useLocation();
@@ -151,8 +151,8 @@ const LoanSchemeConfiguration = () => {
                 F_InterestCalculationType: Yup.string().required("Interest Calculation Type is required"),
                 MinAmount: Yup.number().typeError("Must be a number").required("Min Amount is required"),
                 MaxAmount: Yup.number().typeError("Must be a number").required("Max Amount is required"),
-                MinTenureMonths: Yup.number().typeError("Must be a number").required("Min Tenure is required"),
-                MaxTenureMonths: Yup.number().typeError("Must be a number").required("Max Tenure is required"),
+                MinTenure: Yup.number().typeError("Must be a number").required("Min Tenure is required"),
+                MaxTenure: Yup.number().typeError("Must be a number").required("Max Tenure is required"),
                 InterestRate: Yup.number().typeError("Must be a number").required("Interest Rate is required"),
             }),
         []
@@ -226,12 +226,12 @@ const LoanSchemeConfiguration = () => {
         MultipleAmount: toStringOrEmpty(schemeState.formData.MultipleAmount),
         MinMemberValue: toStringOrEmpty(schemeState.formData.MinMemberValue),
         MaxMemberValue: toStringOrEmpty(schemeState.formData.MaxMemberValue),
-        MinTenureMonths: toStringOrEmpty(schemeState.formData.MinTenureMonths),
-        MaxTenureMonths: toStringOrEmpty(schemeState.formData.MaxTenureMonths),
+        MinTenure: toStringOrEmpty(schemeState.formData.MinTenure),
+        MaxTenure: toStringOrEmpty(schemeState.formData.MaxTenure),
         InterestRate: toStringOrEmpty(schemeState.formData.InterestRate),
         PenaltyRate: toStringOrEmpty(schemeState.formData.PenaltyRate),
-        GracePeriodMonths: toStringOrEmpty(schemeState.formData.GracePeriodMonths),
-        MoratoriumMonths: toStringOrEmpty(schemeState.formData.MoratoriumMonths),
+        GracePeriod: toStringOrEmpty(schemeState.formData.GracePeriod),
+        Moratorium: toStringOrEmpty(schemeState.formData.Moratorium),
         PreMaturityAfter: toStringOrEmpty(schemeState.formData.PreMaturityAfter),
         IsFixedTerm: toBool(schemeState.formData.IsFixedTerm),
         IsInterestBased: toBool(schemeState.formData.IsInterestBased),
@@ -263,12 +263,12 @@ const LoanSchemeConfiguration = () => {
             formData.append("MultipleAmount", values.MultipleAmount || "");
             formData.append("MinMemberValue", values.MinMemberValue || "");
             formData.append("MaxMemberValue", values.MaxMemberValue || "");
-            formData.append("MinTenureMonths", values.MinTenureMonths || "");
-            formData.append("MaxTenureMonths", values.MaxTenureMonths || "");
+            formData.append("MinTenure", values.MinTenure || "");
+            formData.append("MaxTenure", values.MaxTenure || "");
             formData.append("InterestRate", values.InterestRate || "");
             formData.append("PenaltyRate", values.PenaltyRate || "");
-            formData.append("GracePeriodMonths", values.GracePeriodMonths || "");
-            formData.append("MoratoriumMonths", values.MoratoriumMonths || "");
+            formData.append("GracePeriod", values.GracePeriod || "");
+            formData.append("Moratorium", values.Moratorium || "");
             formData.append("PreMaturityAfter", values.PreMaturityAfter || "");
             formData.append("F_CollateralType", values.F_CollateralType || "");
 
@@ -304,7 +304,7 @@ const LoanSchemeConfiguration = () => {
                 true,
                 "memberid",
                 navigate,
-                "/loanSchemeConfig"
+                "/accountTypeScheme"
             );
         } catch (error) {
             console.error("Submission failed:", error);
@@ -416,12 +416,12 @@ const LoanSchemeConfiguration = () => {
                                                 {renderNumber("MultipleAmount", "Multiple Amount", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("MinMemberValue", "Min Member Value", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("MaxMemberValue", "Max Member Value", values, handleChange, handleBlur, touched, errors)}
-                                                {renderNumber("MinTenureMonths", "Min Tenure Months", values, handleChange, handleBlur, touched, errors, true)}
-                                                {renderNumber("MaxTenureMonths", "Max Tenure Months", values, handleChange, handleBlur, touched, errors, true)}
+                                                {renderNumber("MinTenure", "Min Tenure", values, handleChange, handleBlur, touched, errors, true)}
+                                                {renderNumber("MaxTenure", "Max Tenure", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("InterestRate", "Interest Rate", values, handleChange, handleBlur, touched, errors, true, "0.01")}
                                                 {renderNumber("PenaltyRate", "Penalty Rate", values, handleChange, handleBlur, touched, errors, false, "0.01")}
-                                                {renderNumber("GracePeriodMonths", "Grace Period Months", values, handleChange, handleBlur, touched, errors)}
-                                                {renderNumber("MoratoriumMonths", "Moratorium Months", values, handleChange, handleBlur, touched, errors)}
+                                                {renderNumber("GracePeriod", "Grace Period", values, handleChange, handleBlur, touched, errors)}
+                                                {renderNumber("Moratorium", "Moratorium", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("PreMaturityAfter", "Prematurity After", values, handleChange, handleBlur, touched, errors)}
                                             </Row>
 
@@ -535,4 +535,4 @@ const LoanSchemeConfiguration = () => {
     );
 };
 
-export default LoanSchemeConfiguration;
+export default AccountTypeScheme;

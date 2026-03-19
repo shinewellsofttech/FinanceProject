@@ -34,7 +34,7 @@ const mockModulesData = [
     { Id: 8, Name: "Overdue / NPA" },
     { Id: 9, Name: "Accounting / GL" },
     { Id: 10, Name: "Reports & MIS" },
-    { Id: 11, Name: "Loan Scheme Config" },
+    { Id: 11, Name: "Account Type Scheme" },
     { Id: 12, Name: "Loan Closure" },
     { Id: 13, Name: "Audit Trail" },
     { Id: 14, Name: "System Utilities" },

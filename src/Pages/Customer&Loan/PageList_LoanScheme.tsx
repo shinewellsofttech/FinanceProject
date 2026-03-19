@@ -40,12 +40,12 @@ const PageList_LoanScheme = () => {
   }, [loadData]);
 
   const handleAdd = () => {
-    navigate("/loanSchemeConfig", { state: { Id: 0 } });
+    navigate("/accountTypeScheme", { state: { Id: 0 } });
   };
 
   const handleEdit = (id: number | string) => {
     if (!id) return;
-    navigate("/loanSchemeConfig", { state: { Id: id } });
+    navigate("/accountTypeScheme", { state: { Id: id } });
   };
 
   const handleDelete = (id: number | string) => {
@@ -76,7 +76,7 @@ const PageList_LoanScheme = () => {
 
   return (
     <div className="page-body">
-      <Breadcrumbs mainTitle="Loan Scheme Config" parent="Customer & Loan" />
+      <Breadcrumbs mainTitle="Account Type Scheme" parent="Customer & Loan" />
       <Container fluid>
         <Row>
           <Col xs="12">

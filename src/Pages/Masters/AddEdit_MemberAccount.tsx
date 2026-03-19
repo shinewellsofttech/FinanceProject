@@ -36,7 +36,7 @@ interface FormValues {
     InterestRate: string;
     F_InterestCalculationType: string;
     F_RepaymentMode: string;
-    TenureMonths: string;
+    PeriodCount: string;
     EMIAmount: string;
     RepaymentStartDate: string;
     // Personal Loan
@@ -75,7 +75,7 @@ const initialValues: FormValues = {
     InterestRate: "",
     F_InterestCalculationType: "",
     F_RepaymentMode: "",
-    TenureMonths: "",
+    PeriodCount: "",
     EMIAmount: "",
     RepaymentStartDate: "",
     Purpose: "",
@@ -176,7 +176,7 @@ const AddEdit_MemberAccount = () => {
             InterestRate:              Yup.number().typeError("Must be a number").required("Interest Rate is required").min(0),
             F_InterestCalculationType: Yup.string().required("Interest Type is required"),
             F_RepaymentMode:           Yup.string().required("Repayment Mode is required"),
-            TenureMonths:              Yup.number().typeError("Must be a number").required("Tenure is required").min(1),
+            PeriodCount:               Yup.number().typeError("Must be a number").required("Period Count is required").min(1),
             EMIAmount:                 Yup.number().typeError("Must be a number").required("EMI Amount is required").min(0),
             RepaymentStartDate:        Yup.string().required("Repayment Start Date is required"),
             MonthlyIncome:             Yup.number().typeError("Must be a number").nullable(),
@@ -201,7 +201,7 @@ const AddEdit_MemberAccount = () => {
         InterestRate:             ts(accountState.formData.InterestRate),
         F_InterestCalculationType:ts(accountState.formData.F_InterestCalculationType),
         F_RepaymentMode:          ts(accountState.formData.F_RepaymentMode),
-        TenureMonths:             ts(accountState.formData.TenureMonths),
+        PeriodCount:              ts(accountState.formData.PeriodCount),
         EMIAmount:                ts(accountState.formData.EMIAmount),
         RepaymentStartDate:       ts(accountState.formData.RepaymentStartDate),
         Purpose:                  ts(accountState.formData.Purpose),
@@ -237,7 +237,7 @@ const AddEdit_MemberAccount = () => {
             fd.append("InterestRate",              values.InterestRate || "0");
             fd.append("F_InterestCalculationType", values.F_InterestCalculationType || "");
             fd.append("F_RepaymentMode",           values.F_RepaymentMode || "");
-            fd.append("TenureMonths",              values.TenureMonths || "0");
+            fd.append("PeriodCount",               values.PeriodCount || "0");
             fd.append("EMIAmount",                 values.EMIAmount || "0");
             fd.append("RepaymentStartDate",        values.RepaymentStartDate || "");
             // Collateral / Mortgage
@@ -456,17 +456,17 @@ const AddEdit_MemberAccount = () => {
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
-                                                                <Label>Tenure (Months) <span className="text-danger">*</span></Label>
+                                                                <Label>Period Count <span className="text-danger">*</span></Label>
                                                                 <Input
                                                                     type="number"
-                                                                    name="TenureMonths"
+                                                                    name="PeriodCount"
                                                                     placeholder="e.g. 24"
-                                                                    value={values.TenureMonths}
+                                                                    value={values.PeriodCount}
                                                                     onChange={handleChange}
                                                                     onBlur={handleBlur}
-                                                                    invalid={touched.TenureMonths && !!errors.TenureMonths}
+                                                                    invalid={touched.PeriodCount && !!errors.PeriodCount}
                                                                 />
-                                                                <ErrorMessage name="TenureMonths" component="div" className="text-danger small mt-1" />
+                                                                <ErrorMessage name="PeriodCount" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                     </Row>
