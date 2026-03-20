@@ -3,13 +3,13 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, ErrorMessage } from "formik";
 import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
-import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData } from "../../store/Functions";
+import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData, Fn_GetReport } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
 import * as Yup from "yup";
 import {
     Card, CardBody, CardFooter, Col, Container,
-    FormGroup, Input, Label, Row
+    FormGroup, Input, Label, Row, InputGroup, InputGroupText, Spinner
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Btn } from "../../AbstractElements";
@@ -131,6 +131,7 @@ const AddEdit_MemberAccount = () => {
     const [calcTypeState,   setCalcTypeState]   = useState<DropState>(emptyDrop());
     const [repayState,      setRepayState]      = useState<DropState>(emptyDrop());
     const [collateralState, setCollateralState] = useState<DropState>(emptyDrop());
+    const [isCalculatingEMI, setIsCalculatingEMI] = useState(false);
 
     const isEditMode = accountState.id > 0;
     const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/MemberAccountEdit/Id`;
@@ -297,7 +298,40 @@ const AddEdit_MemberAccount = () => {
                             onSubmit={handleSubmit}
                             enableReinitialize
                         >
-                            {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => {
+                            {({ values, handleChange, handleBlur, errors, touched, isSubmitting, setFieldValue }: FormikProps<FormValues>) => {
+                                /* ── Calculate EMI from API ── */
+                                const handleCalculateEMI = async () => {
+                                    if (!values.LoanAmount || !values.InterestRate || !values.PeriodCount || !values.F_AccountTypeScheme) {
+                                        alert("Please fill Loan Amount, Interest Rate, Period Count, and Account Type Scheme to calculate EMI.");
+                                        return;
+                                    }
+                                    setIsCalculatingEMI(true);
+                                    try {
+                                        const fd = new FormData();
+                                        fd.append("LoanAmount", values.LoanAmount);
+                                        fd.append("InterestRate", values.InterestRate);
+                                        fd.append("PeriodCount", values.PeriodCount);
+                                        fd.append("F_AccountTypeScheme", values.F_AccountTypeScheme);
+
+                                        const response = await Fn_GetReport(
+                                            dispatch,
+                                            () => {},
+                                            "emiData",
+                                            `CalculateLoanEMI/0/token`,
+                                            { arguList: { id: 0, formData: fd } },
+                                            true
+                                        );
+                                        if (response && response[0]?.EMIAmount !== undefined) {
+                                            setFieldValue("EMIAmount", String(response[0].EMIAmount));
+                                        } else if (response && response.EMIAmount !== undefined) {
+                                            setFieldValue("EMIAmount", String(response.EMIAmount));
+                                        }
+                                    } catch (error) {
+                                        console.error("EMI Calculation failed:", error);
+                                    } finally {
+                                        setIsCalculatingEMI(false);
+                                    }
+                                };
                                 const lt = values.F_LoanType;
                                 return (
                                     <Form className="theme-form" onKeyDown={handleEnterToNextField}>
@@ -475,15 +509,23 @@ const AddEdit_MemberAccount = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>EMI Amount <span className="text-danger">*</span></Label>
-                                                                <Input
-                                                                    type="number"
-                                                                    name="EMIAmount"
-                                                                    placeholder="e.g. 5000"
-                                                                    value={values.EMIAmount}
-                                                                    onChange={handleChange}
-                                                                    onBlur={handleBlur}
-                                                                    invalid={touched.EMIAmount && !!errors.EMIAmount}
-                                                                />
+                                                                <InputGroup>
+                                                                    <Input
+                                                                        type="number"
+                                                                        name="EMIAmount"
+                                                                        placeholder="e.g. 5000"
+                                                                        value={values.EMIAmount}
+                                                                        readOnly
+                                                                        style={{ backgroundColor: "#e9ecef" }}
+                                                                    />
+                                                                    <InputGroupText
+                                                                        style={{ cursor: isCalculatingEMI ? "not-allowed" : "pointer", backgroundColor: "#4e73df", color: "#fff", border: "none" }}
+                                                                        onClick={isCalculatingEMI ? undefined : handleCalculateEMI}
+                                                                        title="Calculate EMI"
+                                                                    >
+                                                                        {isCalculatingEMI ? <Spinner size="sm" /> : "Calculate"}
+                                                                    </InputGroupText>
+                                                                </InputGroup>
                                                                 <ErrorMessage name="EMIAmount" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
