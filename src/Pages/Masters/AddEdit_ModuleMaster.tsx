@@ -144,9 +144,9 @@ const AddEdit_ModuleMaster = () => {
                             {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
-                                        <CardBody>
+                                        <CardBody className="py-2">
                                             <fieldset disabled={!moduleState.isEditingOpen}>
-                                                <Row className="gy-0">
+                                                <Row className="g-2">
                                                     <Col md="4">
                                                         <FormGroup className="mb-0">
                                                             <Label>
@@ -204,7 +204,7 @@ const AddEdit_ModuleMaster = () => {
                                                 </Row>
                                             </fieldset>
                                         </CardBody>
-                                        <CardFooter className="d-flex align-items-center gap-2">
+                                        <CardFooter className="d-flex align-items-center gap-2 py-2">
                                             <Btn color="primary" type="submit" disabled={isSubmitting || !moduleState.isEditingOpen}>
                                                 <i className="fa fa-save me-1"></i> {isEditMode ? "Update Module" : "Save Module"}
                                             </Btn>

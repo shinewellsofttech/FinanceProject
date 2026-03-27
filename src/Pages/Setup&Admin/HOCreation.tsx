@@ -395,9 +395,9 @@ const HOCreation = () => {
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
                                         <CardHeaderCommon title={`${isEditMode ? "Edit" : "Add"} Head Office Information`} tagClass="card-title mb-0" />
-                                        <CardBody>
+                                        <CardBody className="py-2">
                                             <fieldset disabled={!hoState.isEditingOpen}>
-                                                <Row className="gy-0">
+                                                <Row className="g-2">
                                                     <Col md="4">
                                                         <FormGroup className="mb-0">
                                                             <Label>
@@ -504,15 +504,14 @@ const HOCreation = () => {
                                                         </FormGroup>
                                                     </Col>
 
-                                                    <Col md="12">
+                                                    <Col md="6">
                                                         <FormGroup className="mb-0">
                                                             <Label>
                                                                 Registered Address <span className="text-danger">*</span>
                                                             </Label>
                                                             <Input
-                                                                type="textarea"
+                                                                type="text"
                                                                 name="RegisteredAddress"
-                                                                rows={3}
                                                                 placeholder="Full registered address as per MCA"
                                                                 value={values.RegisteredAddress}
                                                                 onChange={handleChange}
@@ -523,7 +522,7 @@ const HOCreation = () => {
                                                         </FormGroup>
                                                     </Col>
 
-                                                    <Col md="4">
+                                                    <Col md="2">
                                                         <FormGroup className="mb-0">
                                                             <Label>
                                                                 Country <span className="text-danger">*</span>
@@ -546,7 +545,7 @@ const HOCreation = () => {
                                                             <ErrorMessage name="F_CountryMaster" component="div" className="text-danger small mt-1" />
                                                         </FormGroup>
                                                     </Col>
-                                                    <Col md="4">
+                                                    <Col md="2">
                                                         <FormGroup className="mb-0">
                                                             <Label>
                                                                 State <span className="text-danger">*</span>
@@ -569,7 +568,7 @@ const HOCreation = () => {
                                                             <ErrorMessage name="F_StateMaster" component="div" className="text-danger small mt-1" />
                                                         </FormGroup>
                                                     </Col>
-                                                    <Col md="4">
+                                                    <Col md="2">
                                                         <FormGroup className="mb-0">
                                                             <Label>
                                                                 City <span className="text-danger">*</span>
@@ -721,7 +720,7 @@ const HOCreation = () => {
                                                 </Row>
                                             </fieldset>
                                         </CardBody>
-                                        <CardFooter className="d-flex align-items-center gap-2">
+                                        <CardFooter className="d-flex align-items-center gap-2 py-2">
                                             <Btn color="primary" type="submit" disabled={isSubmitting || !hoState.isEditingOpen}>
                                                 <i className="fa fa-plus me-1"></i> {isEditMode ? "Update Head Office" : "Create Head Office"}
                                             </Btn>

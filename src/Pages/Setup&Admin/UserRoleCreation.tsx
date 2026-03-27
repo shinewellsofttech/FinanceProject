@@ -162,9 +162,9 @@ const UserRoleCreation = () => {
                             {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
-                                        <CardBody>
+                                        <CardBody className="py-2">
                                             <fieldset disabled={!roleState.isEditingOpen}>
-                                                <Row className="gy-0">
+                                                <Row className="g-2">
                                                     <Col md="4">
                                                         <FormGroup className="mb-0">
                                                             <Label>
@@ -286,7 +286,7 @@ const UserRoleCreation = () => {
                                                         <h6 className="mb-0 text-primary">Reference: Default Role Templates</h6>
                                                     </div>
                                                     <CardBody className="bg-light bg-opacity-50">
-                                                        <Row className="gy-0">
+                                                        <Row className="g-2">
                                                             <Col md="4">
                                                                 <Card className="h-100 shadow-sm border mb-0">
                                                                     <CardBody className="p-3">

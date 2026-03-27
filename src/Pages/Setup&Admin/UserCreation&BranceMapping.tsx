@@ -204,8 +204,8 @@ const UserCreationBranceMapping = () => {
                             {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
-                                        <CardBody>
-                                            <Row className="gy-0">
+                                        <CardBody className="py-2">
+                                            <Row className="g-2">
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>

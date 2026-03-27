@@ -137,8 +137,8 @@ const ChangePassword = () => {
             <Form className="theme-form" onSubmit={handleSubmit}>
               <Card>
                 <CardHeaderCommon title="Change Password" tagClass="card-title mb-0" />
-                <CardBody>
-                  <Row className="gy-0">
+                <CardBody className="py-2">
+                  <Row className="g-2">
                     <Col md="4">
                       <FormGroup className="mb-0">
                         <Label>User Master <span className="text-danger">*</span></Label>

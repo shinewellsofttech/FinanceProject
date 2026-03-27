@@ -9,10 +9,22 @@ import { handleEnterToNextField } from "../../utils/formUtils";
 import * as Yup from "yup";
 import {
     Card, CardBody, CardFooter, Col, Container,
-    FormGroup, Input, Label, Row, InputGroup, InputGroupText, Spinner
+    FormGroup, Input, Label, Row, InputGroup, InputGroupText, Spinner, Table
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Btn } from "../../AbstractElements";
+
+/* ─── EMI Schedule Interface ─────────────────── */
+interface EMIScheduleItem {
+    InstallmentNo: number;
+    DueDate: string;
+    OpeningPrincipal: number;
+    EMIAmount: number;
+    PrincipalAmount: number;
+    InterestAmount: number;
+    ClosingPrincipal: number;
+    IsPaid: boolean;
+}
 
 /* ─── Loan Type IDs (from API response) ─────────────────── */
 const LOAN_TYPE = {
@@ -39,6 +51,8 @@ interface FormValues {
     PeriodCount: string;
     EMIAmount: string;
     RepaymentStartDate: string;
+    TotalInterest: string;
+    TotalRepaymentAmount: string;
     // Personal Loan
     Purpose: string;
     MonthlyIncome: string;
@@ -64,6 +78,15 @@ interface FormValues {
     PropertyAddress: string;
     PropertyValue: string;
     PropertyType: string;
+    // API JSON fields (for parsing)
+    EMIScheduleJson?: string;
+    CollateralJson?: string;
+    PersonalJson?: string;
+    GoldJson?: string;
+    VehicleJson?: string;
+    HousingJson?: string;
+    MortgageJson?: string;
+    EducationJson?: string;
 }
 
 const initialValues: FormValues = {
@@ -78,6 +101,8 @@ const initialValues: FormValues = {
     PeriodCount: "",
     EMIAmount: "",
     RepaymentStartDate: "",
+    TotalInterest: "",
+    TotalRepaymentAmount: "",
     Purpose: "",
     MonthlyIncome: "",
     EmployerName: "",
@@ -132,9 +157,12 @@ const AddEdit_MemberAccount = () => {
     const [repayState,      setRepayState]      = useState<DropState>(emptyDrop());
     const [collateralState, setCollateralState] = useState<DropState>(emptyDrop());
     const [isCalculatingEMI, setIsCalculatingEMI] = useState(false);
+    const [totalInterest, setTotalInterest] = useState<string>("");
+    const [totalRepaymentAmount, setTotalRepaymentAmount] = useState<string>("");
+    const [emiSchedule, setEmiSchedule] = useState<EMIScheduleItem[]>([]);
 
     const isEditMode = accountState.id > 0;
-    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/MemberAccountEdit/Id`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/MemberAccountData/Id`;
 
     const storedUser   = localStorage.getItem("user");
     const currentUser  = storedUser ? JSON.parse(storedUser) : null;
@@ -166,6 +194,194 @@ const AddEdit_MemberAccount = () => {
     }, [dispatch, location.state, API_URL_EDIT]);
 
     useEffect(() => { firstRef.current?.focus(); }, []);
+
+    /* ── Parse JSON fields from API response ── */
+    useEffect(() => {
+        const fd = accountState.formData as any;
+        if (!fd) return;
+
+        // Parse EMI Schedule JSON
+        if (fd.EMIScheduleJson) {
+            try {
+                const parsed = typeof fd.EMIScheduleJson === 'string' 
+                    ? JSON.parse(fd.EMIScheduleJson) 
+                    : fd.EMIScheduleJson;
+                setEmiSchedule(Array.isArray(parsed) ? parsed : []);
+            } catch (e) {
+                console.error("Error parsing EMIScheduleJson:", e);
+            }
+        }
+
+        // Parse Collateral JSON
+        if (fd.CollateralJson) {
+            try {
+                const parsed = typeof fd.CollateralJson === 'string' 
+                    ? JSON.parse(fd.CollateralJson) 
+                    : fd.CollateralJson;
+                const collateral = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (collateral) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            F_CollateralType: String(collateral.F_CollateralType ?? ""),
+                            CollateralValue: String(collateral.CollateralValue ?? ""),
+                            CollateralDescription: collateral.Description ?? "",
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing CollateralJson:", e);
+            }
+        }
+
+        // Parse Personal Loan JSON
+        if (fd.PersonalJson) {
+            try {
+                const parsed = typeof fd.PersonalJson === 'string' 
+                    ? JSON.parse(fd.PersonalJson) 
+                    : fd.PersonalJson;
+                const personal = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (personal) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            Purpose: personal.Purpose ?? "",
+                            MonthlyIncome: String(personal.MonthlyIncome ?? ""),
+                            EmployerName: personal.EmployerName ?? "",
+                            IsSalaryAccount: personal.IsSalaryAccount ?? false,
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing PersonalJson:", e);
+            }
+        }
+
+        // Parse Gold Loan JSON
+        if (fd.GoldJson) {
+            try {
+                const parsed = typeof fd.GoldJson === 'string' 
+                    ? JSON.parse(fd.GoldJson) 
+                    : fd.GoldJson;
+                const gold = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (gold) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            GoldWeight: String(gold.GoldWeight ?? ""),
+                            GoldRate: String(gold.GoldRate ?? ""),
+                            LTVPercentage: String(gold.LTVPercentage ?? ""),
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing GoldJson:", e);
+            }
+        }
+
+        // Parse Vehicle Loan JSON
+        if (fd.VehicleJson) {
+            try {
+                const parsed = typeof fd.VehicleJson === 'string' 
+                    ? JSON.parse(fd.VehicleJson) 
+                    : fd.VehicleJson;
+                const vehicle = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (vehicle) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            VehicleType: vehicle.VehicleType ?? "",
+                            VehicleNumber: vehicle.VehicleNumber ?? "",
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing VehicleJson:", e);
+            }
+        }
+
+        // Parse Housing Loan JSON
+        if (fd.HousingJson) {
+            try {
+                const parsed = typeof fd.HousingJson === 'string' 
+                    ? JSON.parse(fd.HousingJson) 
+                    : fd.HousingJson;
+                const housing = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (housing) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            PropertyAddress: housing.PropertyAddress ?? "",
+                            PropertyValue: String(housing.PropertyValue ?? ""),
+                            PropertyType: housing.PropertyType ?? "",
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing HousingJson:", e);
+            }
+        }
+
+        // Parse Mortgage Loan JSON
+        if (fd.MortgageJson) {
+            try {
+                const parsed = typeof fd.MortgageJson === 'string' 
+                    ? JSON.parse(fd.MortgageJson) 
+                    : fd.MortgageJson;
+                const mortgage = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (mortgage) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            MortgageType: mortgage.MortgageType ?? "",
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing MortgageJson:", e);
+            }
+        }
+
+        // Parse Education Loan JSON
+        if (fd.EducationJson) {
+            try {
+                const parsed = typeof fd.EducationJson === 'string' 
+                    ? JSON.parse(fd.EducationJson) 
+                    : fd.EducationJson;
+                const education = Array.isArray(parsed) ? parsed[0] : parsed;
+                if (education) {
+                    setAccountState(prev => ({
+                        ...prev,
+                        formData: {
+                            ...prev.formData,
+                            CourseName: education.CourseName ?? "",
+                            CourseDurationYears: String(education.CourseDurationYears ?? ""),
+                            InstituteName: education.InstituteName ?? "",
+                        }
+                    }));
+                }
+            } catch (e) {
+                console.error("Error parsing EducationJson:", e);
+            }
+        }
+    }, [accountState.formData?.EMIScheduleJson, accountState.formData?.CollateralJson, 
+        accountState.formData?.PersonalJson, accountState.formData?.GoldJson,
+        accountState.formData?.VehicleJson, accountState.formData?.HousingJson,
+        accountState.formData?.MortgageJson, accountState.formData?.EducationJson]);
+
+    /* ── Helper to format date from API ── */
+    const formatDateForInput = (dateStr: string | null | undefined): string => {
+        if (!dateStr) return "";
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return "";
+        return date.toISOString().split('T')[0];
+    };
 
     /* ── Validation ── */
     const validationSchema = useMemo(() =>
@@ -204,7 +420,9 @@ const AddEdit_MemberAccount = () => {
         F_RepaymentMode:          ts(accountState.formData.F_RepaymentMode),
         PeriodCount:              ts(accountState.formData.PeriodCount),
         EMIAmount:                ts(accountState.formData.EMIAmount),
-        RepaymentStartDate:       ts(accountState.formData.RepaymentStartDate),
+        RepaymentStartDate:       formatDateForInput(accountState.formData.RepaymentStartDate),
+        TotalInterest:            ts(accountState.formData.TotalInterest),
+        TotalRepaymentAmount:     ts(accountState.formData.TotalRepaymentAmount),
         Purpose:                  ts(accountState.formData.Purpose),
         MonthlyIncome:            ts(accountState.formData.MonthlyIncome),
         EmployerName:             ts(accountState.formData.EmployerName),
@@ -241,6 +459,8 @@ const AddEdit_MemberAccount = () => {
             fd.append("PeriodCount",               values.PeriodCount || "0");
             fd.append("EMIAmount",                 values.EMIAmount || "0");
             fd.append("RepaymentStartDate",        values.RepaymentStartDate || "");
+            fd.append("TotalInterest",             values.TotalInterest || "0");
+            fd.append("TotalRepaymentAmount",      values.TotalRepaymentAmount || "0");
             // Collateral / Mortgage
             fd.append("F_CollateralType",          values.F_CollateralType || "");
             fd.append("CollateralValue",           values.CollateralValue || "0");
@@ -306,6 +526,8 @@ const AddEdit_MemberAccount = () => {
                                         return;
                                     }
                                     setIsCalculatingEMI(true);
+                                    setTotalInterest("");
+                                    setTotalRepaymentAmount("");
                                     try {
                                         const fd = new FormData();
                                         fd.append("LoanAmount", values.LoanAmount);
@@ -321,10 +543,17 @@ const AddEdit_MemberAccount = () => {
                                             { arguList: { id: 0, formData: fd } },
                                             true
                                         );
-                                        if (response && response[0]?.EMIAmount !== undefined) {
-                                            setFieldValue("EMIAmount", String(response[0].EMIAmount));
-                                        } else if (response && response.EMIAmount !== undefined) {
-                                            setFieldValue("EMIAmount", String(response.EMIAmount));
+                                        const data = response?.[0] ?? response;
+                                        if (data?.EMIAmount !== undefined) {
+                                            setFieldValue("EMIAmount", String(data.EMIAmount));
+                                        }
+                                        if (data?.TotalInterest !== undefined) {
+                                            setFieldValue("TotalInterest", String(data.TotalInterest));
+                                            setTotalInterest(String(data.TotalInterest));
+                                        }
+                                        if (data?.TotalRepaymentAmount !== undefined) {
+                                            setFieldValue("TotalRepaymentAmount", String(data.TotalRepaymentAmount));
+                                            setTotalRepaymentAmount(String(data.TotalRepaymentAmount));
                                         }
                                     } catch (error) {
                                         console.error("EMI Calculation failed:", error);
@@ -541,6 +770,34 @@ const AddEdit_MemberAccount = () => {
                                                                     invalid={touched.RepaymentStartDate && !!errors.RepaymentStartDate}
                                                                 />
                                                                 <ErrorMessage name="RepaymentStartDate" component="div" className="text-danger small mt-1" />
+                                                            </FormGroup>
+                                                        </Col>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
+                                                                <Label>Total Interest (₹)</Label>
+                                                                <Input
+                                                                    type="text"
+                                                                    name="TotalInterest"
+                                                                    value={values.TotalInterest ? `₹ ${parseFloat(values.TotalInterest).toLocaleString("en-IN")}` : ""}
+                                                                    readOnly
+                                                                    placeholder="Calculated after EMI"
+                                                                    style={{ backgroundColor: "#e9ecef" }}
+                                                                />
+                                                            </FormGroup>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row className="gy-2 mb-2">
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
+                                                                <Label>Total Repayment Amount (₹)</Label>
+                                                                <Input
+                                                                    type="text"
+                                                                    name="TotalRepaymentAmount"
+                                                                    value={values.TotalRepaymentAmount ? `₹ ${parseFloat(values.TotalRepaymentAmount).toLocaleString("en-IN")}` : ""}
+                                                                    readOnly
+                                                                    placeholder="Calculated after EMI"
+                                                                    style={{ backgroundColor: "#e9ecef" }}
+                                                                />
                                                             </FormGroup>
                                                         </Col>
                                                     </Row>
@@ -898,6 +1155,51 @@ const AddEdit_MemberAccount = () => {
                                                             </Col>
                                                         </Row>
                                                     </fieldset>
+                                                </CardBody>
+                                            </Card>
+                                        )}
+
+                                        {/* ── EMI SCHEDULE TABLE (only in edit mode) ── */}
+                                        {isEditMode && emiSchedule.length > 0 && (
+                                            <Card className="mt-3">
+                                                <CardBody>
+                                                    <h6 className="mb-3 fw-semibold text-secondary">EMI Schedule</h6>
+                                                    <div className="table-responsive" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                                        <Table bordered hover size="sm" className="mb-0">
+                                                            <thead className="table-light" style={{ position: 'sticky', top: 0 }}>
+                                                                <tr>
+                                                                    <th className="text-center">#</th>
+                                                                    <th>Due Date</th>
+                                                                    <th className="text-end">Opening Principal</th>
+                                                                    <th className="text-end">EMI Amount</th>
+                                                                    <th className="text-end">Principal</th>
+                                                                    <th className="text-end">Interest</th>
+                                                                    <th className="text-end">Closing Principal</th>
+                                                                    <th className="text-center">Status</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                {emiSchedule.map((item, idx) => (
+                                                                    <tr key={idx} className={item.IsPaid ? "table-success" : ""}>
+                                                                        <td className="text-center">{item.InstallmentNo}</td>
+                                                                        <td>{new Date(item.DueDate).toLocaleDateString("en-IN")}</td>
+                                                                        <td className="text-end">₹ {item.OpeningPrincipal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                                                                        <td className="text-end">₹ {item.EMIAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                                                                        <td className="text-end">₹ {item.PrincipalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                                                                        <td className="text-end">₹ {item.InterestAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                                                                        <td className="text-end">₹ {item.ClosingPrincipal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+                                                                        <td className="text-center">
+                                                                            {item.IsPaid ? (
+                                                                                <span className="badge bg-success">Paid</span>
+                                                                            ) : (
+                                                                                <span className="badge bg-warning text-dark">Pending</span>
+                                                                            )}
+                                                                        </td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </Table>
+                                                    </div>
                                                 </CardBody>
                                             </Card>
                                         )}

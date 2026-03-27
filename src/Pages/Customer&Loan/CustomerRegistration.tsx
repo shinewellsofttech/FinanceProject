@@ -473,7 +473,7 @@ const CustomerRegistration = () => {
                                                         <Col md="12">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Current Address <span className="text-danger">*</span></Label>
-                                                                <Input type="textarea" name="CurrentAddress" placeholder="House No, Street, Area" value={values.CurrentAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.CurrentAddress && !!errors.CurrentAddress} />
+                                                                <Input type="text" name="CurrentAddress" placeholder="House No, Street, Area" value={values.CurrentAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.CurrentAddress && !!errors.CurrentAddress} />
                                                                 <ErrorMessage name="CurrentAddress" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -537,7 +537,7 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Business Address</Label>
-                                                                <Input type="textarea" name="BusinessAddress" placeholder="Business / workplace address" value={values.BusinessAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.BusinessAddress && !!errors.BusinessAddress} />
+                                                                <Input type="text" name="BusinessAddress" placeholder="Business / workplace address" value={values.BusinessAddress} onChange={handleChange} onBlur={handleBlur} invalid={touched.BusinessAddress && !!errors.BusinessAddress} />
                                                                 <ErrorMessage name="BusinessAddress" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -690,7 +690,7 @@ const CustomerRegistration = () => {
                                         >
                                             {({ values, handleChange, handleBlur, errors, touched, setFieldValue, isSubmitting }: FormikProps<KYCFormValues>) => (
                                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
-                                                    <Row className="gy-0">
+                                                    <Row className="g-2">
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ID Proof Type <span className="text-danger">*</span></Label>
@@ -766,7 +766,7 @@ const CustomerRegistration = () => {
                                                             <Card className="border border-info bg-light-info mb-0 shadow-sm">
                                                                 <CardBody>
                                                                     <h6 className="mb-3 text-info"><i className="fa fa-search me-2"></i> Verification Actions</h6>
-                                                                    <Row className="gy-0">
+                                                                    <Row className="g-2">
                                                                         <Col md="4">
                                                                             <FormGroup className="mb-0">
                                                                                 <Label>CKYC Status</Label>

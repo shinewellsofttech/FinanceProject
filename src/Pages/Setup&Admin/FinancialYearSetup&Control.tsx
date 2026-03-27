@@ -168,8 +168,8 @@ const FinancialYearSetupControl = () => {
                             {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => (
                                 <Form className="theme-form" onKeyDown={handleEnterToNextField}>
                                     <Card>
-                                        <CardBody>
-                                            <Row className="gy-0">
+                                        <CardBody className="py-2">
+                                            <Row className="g-2">
                                                 <Col md="4">
                                                     <FormGroup className="mb-0">
                                                         <Label>
@@ -266,7 +266,7 @@ const FinancialYearSetupControl = () => {
                                                 </Col>
                                             </Row>
                                         </CardBody>
-                                        <CardFooter className="d-flex align-items-center gap-2">
+                                        <CardFooter className="d-flex align-items-center gap-2 py-2">
                                             <Btn color="primary" type="submit" disabled={isSubmitting}>
                                                 <i className="fa fa-calendar-plus-o me-1"></i> {isEditMode ? "Update Financial Year" : "Create Financial Year"}
                                             </Btn>

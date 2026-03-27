@@ -146,8 +146,8 @@ const AddEdit_StateMaster = () => {
                       title={`${isEditMode ? "Edit" : "Add"} State`}
                       tagClass="card-title mb-0"
                     />
-                    <CardBody>
-                      <Row className="gy-0">
+                    <CardBody className="py-2">
+                      <Row className="g-2">
                         <Col md="4">
                           <FormGroup className="mb-0">
                             <Label>Name <span className="text-danger">*</span></Label>
@@ -187,7 +187,7 @@ const AddEdit_StateMaster = () => {
                         </Col>
                       </Row>
                     </CardBody>
-                    <CardFooter className="d-flex align-items-center gap-2">
+                    <CardFooter className="d-flex align-items-center gap-2 py-2">
                       <Btn color="primary" type="submit" disabled={isSubmitting}>
                         <i className="fa fa-save me-1"></i> {isEditMode ? "Update" : "Save"}
                       </Btn>

@@ -199,7 +199,7 @@ const LoanApplication = () => {
                                 >
                                     {({ values, handleChange, handleBlur, errors, touched, setFieldValue, isSubmitting }: FormikProps<LoanAppFormValues>) => (
                                         <Form className="theme-form" onKeyDown={handleEnterToNextField}>
-                                            <Row className="gy-0">
+                                            <Row className="g-2">
                                                 {/* Primary Application Details */}
                                                 <Col md="4">
                                                     <FormGroup className="mb-1">
@@ -473,7 +473,7 @@ const LoanApplication = () => {
                                                     <Card className="border border-primary bg-light-primary mb-0 shadow-sm">
                                                         <CardBody>
                                                             <h6 className="mb-3 text-primary"><i className="fa fa-users me-2"></i> Co-Applicant Details (Optional)</h6>
-                                                            <Row className="gy-0">
+                                                            <Row className="g-2">
                                                                 <Col md="4">
                                                                     <FormGroup className="mb-1">
                                                                         <Label>Co-Applicant Name</Label>
@@ -522,7 +522,7 @@ const LoanApplication = () => {
                                                                 <strong>Rule:</strong> A member acting as Guarantor CANNOT take a new loan until the guaranteed loan is closed. Enforce this check at application stage. Guarantor CIBIL must also be checked.
                                                             </Alert>
 
-                                                            <Row className="gy-0">
+                                                            <Row className="g-2">
                                                                 <Col md="4">
                                                                     <FormGroup className="mb-1">
                                                                         <Label>Guarantor Customer ID</Label>
@@ -557,7 +557,7 @@ const LoanApplication = () => {
                                                     <Card className="border border-info bg-light-info mb-0 shadow-sm">
                                                         <CardBody>
                                                             <h6 className="mb-3 text-info"><i className="fa fa-paperclip me-2"></i> Loan Application Documents</h6>
-                                                            <Row className="gy-0">
+                                                            <Row className="g-2">
                                                                 <Col md="4">
                                                                     <FormGroup className="mb-1">
                                                                         <Label>Loan Application Form (Signed) <span className="text-danger">*</span></Label>
