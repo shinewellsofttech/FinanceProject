@@ -519,10 +519,9 @@ const AddEdit_MemberAccount = () => {
                             enableReinitialize
                         >
                             {({ values, handleChange, handleBlur, errors, touched, isSubmitting, setFieldValue }: FormikProps<FormValues>) => {
-                                /* ── Calculate EMI from API ── */
-                                const handleCalculateEMI = async () => {
-                                    if (!values.LoanAmount || !values.InterestRate || !values.PeriodCount || !values.F_AccountTypeScheme) {
-                                        alert("Please fill Loan Amount, Interest Rate, Period Count, and Account Type Scheme to calculate EMI.");
+                                /* ── Auto Calculate EMI from API ── */
+                                const autoCalculateEMI = async (loanAmount: string, interestRate: string, periodCount: string, schemeId: string) => {
+                                    if (!loanAmount || !interestRate || !periodCount || !schemeId) {
                                         return;
                                     }
                                     setIsCalculatingEMI(true);
@@ -530,10 +529,10 @@ const AddEdit_MemberAccount = () => {
                                     setTotalRepaymentAmount("");
                                     try {
                                         const fd = new FormData();
-                                        fd.append("LoanAmount", values.LoanAmount);
-                                        fd.append("InterestRate", values.InterestRate);
-                                        fd.append("PeriodCount", values.PeriodCount);
-                                        fd.append("F_AccountTypeScheme", values.F_AccountTypeScheme);
+                                        fd.append("LoanAmount", loanAmount);
+                                        fd.append("InterestRate", interestRate);
+                                        fd.append("PeriodCount", periodCount);
+                                        fd.append("F_AccountTypeScheme", schemeId);
 
                                         const response = await Fn_GetReport(
                                             dispatch,
@@ -611,7 +610,10 @@ const AddEdit_MemberAccount = () => {
                                                                     type="select"
                                                                     name="F_AccountTypeScheme"
                                                                     value={values.F_AccountTypeScheme}
-                                                                    onChange={handleChange}
+                                                                    onChange={(e) => {
+                                                                        handleChange(e);
+                                                                        autoCalculateEMI(values.LoanAmount, values.InterestRate, values.PeriodCount, e.target.value);
+                                                                    }}
                                                                     onBlur={handleBlur}
                                                                     invalid={touched.F_AccountTypeScheme && !!errors.F_AccountTypeScheme}
                                                                 >
@@ -653,9 +655,12 @@ const AddEdit_MemberAccount = () => {
                                                                     name="LoanAmount"
                                                                     placeholder="e.g. 50000"
                                                                     value={values.LoanAmount}
-                                                                    onChange={handleChange}
+                                                                    onChange={(e) => {
+                                                                        handleChange(e);
+                                                                        autoCalculateEMI(e.target.value, values.InterestRate, values.PeriodCount, values.F_AccountTypeScheme);
+                                                                    }}
                                                                     onBlur={handleBlur}
-                                                                                                           invalid={touched.LoanAmount && !!errors.LoanAmount}
+                                                                    invalid={touched.LoanAmount && !!errors.LoanAmount}
                                                                 />
                                                                 <ErrorMessage name="LoanAmount" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
@@ -669,7 +674,10 @@ const AddEdit_MemberAccount = () => {
                                                                     step="0.01"
                                                                     placeholder="e.g. 12.50"
                                                                     value={values.InterestRate}
-                                                                    onChange={handleChange}
+                                                                    onChange={(e) => {
+                                                                        handleChange(e);
+                                                                        autoCalculateEMI(values.LoanAmount, e.target.value, values.PeriodCount, values.F_AccountTypeScheme);
+                                                                    }}
                                                                     onBlur={handleBlur}
                                                                     invalid={touched.InterestRate && !!errors.InterestRate}
                                                                 />
@@ -725,7 +733,10 @@ const AddEdit_MemberAccount = () => {
                                                                     name="PeriodCount"
                                                                     placeholder="e.g. 24"
                                                                     value={values.PeriodCount}
-                                                                    onChange={handleChange}
+                                                                    onChange={(e) => {
+                                                                        handleChange(e);
+                                                                        autoCalculateEMI(values.LoanAmount, values.InterestRate, e.target.value, values.F_AccountTypeScheme);
+                                                                    }}
                                                                     onBlur={handleBlur}
                                                                     invalid={touched.PeriodCount && !!errors.PeriodCount}
                                                                 />
@@ -737,24 +748,15 @@ const AddEdit_MemberAccount = () => {
                                                     <Row className="gy-2 mb-2">
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
-                                                                <Label>EMI Amount <span className="text-danger">*</span></Label>
-                                                                <InputGroup>
-                                                                    <Input
-                                                                        type="number"
-                                                                        name="EMIAmount"
-                                                                        placeholder="e.g. 5000"
-                                                                        value={values.EMIAmount}
-                                                                        readOnly
-                                                                        style={{ backgroundColor: "#e9ecef" }}
-                                                                    />
-                                                                    <InputGroupText
-                                                                        style={{ cursor: isCalculatingEMI ? "not-allowed" : "pointer", backgroundColor: "#4e73df", color: "#fff", border: "none" }}
-                                                                        onClick={isCalculatingEMI ? undefined : handleCalculateEMI}
-                                                                        title="Calculate EMI"
-                                                                    >
-                                                                        {isCalculatingEMI ? <Spinner size="sm" /> : "Calculate"}
-                                                                    </InputGroupText>
-                                                                </InputGroup>
+                                                                <Label>EMI Amount <span className="text-danger">*</span> {isCalculatingEMI && <Spinner size="sm" className="ms-2" />}</Label>
+                                                                <Input
+                                                                    type="number"
+                                                                    name="EMIAmount"
+                                                                    placeholder="Auto-calculated"
+                                                                    value={values.EMIAmount}
+                                                                    readOnly
+                                                                    style={{ backgroundColor: "#e9ecef" }}
+                                                                />
                                                                 <ErrorMessage name="EMIAmount" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>

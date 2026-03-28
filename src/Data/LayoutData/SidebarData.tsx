@@ -116,6 +116,27 @@ export const MenuList: MenuItem[] = [
     ],
   },
   {
+    title: "Transactions",
+    Items: [
+      {
+        id: 1,
+        title: "Receipt",
+        path: `${process.env.PUBLIC_URL}/receipt`,
+        icon: "FileText",
+        type: "link",
+        bookmark: true,
+      },
+      {
+        id: 2,
+        title: "Payment",
+        path: `${process.env.PUBLIC_URL}/payment`,
+        icon: "CreditCard",
+        type: "link",
+        bookmark: true,
+      },
+    ],
+  },
+  {
     title: "Customer & Loan",
     Items: [
       {

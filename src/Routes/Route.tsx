@@ -34,6 +34,8 @@ import LoanClosing from "../Pages/Operations/LoanClosing";
 import Foreclosure from "../Pages/Operations/Foreclosure";
 import AuctionManagement from "../Pages/Operations/AuctionManagement";
 import RepaymentForm from "../Pages/Operations/RepaymentForm";
+import Receipt from "../Pages/Transactions/Receipt";
+import Payment from "../Pages/Transactions/Payment";
 import PageList_ModuleMaster from "../Pages/Masters/PageList_ModuleMaster";
 import AddEdit_ModuleMaster from "../Pages/Masters/AddEdit_ModuleMaster";
 import PageList_MemberAccount from "../Pages/Masters/PageList_MemberAccount";
@@ -73,6 +75,10 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/foreclosure`, Component: <Foreclosure /> },
   { path: `${process.env.PUBLIC_URL}/auctionManagement`, Component: <AuctionManagement /> },
   { path: `${process.env.PUBLIC_URL}/repaymentForm`, Component: <RepaymentForm /> },
+
+  // Transactions
+  { path: `${process.env.PUBLIC_URL}/receipt`, Component: <Receipt /> },
+  { path: `${process.env.PUBLIC_URL}/payment`, Component: <Payment /> },
 
   // Masters
   { path: `${process.env.PUBLIC_URL}/countryMaster`, Component: <PageList_CountryMaster /> },
