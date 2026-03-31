@@ -710,7 +710,7 @@ const Payment = () => {
                                                 <Col md="2">
                                                     <FormGroup className="mb-0">
                                                         <Label>Payment Date</Label>
-                                                        <Input
+                                                         <Input
                                                             type="date"
                                                             name="PaymentDate"
                                                             value={values.PaymentDate}

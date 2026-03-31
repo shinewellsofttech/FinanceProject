@@ -113,6 +113,15 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
+      {
+        id:6,
+        title:"Ledger Master",
+        path: `${process.env.PUBLIC_URL}/ledgerMasterList`,
+        icon: "Book",
+        type: "link",
+        bookmark: true,
+
+      }
     ],
   },
   {
