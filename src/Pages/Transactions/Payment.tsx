@@ -29,13 +29,11 @@ import { API_WEB_URLS } from "../../constants/constAPI";
 
 /* ─── Types ─────────────────────────────────────────────── */
 
-type PaymentMode = "Cash" | "Cheque / E.F." | "Saving A/c";
-
 interface FormValues {
     // Voucher Information
     AccountNo: string;
     VoucherDate: string;
-    PaymentMode: PaymentMode;
+    PaymentMode: string;
     Status: string;
 
     // Cheque / E.F. fields
@@ -58,7 +56,6 @@ interface FormValues {
     // Member Information (read-only)
     MemberName: string;
     MemberId: string;
-    FatherName: string;
     ContactNo: string;
     Address: string;
 
@@ -73,7 +70,7 @@ interface FormValues {
 const initialValues: FormValues = {
     AccountNo: "",
     VoucherDate: new Date().toISOString().split("T")[0],
-    PaymentMode: "Cash",
+    PaymentMode: "",
     Status: "",
 
     ChequeNo: "",
@@ -92,7 +89,6 @@ const initialValues: FormValues = {
 
     MemberName: "",
     MemberId: "",
-    FatherName: "",
     ContactNo: "",
     Address: "",
 
@@ -116,8 +112,15 @@ const Payment = () => {
 
     const [bankState, setBankState] = useState<DropState>({ dataList: [], isProgress: true });
     const [memberAccountState, setMemberAccountState] = useState<DropState>({ dataList: [], isProgress: true });
+    const [accountTypeState, setAccountTypeState] = useState<DropState>({ dataList: [], isProgress: true });
+    const [accountTypeSchemeState, setAccountTypeSchemeState] = useState<DropState>({ dataList: [], isProgress: false });
+    const [accountListState, setAccountListState] = useState<DropState>({ dataList: [], isProgress: false });
+    const [paymentMethodState, setPaymentMethodState] = useState<DropState>({ dataList: [], isProgress: true });
     const [accountSearchModal, setAccountSearchModal] = useState(false);
     const [searchText, setSearchText] = useState("");
+    const [selectedAccountType, setSelectedAccountType] = useState("");
+    const [selectedAccountTypeScheme, setSelectedAccountTypeScheme] = useState("");
+    const [selectedAccount, setSelectedAccount] = useState("");
     const [formikSetFieldValue, setFormikSetFieldValue] = useState<((field: string, value: any) => void) | null>(null);
     const [memberInfoExpanded, setMemberInfoExpanded] = useState(false);
 
@@ -129,7 +132,47 @@ const Payment = () => {
     useEffect(() => {
         Fn_FillListData(dispatch, setBankState, "dataList", `${API_WEB_URLS.MASTER}/0/token/BankMaster/Id/0`).catch(console.error);
         Fn_FillListData(dispatch, setMemberAccountState, "dataList", `${API_WEB_URLS.MASTER}/0/token/MemberAccountData/Id/0`).catch(console.error);
+        Fn_FillListData(dispatch, setAccountTypeState, "dataList", `${API_WEB_URLS.MASTER}/0/token/accountType/Id/0`).catch(console.error);
+        Fn_FillListData(dispatch, setPaymentMethodState, "dataList", `${API_WEB_URLS.MASTER}/0/token/PaymentMethodMaster/Id/0`).catch(console.error);
     }, [dispatch]);
+
+    /* ── Fetch AccountTypeScheme when AccountType changes ── */
+    useEffect(() => {
+        if (selectedAccountType) {
+            setAccountTypeSchemeState({ dataList: [], isProgress: true });
+            setSelectedAccountTypeScheme("");
+            setAccountListState({ dataList: [], isProgress: false });
+            setSelectedAccount("");
+            Fn_FillListData(
+                dispatch, 
+                setAccountTypeSchemeState, 
+                "dataList", 
+                `${API_WEB_URLS.MASTER}/0/token/AccountTypeSchemeByType/TBL.F_AccountType/${selectedAccountType}`
+            ).catch(console.error);
+        } else {
+            setAccountTypeSchemeState({ dataList: [], isProgress: false });
+            setSelectedAccountTypeScheme("");
+            setAccountListState({ dataList: [], isProgress: false });
+            setSelectedAccount("");
+        }
+    }, [dispatch, selectedAccountType]);
+
+    /* ── Fetch Accounts when AccountTypeScheme changes ── */
+    useEffect(() => {
+        if (selectedAccountTypeScheme) {
+            setAccountListState({ dataList: [], isProgress: true });
+            setSelectedAccount("");
+            Fn_FillListData(
+                dispatch, 
+                setAccountListState, 
+                "dataList", 
+                `${API_WEB_URLS.MASTER}/0/token/MemberAccountDataByScheme/Id/${selectedAccountTypeScheme}`
+            ).catch(console.error);
+        } else {
+            setAccountListState({ dataList: [], isProgress: false });
+            setSelectedAccount("");
+        }
+    }, [dispatch, selectedAccountTypeScheme]);
 
     useEffect(() => {
         accountNoRef.current?.focus();
@@ -185,24 +228,58 @@ const Payment = () => {
     const handleSelectAccount = (account: any) => {
         if (formikSetFieldValue) {
             formikSetFieldValue("AccountNo", account.AccountNo || "");
-            formikSetFieldValue("MemberName", account.MemberName || account.Name || "");
-            formikSetFieldValue("MemberId", account.MemberId || account.Id || "");
-            formikSetFieldValue("FatherName", account.FatherName || "");
-            formikSetFieldValue("ContactNo", account.ContactNo || account.Mobile || "");
-            formikSetFieldValue("Address", account.Address || "");
-            formikSetFieldValue("SchemeName", account.SchemeName || "");
-            formikSetFieldValue("OpeningDate", account.OpeningDate || "");
+            formikSetFieldValue("MemberName", account.CustomerName || account.MemberName || account.Name || "");
+            formikSetFieldValue("MemberId", account.F_Member || account.MemberId || account.Id || "");
+            formikSetFieldValue("ContactNo", account.CustomerMobile || account.ContactNo || account.Mobile || "");
+            formikSetFieldValue("Address", account.CustomerAddress || account.Address || "");
+            
+            // Get scheme name from selected scheme dropdown
+            const schemeName = selectedAccountTypeScheme 
+                ? accountTypeSchemeState.dataList.find((s: any) => String(s.Id) === selectedAccountTypeScheme)?.Name || account.SchemeName || ""
+                : account.SchemeName || "";
+            formikSetFieldValue("SchemeName", schemeName);
+            
+            // Format dates if they exist
+            const openingDate = account.RepaymentStartDate || account.OpeningDate || "";
+            const formattedOpeningDate = openingDate ? new Date(openingDate).toISOString().split('T')[0] : "";
+            formikSetFieldValue("OpeningDate", formattedOpeningDate);
+            
             formikSetFieldValue("InterestRate", account.InterestRate || account.ROI || "");
-            formikSetFieldValue("MaturityDate", account.MaturityDate || "");
-            formikSetFieldValue("TotalAmount", account.TotalAmount || account.LoanAmount || "");
-            formikSetFieldValue("MonthlyAmount", account.MonthlyAmount || account.EMIAmount || "");
+            
+            // Calculate maturity date from last EMI in EMIScheduleJson
+            let formattedMaturityDate = "";
+            if (account.EMIScheduleJson) {
+                try {
+                    const emiSchedule = typeof account.EMIScheduleJson === 'string' 
+                        ? JSON.parse(account.EMIScheduleJson) 
+                        : account.EMIScheduleJson;
+                    if (Array.isArray(emiSchedule) && emiSchedule.length > 0) {
+                        const lastEMI = emiSchedule[emiSchedule.length - 1];
+                        if (lastEMI.DueDate) {
+                            formattedMaturityDate = new Date(lastEMI.DueDate).toISOString().split('T')[0];
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error parsing EMIScheduleJson:", error);
+                }
+            }
+            if (!formattedMaturityDate) {
+                const maturityDate = account.EndDate || account.MaturityDate || "";
+                formattedMaturityDate = maturityDate ? new Date(maturityDate).toISOString().split('T')[0] : "";
+            }
+            formikSetFieldValue("MaturityDate", formattedMaturityDate);
+            
+            formikSetFieldValue("TotalAmount", account.LoanAmount || account.TotalAmount || "");
+            formikSetFieldValue("MonthlyAmount", account.EMIAmount || account.MonthlyAmount || "");
         }
         setAccountSearchModal(false);
         setSearchText("");
+        setSelectedAccountType("");
+        setSelectedAccountTypeScheme("");
     };
 
     /* ── Validation schema based on payment mode ── */
-    const getValidationSchema = (paymentMode: PaymentMode) => {
+    const getValidationSchema = (paymentMode: string) => {
         const baseSchema = {
             AccountNo: Yup.string().required("Account No is required"),
             VoucherDate: Yup.string().required("Voucher Date is required"),
@@ -210,18 +287,21 @@ const Payment = () => {
             Amount: Yup.number().typeError("Must be a number").required("Amount is required").min(1, "Amount must be greater than 0"),
         };
 
-        switch (paymentMode) {
-            case "Cheque / E.F.":
-                return Yup.object({
-                    ...baseSchema,
-                    ChequeNo: Yup.string().required("Cheque No is required"),
-                    ChqAmount: Yup.number().typeError("Must be a number").required("Amount is required"),
-                    ChqDate: Yup.string().required("Cheque Date is required"),
-                    F_Bank: Yup.string().required("Bank is required"),
-                });
-            default:
-                return Yup.object(baseSchema);
+        // Check if payment mode name contains "Cheque" for cheque validation
+        const paymentMethod = paymentMethodState.dataList.find((pm: any) => String(pm.Id) === paymentMode);
+        const isChequeMode = paymentMethod?.Name?.toLowerCase().includes("cheque");
+
+        if (isChequeMode) {
+            return Yup.object({
+                ...baseSchema,
+                ChequeNo: Yup.string().required("Cheque No is required"),
+                ChqAmount: Yup.number().typeError("Must be a number").required("Amount is required"),
+                ChqDate: Yup.string().required("Cheque Date is required"),
+                F_Bank: Yup.string().required("Bank is required"),
+            });
         }
+        
+        return Yup.object(baseSchema);
     };
 
     /* ── Submit ── */
@@ -234,12 +314,17 @@ const Payment = () => {
             fd.append("PaymentMode", values.PaymentMode);
             fd.append("Status", values.Status);
 
-            if (values.PaymentMode === "Cheque / E.F.") {
+            // Get payment method name
+            const paymentMethod = paymentMethodState.dataList.find((pm: any) => String(pm.Id) === values.PaymentMode);
+            const isChequeMode = paymentMethod?.Name?.toLowerCase().includes("cheque");
+            const isSavingMode = paymentMethod?.Name?.toLowerCase().includes("saving");
+
+            if (isChequeMode) {
                 fd.append("ChequeNo", values.ChequeNo);
                 fd.append("ChqAmount", values.ChqAmount);
                 fd.append("ChqDate", values.ChqDate);
                 fd.append("F_Bank", values.F_Bank);
-            } else if (values.PaymentMode === "Saving A/c") {
+            } else if (isSavingMode) {
                 fd.append("TransferToSB", values.TransferToSB ? "true" : "false");
             }
 
@@ -271,14 +356,43 @@ const Payment = () => {
     };
 
     /* ── Filter accounts for modal ── */
-    const filteredAccounts = memberAccountState.dataList.filter((acc: any) => {
+    const displayAccounts = useMemo(() => {
+        // If scheme is selected, use accounts from API
+        if (selectedAccountTypeScheme && accountListState.dataList.length > 0) {
+            const search = searchText.toLowerCase();
+            const schemeName = accountTypeSchemeState.dataList.find((s: any) => String(s.Id) === selectedAccountTypeScheme)?.Name || "";
+            
+            return accountListState.dataList.filter((acc: any) => {
+                if (!searchText) return true;
+                return (
+                    (acc.AccountNo?.toLowerCase().includes(search)) ||
+                    (acc.CustomerName?.toLowerCase().includes(search)) ||
+                    (acc.MemberName?.toLowerCase().includes(search)) ||
+                    (acc.Name?.toLowerCase().includes(search))
+                );
+            }).map((acc: any) => ({
+                ...acc,
+                SchemeName: schemeName,
+                MemberName: acc.CustomerName || acc.MemberName || acc.Name
+            }));
+        }
+        // Otherwise use filtered accounts from memberAccountState
         const search = searchText.toLowerCase();
-        return (
-            (acc.AccountNo?.toLowerCase().includes(search)) ||
-            (acc.MemberName?.toLowerCase().includes(search)) ||
-            (acc.Name?.toLowerCase().includes(search))
-        );
-    });
+        return memberAccountState.dataList.filter((acc: any) => {
+            const matchesSearch = (
+                (acc.AccountNo?.toLowerCase().includes(search)) ||
+                (acc.MemberName?.toLowerCase().includes(search)) ||
+                (acc.Name?.toLowerCase().includes(search))
+            );
+            const matchesAccountType = !selectedAccountType || 
+                String(acc.F_AccountType) === selectedAccountType || 
+                String(acc.AccountTypeId) === selectedAccountType;
+            const matchesAccountTypeScheme = !selectedAccountTypeScheme || 
+                String(acc.F_AccountTypeScheme) === selectedAccountTypeScheme || 
+                String(acc.SchemeId) === selectedAccountTypeScheme;
+            return matchesSearch && matchesAccountType && matchesAccountTypeScheme;
+        });
+    }, [selectedAccountTypeScheme, accountListState.dataList, searchText, memberAccountState.dataList, selectedAccountType, accountTypeSchemeState.dataList]);
 
     /* ─── Render ─────────────────────────────────────────── */
     return (
@@ -308,10 +422,10 @@ const Payment = () => {
                                                                 type="text"
                                                                 name="AccountNo"
                                                                 value={values.AccountNo}
-                                                                onChange={handleChange}
-                                                                onBlur={handleBlur}
+                                                                readOnly
                                                                 innerRef={accountNoRef}
                                                                 invalid={touched.AccountNo && !!errors.AccountNo}
+                                                                style={{ backgroundColor: "#f5f5f5" }}
                                                             />
                                                             <Btn color="primary" type="button" onClick={() => handleAccountSearch(setFieldValue)}>
                                                                 <i className="fa fa-search" />
@@ -353,9 +467,10 @@ const Payment = () => {
                                                             onBlur={handleBlur}
                                                             style={{ backgroundColor: "#ffe4c4" }}
                                                         >
-                                                            <option value="Cash">Cash</option>
-                                                            <option value="Cheque / E.F.">Cheque / E.F.</option>
-                                                            <option value="Saving A/c">Saving A/c</option>
+                                                            <option value="">Select Payment Mode...</option>
+                                                            {paymentMethodState.dataList.map((method: any) => (
+                                                                <option key={method.Id} value={method.Id}>{method.Name}</option>
+                                                            ))}
                                                         </Input>
                                                     </FormGroup>
                                                 </Col>
@@ -374,7 +489,10 @@ const Payment = () => {
                                             </Row>
 
                                             {/* ─── Cheque / E.F. Fields ─── */}
-                                            {values.PaymentMode === "Cheque / E.F." && (
+                                            {(() => {
+                                                const paymentMethod = paymentMethodState.dataList.find((pm: any) => String(pm.Id) === values.PaymentMode);
+                                                return paymentMethod?.Name?.toLowerCase().includes("cheque");
+                                            })() && (
                                                 <Row className="gy-3 mt-2">
                                                     <Col md="2">
                                                         <FormGroup className="mb-0">
@@ -441,7 +559,10 @@ const Payment = () => {
                                             )}
 
                                             {/* ─── Saving A/c Fields ─── */}
-                                            {values.PaymentMode === "Saving A/c" && (
+                                            {(() => {
+                                                const paymentMethod = paymentMethodState.dataList.find((pm: any) => String(pm.Id) === values.PaymentMode);
+                                                return paymentMethod?.Name?.toLowerCase().includes("saving");
+                                            })() && (
                                                 <Row className="gy-3 mt-2">
                                                     <Col md="3">
                                                         <FormGroup check className="mb-0">
@@ -520,25 +641,19 @@ const Payment = () => {
                                         {memberInfoExpanded && (
                                             <CardBody>
                                                 <Row className="gy-3">
-                                                    <Col md="3">
+                                                    <Col md="4">
                                                         <FormGroup className="mb-0">
                                                             <Label>Member Name</Label>
                                                             <Input type="text" name="MemberName" value={values.MemberName} readOnly style={{ backgroundColor: "#f5f5f5" }} />
                                                         </FormGroup>
                                                     </Col>
-                                                    <Col md="3">
+                                                    <Col md="4">
                                                         <FormGroup className="mb-0">
                                                             <Label>Member ID</Label>
                                                             <Input type="text" name="MemberId" value={values.MemberId} readOnly style={{ backgroundColor: "#f5f5f5" }} />
                                                         </FormGroup>
                                                     </Col>
-                                                    <Col md="3">
-                                                        <FormGroup className="mb-0">
-                                                            <Label>Father Name</Label>
-                                                            <Input type="text" name="FatherName" value={values.FatherName} readOnly style={{ backgroundColor: "#f5f5f5" }} />
-                                                        </FormGroup>
-                                                    </Col>
-                                                    <Col md="3">
+                                                    <Col md="4">
                                                         <FormGroup className="mb-0">
                                                             <Label>Contact No.</Label>
                                                             <Input type="text" name="ContactNo" value={values.ContactNo} readOnly style={{ backgroundColor: "#f5f5f5" }} />
@@ -664,14 +779,51 @@ const Payment = () => {
             <Modal isOpen={accountSearchModal} toggle={() => setAccountSearchModal(false)} size="lg">
                 <ModalHeader toggle={() => setAccountSearchModal(false)}>Search Account</ModalHeader>
                 <ModalBody>
-                    <Input
-                        type="text"
-                        placeholder="Search by Account No or Member Name..."
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        className="mb-3"
-                    />
-                    {memberAccountState.isProgress ? (
+                    <Row className="mb-3">
+                        <Col md="4">
+                            <FormGroup className="mb-0">
+                                <Label>Account Type</Label>
+                                <Input
+                                    type="select"
+                                    value={selectedAccountType}
+                                    onChange={(e) => setSelectedAccountType(e.target.value)}
+                                >
+                                    <option value="">All Account Types</option>
+                                    {accountTypeState.dataList.map((type: any) => (
+                                        <option key={type.Id} value={type.Id}>{type.Name}</option>
+                                    ))}
+                                </Input>
+                            </FormGroup>
+                        </Col>
+                        <Col md="4">
+                            <FormGroup className="mb-0">
+                                <Label>Account Type Scheme</Label>
+                                <Input
+                                    type="select"
+                                    value={selectedAccountTypeScheme}
+                                    onChange={(e) => setSelectedAccountTypeScheme(e.target.value)}
+                                    disabled={!selectedAccountType || accountTypeSchemeState.isProgress}
+                                >
+                                    <option value="">All Schemes</option>
+                                    {accountTypeSchemeState.dataList.map((scheme: any) => (
+                                        <option key={scheme.Id} value={scheme.Id}>{scheme.Name}</option>
+                                    ))}
+                                </Input>
+                            </FormGroup>
+                        </Col>
+                        <Col md="4">
+                            <FormGroup className="mb-0">
+                                <Label>Search</Label>
+                                <Input
+                                    type="text"
+                                    placeholder="Search by Account No or Member Name..."
+                                    value={searchText}
+                                    onChange={(e) => setSearchText(e.target.value)}
+                                />
+                            </FormGroup>
+                        </Col>
+                    </Row>
+                    {memberAccountState.isProgress || (selectedAccountTypeScheme && accountListState.isProgress) ? (
                         <div className="text-center p-3">
                             <Spinner color="primary" />
                         </div>
@@ -686,12 +838,12 @@ const Payment = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredAccounts.length === 0 ? (
+                                {displayAccounts.length === 0 ? (
                                     <tr>
                                         <td colSpan={4} className="text-center">No accounts found</td>
                                     </tr>
                                 ) : (
-                                    filteredAccounts.slice(0, 50).map((acc: any) => (
+                                    displayAccounts.slice(0, 50).map((acc: any) => (
                                         <tr key={acc.Id}>
                                             <td>{acc.AccountNo}</td>
                                             <td>{acc.MemberName || acc.Name}</td>
