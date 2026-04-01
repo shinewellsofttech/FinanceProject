@@ -5,10 +5,11 @@ import { Card, CardBody, Col, Container, Input, Label, Row, Table } from "reacts
 import { Btn } from "../../AbstractElements";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
-import { Fn_FillListData } from "../../store/Functions";
+import { Fn_FillListData, Fn_DeleteData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 
 const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/Id/0`;
+const DELETE_API_URL = `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/Id`;
 
 interface ListState {
   dataList: any[];
@@ -33,7 +34,25 @@ const PageList_LedgerMaster = () => {
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleAdd = () => navigate("/addEditLedgerMaster", { state: { Id: 0 } });
-  const handleEdit = (id: number | string) => { if (!id) return; navigate("/addEditLedgerMaster", { state: { Id: id } }); };
+  
+  const handleEdit = (id: number | string) => { 
+    console.log("handleEdit called with id:", id);
+    if (!id && id !== 0) return; 
+    navigate("/addEditLedgerMaster", { state: { Id: id } }); 
+  };
+
+  const handleDelete = (id: number | string) => {
+    console.log("handleDelete called with id:", id);
+    if (!id && id !== 0) return;
+    if (window.confirm("Are you sure you want to delete this ledger?")) {
+      Fn_DeleteData(dispatch, setState as any, Number(id), DELETE_API_URL, LIST_API_URL)
+        .then(() => loadData())
+        .catch((error) => {
+          console.error("Failed to delete ledger:", error);
+          alert("Failed to delete. Please try again.");
+        });
+    }
+  };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => setState((prev) => ({ ...prev, filterText: e.target.value }));
 
@@ -43,8 +62,9 @@ const PageList_LedgerMaster = () => {
     if (!q) return list;
     return list.filter((item: any) =>
       String(item?.Name ?? "").toLowerCase().includes(q) ||
-      String(item?.Id ?? "").includes(q) ||
-      String(item?.LedgerGroupName ?? "").toLowerCase().includes(q)
+      String(item?.ID ?? item?.Id ?? "").includes(q) ||
+      String(item?.LedgerGroupName ?? "").toLowerCase().includes(q) ||
+      String(item?.Remarks ?? "").toLowerCase().includes(q)
     );
   }, [state.dataList, state.filterText]);
 
@@ -55,24 +75,36 @@ const PageList_LedgerMaster = () => {
         <Row>
           <Col xs="12">
             <Card>
-              <CardHeaderCommon title="Ledger List" tagClass="card-title mb-0" />
+              <CardHeaderCommon title="Ledger Master List" tagClass="card-title mb-0" />
               <CardBody>
                 <Row className="mb-3">
                   <Col md="6" className="d-flex align-items-center">
                     <Label className="me-2 mb-0">Search:</Label>
-                    <Input type="search" placeholder="Search by name, group..." value={state.filterText} onChange={handleSearchChange} />
+                    <Input 
+                      type="search" 
+                      placeholder="Search by name, group..." 
+                      value={state.filterText} 
+                      onChange={handleSearchChange} 
+                    />
                   </Col>
                   <Col md="6" className="text-end">
-                    <Btn color="primary" onClick={handleAdd}><i className="fa fa-plus me-2" />Add Ledger</Btn>
+                    <Btn color="primary" onClick={handleAdd}>
+                      <i className="fa fa-plus me-2" />
+                      Add Ledger
+                    </Btn>
                   </Col>
                 </Row>
 
                 {state.isProgress ? (
-                  <div className="text-center py-5"><div className="spinner-border" role="status"><span className="visually-hidden">Loading...</span></div></div>
+                  <div className="text-center py-5">
+                    <div className="spinner-border" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
                 ) : (
                   <div className="table-responsive">
                     <Table bordered hover striped>
-                      <thead className="table-light">
+                      <thead>
                         <tr>
                           <th>#</th>
                           <th>Name</th>
@@ -84,17 +116,35 @@ const PageList_LedgerMaster = () => {
                       </thead>
                       <tbody>
                         {filteredList.length === 0 ? (
-                          <tr><td colSpan={6} className="text-center py-4">No records found.</td></tr>
+                          <tr>
+                            <td colSpan={6} className="text-center py-4">
+                              No records found.
+                            </td>
+                          </tr>
                         ) : (
-                          filteredList.map((item: any, idx: number) => (
-                            <tr key={item?.Id ?? idx}>
-                              <td>{idx + 1}</td>
+                          filteredList.map((item: any, index: number) => (
+                            <tr key={item?.ID || item?.Id || item?.id || index}>
+                              <td>{index + 1}</td>
                               <td>{item?.Name ?? "-"}</td>
-                              <td>{item?.LedgerGroupName || item?.LedgerGroup || item?.F_LedgerGroup}</td>
-                              <td>{item?.BranchName || item?.F_BranchOffice}</td>
-                              <td>{item?.Remark ?? ""}</td>
+                              <td>{item?.LedgerGroupName || item?.LedgerGroup || item?.F_LedgerGroupMaster || "-"}</td>
+                              <td>{item?.BranchName || item?.F_BranchOffice || "-"}</td>
+                              <td>{item?.Remarks || item?.Remark || ""}</td>
                               <td>
-                                <Btn color="primary" size="sm" className="me-1" onClick={() => handleEdit(item?.Id)} title="Edit"><i className="fa fa-edit" /></Btn>
+                                <Btn 
+                                  color="primary" 
+                                  size="sm" 
+                                  className="me-2" 
+                                  onClick={() => handleEdit(item?.ID || item?.Id || item?.id)}
+                                >
+                                  <i className="fa fa-edit" />
+                                </Btn>
+                                <Btn 
+                                  color="danger" 
+                                  size="sm" 
+                                  onClick={() => handleDelete(item?.ID || item?.Id || item?.id)}
+                                >
+                                  <i className="fa fa-trash" />
+                                </Btn>
                               </td>
                             </tr>
                           ))

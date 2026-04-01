@@ -1,30 +1,77 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Formik, Form } from "formik";
+import { Formik, Form, ErrorMessage } from "formik";
+import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
 import * as Yup from "yup";
 import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
+import { handleEnterToNextField } from "../../utils/formUtils";
 import { Card, CardBody, CardFooter, Col, Container, FormGroup, Input, Label, Row } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Btn } from "../../AbstractElements";
 
-interface DropState { dataList: any[]; isProgress: boolean; filterText: string; }
+interface FormValues {
+  Name: string;
+  F_LedgerGroupMaster: string;
+  F_BranchOffice: string;
+  Remarks: string;
+}
+
+const initialFormValues: FormValues = {
+  Name: "",
+  F_LedgerGroupMaster: "",
+  F_BranchOffice: "",
+  Remarks: "",
+};
+
+interface MasterState {
+  id: number;
+  formData: Partial<FormValues>;
+  isProgress?: boolean;
+}
+
+interface DropState { 
+  dataList: any[]; 
+  isProgress: boolean; 
+  filterText: string; 
+}
+
 const emptyDrop = (): DropState => ({ dataList: [], isProgress: false, filterText: "" });
+
+const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/Id`;
+const API_URL_SAVE = `${API_WEB_URLS.LedgerMaster}/0/token`;
 
 const AddEdit_LedgerMaster = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const firstRef = useRef<HTMLInputElement | null>(null);
+  const nameRef = useRef<HTMLInputElement | null>(null);
 
-  const [state, setState] = useState({ id: 0, formData: { Id: 0, Name: "", F_LedgerGroup: "", F_BranchOffice: localStorage.getItem("F_BranchOffice") ?? "", Remark: "" }, isProgress: false });
+  const [masterState, setMasterState] = useState<MasterState>({
+    id: 0,
+    formData: { ...initialFormValues },
+    isProgress: false,
+  });
 
   const [ledgerGroupState, setLedgerGroupState] = useState<DropState>(emptyDrop());
   const [branchState, setBranchState] = useState<DropState>(emptyDrop());
 
-  const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/Id`;
+  const isEditMode = masterState.id > 0;
+
+  const validationSchema = useMemo(
+    () =>
+      Yup.object({
+        Name: Yup.string().trim().required("Name is required"),
+        F_LedgerGroupMaster: Yup.string().required("Ledger Group is required"),
+      }),
+    []
+  );
+
+  useEffect(() => {
+    nameRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     // Fetch ledger groups from LedgerGroupMaster and branches from BranchOffice
@@ -33,41 +80,60 @@ const AddEdit_LedgerMaster = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    const locationState = (location.state as any) || {};
-    const id = locationState?.Id ?? 0;
-    if (id > 0) {
-      setState((prev) => ({ ...prev, id, isProgress: true }));
-      Fn_DisplayData(dispatch, setState as any, id, API_URL_EDIT);
+    const locationState = location.state as { Id?: number } | undefined;
+    const recordId = locationState?.Id ?? 0;
+
+    if (recordId > 0) {
+      setMasterState((prev) => ({ ...prev, id: recordId }));
+      Fn_DisplayData(dispatch, setMasterState, recordId, API_URL_EDIT);
     } else {
-      setState({ id: 0, formData: { Id: 0, Name: "", F_LedgerGroup: "", F_BranchOffice: localStorage.getItem("F_BranchOffice") ?? "", Remark: "" }, isProgress: false });
+      setMasterState((prev) => ({
+        ...prev,
+        id: 0,
+        formData: { 
+          ...initialFormValues,
+          F_BranchOffice: localStorage.getItem("F_BranchOffice") || "",
+        },
+      }));
     }
   }, [dispatch, location.state]);
 
-  useEffect(() => { firstRef.current?.focus(); }, []);
+  const toStringOrEmpty = (value: unknown) =>
+    value !== undefined && value !== null ? String(value) : "";
 
-  const initialValues = state.formData;
+  const currentFormValues: FormValues = {
+    ...initialFormValues,
+    Name: toStringOrEmpty(masterState.formData.Name),
+    F_LedgerGroupMaster: toStringOrEmpty((masterState.formData as any).F_LedgerGroupMaster),
+    F_BranchOffice: toStringOrEmpty((masterState.formData as any).F_BranchOffice || localStorage.getItem("F_BranchOffice")),
+    Remarks: toStringOrEmpty((masterState.formData as any).Remarks),
+  };
 
-  const validationSchema = useMemo(() => Yup.object({
-    Name: Yup.string().required("Name is required"),
-    F_LedgerGroup: Yup.string().required("Ledger Group is required"),
-  }), []);
-
-  const handleSubmit = async (values: any, { setSubmitting }: any) => {
+  const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
     try {
       const storedUser = localStorage.getItem("user");
       const currentUser = storedUser ? JSON.parse(storedUser) : null;
-      const loggedUserId = String(currentUser?.uid ?? currentUser?.id ?? "");
+      const loggedUserId = String(currentUser?.uid ?? currentUser?.id ?? "0");
 
-      const fd = new FormData();
-      fd.append("Name", values.Name || "");
-      fd.append("F_LedgerGroup", String(values.F_LedgerGroup || ""));
-      fd.append("F_BranchOffice", String(values.F_BranchOffice || ""));
-      fd.append("Remark", values.Remark || "");
-      fd.append("UserId", loggedUserId);
+      const formData = new FormData();
+      formData.append("Name", values.Name || "");
+      formData.append("Remarks", values.Remarks || "");
+      formData.append("F_LedgerGroupMaster", String(values.F_LedgerGroupMaster || ""));
+      formData.append("F_BranchOffice", String(values.F_BranchOffice || ""));
+      formData.append("UserId", loggedUserId);
 
-      await Fn_AddEditData(dispatch, () => navigate("/ledgerMasterList"), { arguList: { id: values.Id ?? 0, formData: fd } }, `LedgerMaster/${loggedUserId}/token`, true, "ledgerid");
-    } catch (err) {
-      console.error(err);
+      await Fn_AddEditData(
+        dispatch,
+        () => undefined,
+        { arguList: { id: masterState.id, formData } },
+        API_URL_SAVE,
+        true,
+        "ledgerid",
+        navigate,
+        "/ledgerMasterList"
+      );
+    } catch (error) {
+      console.error("Submission failed:", error);
     } finally {
       setSubmitting(false);
     }
@@ -75,61 +141,120 @@ const AddEdit_LedgerMaster = () => {
 
   return (
     <div className="page-body">
-      <Breadcrumbs mainTitle={state.id > 0 ? "Edit Ledger" : "Add Ledger"} parent="Masters" />
+      <Breadcrumbs mainTitle={isEditMode ? "Edit Ledger" : "Add Ledger"} parent="Masters" />
       <Container fluid>
         <Row>
           <Col xs="12">
-            <Card>
-              <CardHeaderCommon title={state.id > 0 ? "Edit Ledger" : "Add Ledger"} tagClass="card-title mb-0" />
-              <CardBody>
-                <Formik initialValues={initialValues} enableReinitialize validationSchema={validationSchema} onSubmit={handleSubmit}>
-                  {({ values, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
-                    <Form onSubmit={handleSubmit}>
-                      <Row>
-                        <Col md={6}>
+            <Formik<FormValues>
+              initialValues={currentFormValues}
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+              enableReinitialize
+            >
+              {({ values, handleChange, handleBlur, errors, touched, isSubmitting }: FormikProps<FormValues>) => (
+                <Form className="theme-form" onKeyDown={handleEnterToNextField}>
+                  <Card>
+                    <CardHeaderCommon
+                      title={`${isEditMode ? "Edit" : "Add"} Ledger Master`}
+                      tagClass="card-title mb-0"
+                    />
+                    <CardBody>
+                      <Row className="gy-3">
+                        <Col md="6">
                           <FormGroup>
-                            <Label>Name</Label>
-                            <Input name="Name" innerRef={firstRef as any} value={values.Name || ""} onChange={handleChange} onBlur={handleBlur} />
+                            <Label>
+                              Name <span className="text-danger">*</span>
+                            </Label>
+                            <Input
+                              type="text"
+                              name="Name"
+                              placeholder="Enter ledger name"
+                              value={values.Name}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              invalid={touched.Name && !!errors.Name}
+                              innerRef={nameRef}
+                            />
+                            <ErrorMessage name="Name" component="div" className="text-danger small mt-1" />
                           </FormGroup>
                         </Col>
-                        <Col md={6}>
+                        <Col md="6">
                           <FormGroup>
-                            <Label>Ledger Group</Label>
-                            <Input type="select" name="F_LedgerGroup" value={values.F_LedgerGroup || ""} onChange={handleChange}>
+                            <Label>
+                              Ledger Group <span className="text-danger">*</span>
+                            </Label>
+                            <Input
+                              type="select"
+                              name="F_LedgerGroupMaster"
+                              value={values.F_LedgerGroupMaster}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                              invalid={touched.F_LedgerGroupMaster && !!errors.F_LedgerGroupMaster}
+                            >
                               <option value="">Select Group...</option>
-                              {ledgerGroupState.dataList.map((g: any) => <option key={g.Id} value={g.Id}>{g.Name}</option>)}
+                              {ledgerGroupState.dataList.map((g: any) => (
+                                <option key={g.ID || g.Id} value={g.ID || g.Id}>
+                                  {g.Name}
+                                </option>
+                              ))}
                             </Input>
+                            <ErrorMessage name="F_LedgerGroupMaster" component="div" className="text-danger small mt-1" />
                           </FormGroup>
                         </Col>
                       </Row>
 
-                      <Row>
-                        <Col md={6}>
+                      <Row className="gy-3">
+                        <Col md="6">
                           <FormGroup>
-                            <Label>Branch</Label>
-                            <Input type="select" name="F_BranchOffice" value={values.F_BranchOffice || ""} onChange={handleChange}>
+                            <Label>Branch Office</Label>
+                            <Input
+                              type="select"
+                              name="F_BranchOffice"
+                              value={values.F_BranchOffice}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                            >
                               <option value="">Select Branch...</option>
-                              {branchState.dataList.map((b: any) => <option key={b.Id} value={b.Id}>{b.Name || b.BranchName}</option>)}
+                              {branchState.dataList.map((b: any) => (
+                                <option key={b.ID || b.Id} value={b.ID || b.Id}>
+                                  {b.Name || b.BranchName}
+                                </option>
+                              ))}
                             </Input>
                           </FormGroup>
                         </Col>
-                        <Col md={6}>
+                        <Col md="6">
                           <FormGroup>
-                            <Label>Remark</Label>
-                            <Input type="text" name="Remark" value={values.Remark || ""} onChange={handleChange} />
+                            <Label>Remarks</Label>
+                            <Input
+                              type="text"
+                              name="Remarks"
+                              placeholder="Enter remarks"
+                              value={values.Remarks}
+                              onChange={handleChange}
+                              onBlur={handleBlur}
+                            />
                           </FormGroup>
                         </Col>
                       </Row>
-
-                      <CardFooter className="text-end">
-                        <Btn color="secondary" type="button" onClick={() => navigate("/ledgerMasterList")}>Cancel</Btn>
-                        <Btn color="primary" type="submit" disabled={isSubmitting as boolean} className="ms-2">{isSubmitting ? 'Saving...' : 'Save'}</Btn>
-                      </CardFooter>
-                    </Form>
-                  )}
-                </Formik>
-              </CardBody>
-            </Card>
+                    </CardBody>
+                    <CardFooter className="d-flex align-items-center gap-2">
+                      <Btn color="primary" type="submit" disabled={isSubmitting}>
+                        <i className="fa fa-save me-1"></i> {isEditMode ? "Update" : "Save"}
+                      </Btn>
+                      <Btn
+                        color="light"
+                        type="button"
+                        className="text-dark"
+                        onClick={() => navigate("/ledgerMasterList")}
+                      >
+                        <i className="fa fa-list me-1"></i> Back to List
+                      </Btn>
+                    </CardFooter>
+                  </Card>
+                </Form>
+              )}
+            </Formik>
           </Col>
         </Row>
       </Container>

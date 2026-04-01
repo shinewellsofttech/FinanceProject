@@ -1,98 +1,176 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { Table, Button, Row, Col, Input } from "reactstrap";
-import AddEdit_LedgerMaster from "../AddEdit_LedgerMaster/AddEdit_LedgerMaster";
-import { Fn_FillListData } from "../../../store/Functions";
+import { useNavigate } from "react-router-dom";
+import { Card, CardBody, Col, Container, Input, Label, Row, Table } from "reactstrap";
+import { Btn } from "../../../AbstractElements";
+import Breadcrumbs from "../../../CommonElements/Breadcrumbs/Breadcrumbs";
+import CardHeaderCommon from "../../../CommonElements/CardHeaderCommon/CardHeaderCommon";
+import { Fn_FillListData, Fn_DeleteData } from "../../../store/Functions";
 import { API_WEB_URLS } from "../../../constants/constAPI";
 
-const PageList_LedgerMaster = () => {
-  const dispatch = useDispatch();
-  const [ledgers, setLedgers] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isOpenModal, setIsOpenModal] = useState(false);
-  const [selected, setSelected] = useState<any>(null);
-  const [query, setQuery] = useState("");
+const API_URL = API_WEB_URLS.MASTER + "/0/token/LedgerMaster/Id/0";
 
-  const loadList = async () => {
-    try {
-      setLoading(true);
-      await Fn_FillListData(dispatch, (s: any) => {
-        // Normalize possible response shapes to an array
-        const list = s?.dataList ?? s?.data ?? s;
-        if (Array.isArray(list)) setLedgers(list);
-        else if (list && Array.isArray(list.dataList)) setLedgers(list.dataList);
-        else setLedgers([]);
-      }, "dataList", `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/Id/0`);
-    } catch (err) {
-      console.error(err);
-      setLedgers([]);
-    } finally {
-      setLoading(false);
+const PageList_LedgerMasterContainer = () => {
+  const [state, setState] = useState({
+    LedgerMasterList: [] as any[],
+    isProgress: true,
+    filterText: "",
+  });
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const loadData = () => {
+    Fn_FillListData(dispatch, setState, "LedgerMasterList", API_URL);
+  };
+
+  const handleEdit = (id: number) => {
+    navigate("/addEditLedgerMaster", { state: { Id: id } });
+  };
+
+  const handleDelete = (id: number) => {
+    console.log("handleDelete called with id:", id);
+    if (!id || id === 0) {
+      alert("Invalid ID for deletion");
+      return;
+    }
+    if (window.confirm("Are you sure you want to delete this ledger?")) {
+      const deleteUrl = API_WEB_URLS.MASTER + "/0/token/LedgerMaster/Id";
+      console.log("Calling Fn_DeleteData with:", { id, deleteUrl });
+      Fn_DeleteData(dispatch, setState, id, deleteUrl, API_URL)
+        .then(() => {
+          console.log("Delete successful, reloading data");
+          loadData();
+        })
+        .catch((error) => {
+          console.error("Delete error:", error);
+          alert("Failed to delete. Please check console for details.");
+        });
     }
   };
 
-  useEffect(() => { loadList(); }, []);
+  const handleAdd = () => {
+    navigate("/addEditLedgerMaster", { state: { Id: 0 } });
+  };
 
-  const handleAdd = () => { setSelected(null); setIsOpenModal(true); };
-  const handleEdit = (row: any) => { setSelected(row); setIsOpenModal(true); };
-
-  const handleSaved = () => { setIsOpenModal(false); loadList(); };
-
-  const filtered = ledgers.filter((l: any) => {
-    if (!query) return true;
-    const q = query.toLowerCase();
-    return (l.Name || "").toLowerCase().includes(q) || String(l.Id).includes(q);
+  const filteredData = (Array.isArray(state.LedgerMasterList) ? state.LedgerMasterList : []).filter((item) => {
+    const searchText = state.filterText.toLowerCase();
+    return (
+      (item.Name && item.Name.toLowerCase().includes(searchText)) ||
+      (item.LedgerGroupName && item.LedgerGroupName.toLowerCase().includes(searchText)) ||
+      (item.BranchName && item.BranchName.toLowerCase().includes(searchText)) ||
+      (item.Remark && item.Remark.toLowerCase().includes(searchText))
+    );
   });
 
   return (
-    <div>
-      <Row className="mb-2">
-        <Col md={8}><h5>Ledger Master</h5></Col>
-        <Col md={4} className="text-end">
-          <Button color="primary" onClick={handleAdd}>Add Ledger</Button>
-        </Col>
-      </Row>
-
-      <Row className="mb-2">
-        <Col md={4}><Input placeholder="Search..." value={query} onChange={(e) => setQuery(e.target.value)} /></Col>
-      </Row>
-
-      <Table bordered responsive>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Ledger Group</th>
-            <th>Branch</th>
-            <th>Remark</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan={6}>Loading...</td></tr>
-          ) : filtered.length ? (
-            filtered.map((r: any, idx: number) => (
-              <tr key={r.Id || idx}>
-                <td>{idx + 1}</td>
-                <td>{r.Name}</td>
-                <td>{r.LedgerGroupName || r.LedgerGroup || r.F_LedgerGroup}</td>
-                <td>{r.BranchName || r.F_BranchOffice}</td>
-                <td>{r.Remark}</td>
-                <td>
-                  <Button color="sm" size="sm" onClick={() => handleEdit(r)}>Edit</Button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr><td colSpan={6}>No records found</td></tr>
-          )}
-        </tbody>
-      </Table>
-
-      <AddEdit_LedgerMaster isOpen={isOpenModal} toggle={() => setIsOpenModal(!isOpenModal)} data={selected} onSaved={handleSaved} />
+    <div className="page-body">
+      <Breadcrumbs mainTitle="Ledger Master List" parent="Masters" />
+      <Container fluid>
+        <Row>
+          <Col xs="12">
+            <Card>
+              <CardHeaderCommon
+                title="Ledger Master List"
+                tagClass="card-title mb-0"
+              />
+              <CardBody>
+                <Row className="mb-3">
+                  <Col md="6">
+                    <div className="dataTables_filter d-flex align-items-center">
+                      <Label className="me-2">Search:</Label>
+                      <Input
+                        type="search"
+                        placeholder="Search by name, group, branch..."
+                        value={state.filterText}
+                        onChange={(e) =>
+                          setState((prev) => ({
+                            ...prev,
+                            filterText: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </Col>
+                  <Col md="6" className="text-end">
+                    <Btn
+                      color="primary"
+                      onClick={handleAdd}
+                    >
+                      <i className="fa fa-plus me-2"></i>Add New Ledger
+                    </Btn>
+                  </Col>
+                </Row>
+                {state.isProgress ? (
+                  <div className="text-center p-4">
+                    <div className="spinner-border" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <Table striped hover>
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Name</th>
+                          <th>Ledger Group</th>
+                          <th>Branch Office</th>
+                          <th>Remark</th>
+                          <th style={{ width: "150px", textAlign: "center" }}>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.length === 0 ? (
+                          <tr>
+                            <td colSpan={6} className="text-center p-4">
+                              No data found
+                            </td>
+                          </tr>
+                        ) : (
+                          filteredData.map((item: any, index: number) => (
+                            <tr key={item.Id || index}>
+                              <td>{index + 1}</td>
+                              <td>{item.Name || "-"}</td>
+                              <td>{item.LedgerGroupName || "-"}</td>
+                              <td>{item.BranchName || "-"}</td>
+                              <td>{item.Remark || "-"}</td>
+                              <td style={{ width: "150px", whiteSpace: "nowrap" }}>
+                                <Btn
+                                  color="primary"
+                                  size="sm"
+                                  className="me-2"
+                                  onClick={() => handleEdit(item.Id)}
+                                >
+                                  <i className="fa fa-edit"></i>
+                                </Btn>
+                                <Btn
+                                  color="danger"
+                                  size="sm"
+                                  onClick={() => handleDelete(item.Id)}
+                                >
+                                  <i className="fa fa-trash"></i>
+                                </Btn>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </Table>
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
     </div>
   );
 };
 
-export default PageList_LedgerMaster;
+export default PageList_LedgerMasterContainer;
