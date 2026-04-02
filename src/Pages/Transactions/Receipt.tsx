@@ -420,7 +420,7 @@ const Receipt = () => {
 
                     // Fetch Last Installment data
                     try {
-                        const lastInstallmentUrl = `http://192.168.31.70:4554/api/V1/Masters/0/token/LastInstallment/Id/${data.F_MemberAccountMaster}`;
+                        const lastInstallmentUrl = `${API_WEB_URLS.BASE}Masters/0/token/LastInstallment/Id/${data.F_MemberAccountMaster}`;
                         const lastInstallmentResponse = await API_HELPER.apiGET(lastInstallmentUrl);
                         const lastInstallmentData = lastInstallmentResponse?.data?.dataList?.[0];
                         
@@ -607,7 +607,7 @@ const Receipt = () => {
             // Fetch Last Installment data
             if (memberAccountId) {
                 try {
-                    const lastInstallmentUrl = `http://192.168.31.70:4554/api/V1/Masters/0/token/LastInstallment/Id/${memberAccountId}`;
+                    const lastInstallmentUrl = `${API_WEB_URLS.BASE}Masters/0/token/LastInstallment/Id/${memberAccountId}`;
                     const lastInstallmentResponse = await API_HELPER.apiGET(lastInstallmentUrl);
                     const lastInstallmentData = lastInstallmentResponse?.data?.dataList?.[0];
                     

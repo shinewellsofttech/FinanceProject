@@ -127,10 +127,11 @@ export const MenuList: MenuItem[] = [
   {
     title: "Transactions",
     Items: [
+
       {
         id: 1,
-        title: "Receipt",
-        path: `${process.env.PUBLIC_URL}/receipt`,
+        title: "Receipt LIst",
+        path: `${process.env.PUBLIC_URL}/receiptList`,
         icon: "FileText",
         type: "link",
         bookmark: true,

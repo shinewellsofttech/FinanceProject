@@ -119,10 +119,8 @@ const PageList_Receipt = () => {
         return list.filter(
             (item: any) =>
                 String(item?.VoucherNo ?? "").toLowerCase().includes(search) ||
-                String(item?.ReceiptNo ?? "").toLowerCase().includes(search) ||
                 String(item?.AccountNo ?? "").toLowerCase().includes(search) ||
-                String(item?.MemberName ?? "").toLowerCase().includes(search) ||
-                String(item?.Remarks ?? "").toLowerCase().includes(search) ||
+                String(item?.Narration ?? "").toLowerCase().includes(search) ||
                 String(item?.Amount ?? "").toLowerCase().includes(search)
         );
     }, [state.dataList, state.filterText]);
@@ -142,21 +140,15 @@ const PageList_Receipt = () => {
     };
 
     const getReceiveModeName = (mode: number | string | null | undefined) => {
-        const modeStr = String(mode ?? "");
-        switch (modeStr) {
-            case "Cash": return "Cash";
-            case "Cheque / RTGS": return "Cheque/RTGS";
-            case "Bank Challan": return "Bank Challan";
-            case "E.F.T": return "E.F.T";
-            case "Current A/c": return "Current A/c";
-            case "Saving A/c": return "Saving A/c";
-            case "1": return "Cash";
-            case "2": return "Cheque/RTGS";
-            case "3": return "Bank Challan";
-            case "4": return "E.F.T";
-            case "5": return "Current A/c";
-            case "6": return "Saving A/c";
-            default: return modeStr || "-";
+        const modeNum = Number(mode);
+        switch (modeNum) {
+            case 1: return "Cash";
+            case 2: return "Cheque/RTGS";
+            case 3: return "Bank Challan";
+            case 4: return "E.F.T";
+            case 5: return "Current A/c";
+            case 6: return "Saving A/c";
+            default: return String(mode ?? "-");
         }
     };
 
@@ -208,7 +200,7 @@ const PageList_Receipt = () => {
                                             <Label className="mb-1">Search</Label>
                                             <Input
                                                 type="search"
-                                                placeholder="Search by receipt no, account, member..."
+                                                placeholder="Search by voucher no, account, narration..."
                                                 value={state.filterText}
                                                 onChange={handleSearchChange}
                                             />
@@ -235,40 +227,38 @@ const PageList_Receipt = () => {
                                             <thead className="table-light">
                                                 <tr>
                                                     <th>#</th>
-                                                    <th>Receipt No</th>
+                                                    <th>Voucher No</th>
                                                     <th>Date</th>
                                                     <th>Account No</th>
-                                                    <th>Member Name</th>
-                                                    <th>Receive Mode</th>
+                                                    <th>Payment Mode</th>
                                                     <th className="text-end">Amount</th>
-                                                    <th>Remarks</th>
+                                                    <th>Narration</th>
                                                     <th>Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {filteredList.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={9} className="text-center py-4">
+                                                        <td colSpan={8} className="text-center py-4">
                                                             No records found.
                                                         </td>
                                                     </tr>
                                                 ) : (
                                                     filteredList.map((item: any, index: number) => (
-                                                        <tr key={item?.Id ?? item?.ID ?? index}>
+                                                        <tr key={item?.Id ?? index}>
                                                             <td>{index + 1}</td>
-                                                            <td>{item?.ReceiptNo ?? item?.VoucherNo ?? "-"}</td>
-                                                            <td>{formatDate(item?.ReceiptDate ?? item?.VoucherDate)}</td>
+                                                            <td>{item?.VoucherNo ?? "-"}</td>
+                                                            <td>{formatDate(item?.ReceiptDate)}</td>
                                                             <td>{item?.AccountNo ?? "-"}</td>
-                                                            <td>{item?.MemberName ?? "-"}</td>
-                                                            <td>{getReceiveModeName(item?.ReceiveMode)}</td>
-                                                            <td className="text-end">{formatAmount(item?.ReceiptAmount ?? item?.Amount)}</td>
-                                                            <td>{item?.Remarks ?? "-"}</td>
+                                                            <td>{getReceiveModeName(item?.PaymentMode)}</td>
+                                                            <td className="text-end">{formatAmount(item?.Amount)}</td>
+                                                            <td>{item?.Narration ?? "-"}</td>
                                                             <td>
                                                                 <Btn 
                                                                     color="primary" 
                                                                     size="sm" 
                                                                     className="me-1" 
-                                                                    onClick={() => handleEdit(item?.Id ?? item?.ID)}
+                                                                    onClick={() => handleEdit(item?.Id)}
                                                                     title="Edit"
                                                                 >
                                                                     <i className="fa fa-edit" />
