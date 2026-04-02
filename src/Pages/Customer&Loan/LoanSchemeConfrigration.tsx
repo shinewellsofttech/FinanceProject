@@ -10,6 +10,7 @@ import * as Yup from "yup";
 import { Card, CardBody, CardFooter, CardHeader, Col, Container, FormGroup, Input, Label, Row, Table } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Btn } from "../../AbstractElements";
+import { toast } from "react-toastify";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -83,7 +84,10 @@ const initialValues: FormValues = {
     F_CollateralType: "",
 };
 
-type DropdownOption = { Id?: number; Name?: string };
+type DropdownOption = { Id?: number; ID?: number; Name?: string };
+
+// Helper to get ID from option (handles both Id and ID)
+const getOptionId = (opt: DropdownOption): number | undefined => opt.Id ?? opt.ID;
 
 interface DropdownState {
     accountTypes: DropdownOption[];
@@ -167,12 +171,12 @@ const AccountTypeScheme = () => {
         Fn_FillListData(dispatch, setDropdowns, "loanTypes", `${API_WEB_URLS.MASTER}/0/token/LoanType/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "emiTypes", `${API_WEB_URLS.MASTER}/0/token/EMIType/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "periodicities", `${API_WEB_URLS.MASTER}/0/token/Periodicity/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "interestLedgers", `${API_WEB_URLS.MASTER}/0/token/InterestLedger/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "interestLedgers", `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/tbl.F_LedgerGroupMaster/27`);
         Fn_FillListData(dispatch, setDropdowns, "interestCalculationTypes", `${API_WEB_URLS.MASTER}/0/token/InterestCalculationType/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "collateralTypes", `${API_WEB_URLS.MASTER}/0/token/CollateralType/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "chargeTypes", `${API_WEB_URLS.MASTER}/0/token/ChargeType/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "calcTypes", `${API_WEB_URLS.MASTER}/0/token/CalculationType/Id/0`);
-        Fn_FillListData(dispatch, setDropdowns, "ledgers", `${API_WEB_URLS.MASTER}/0/token/Ledger/Id/0`);
+        Fn_FillListData(dispatch, setDropdowns, "ledgers", `${API_WEB_URLS.MASTER}/0/token/LedgerMaster/tbl.F_LedgerGroupMaster/27`);
     }, [dispatch]);
 
     // ─── Load Edit Data ──────────────────────────────────────────────────────
@@ -189,6 +193,56 @@ const AccountTypeScheme = () => {
         }
     }, [dispatch, location.state]);
 
+    // ─── Process JSON Fields for Edit Mode ───────────────────────────────────
+
+    useEffect(() => {
+        if (schemeState.id > 0 && schemeState.formData) {
+            // Parse CollateralJson to get F_CollateralType
+            if (schemeState.formData.CollateralJson) {
+                try {
+                    const collateralData = typeof schemeState.formData.CollateralJson === 'string'
+                        ? JSON.parse(schemeState.formData.CollateralJson)
+                        : schemeState.formData.CollateralJson;
+                    
+                    if (Array.isArray(collateralData) && collateralData.length > 0) {
+                        const collateralType = collateralData[0].F_CollateralType;
+                        setSchemeState((prev) => ({
+                            ...prev,
+                            formData: {
+                                ...prev.formData,
+                                F_CollateralType: String(collateralType || "")
+                            }
+                        }));
+                    }
+                } catch (error) {
+                    console.error("Error parsing CollateralJson:", error);
+                }
+            }
+
+            // Parse ChargesJson to populate charges table
+            if (schemeState.formData.ChargesJson) {
+                try {
+                    const chargesData = typeof schemeState.formData.ChargesJson === 'string'
+                        ? JSON.parse(schemeState.formData.ChargesJson)
+                        : schemeState.formData.ChargesJson;
+                    
+                    if (Array.isArray(chargesData)) {
+                        const mappedCharges: ChargeRow[] = chargesData.map((charge: any) => ({
+                            ChargeType: String(charge.F_ChargeType || ""),
+                            CalculationType: String(charge.F_CalculationType || ""),
+                            Amount: String(charge.Amount || ""),
+                            Ledger: String(charge.F_Ledger || ""),
+                            IsDeductFromLoan: charge.IsDeductFromLoan ? "1" : "0",
+                        }));
+                        setCharges(mappedCharges);
+                    }
+                } catch (error) {
+                    console.error("Error parsing ChargesJson:", error);
+                }
+            }
+        }
+    }, [schemeState.id, schemeState.formData.CollateralJson, schemeState.formData.ChargesJson]);
+
     // ─── Charges Table Helpers ───────────────────────────────────────────────
 
     const addCharge = () => {
@@ -199,8 +253,34 @@ const AccountTypeScheme = () => {
         setCharges((prev) => prev.filter((_, i) => i !== index));
     };
 
+    // Helper to check if calculation type is "Percentage"
+    const isPercentageCalcType = (calcTypeId: string): boolean => {
+        if (!calcTypeId) return false;
+        const calcType = dropdowns.calcTypes.find((ct) => {
+            const id = getOptionId(ct);
+            return id != null && String(id) === calcTypeId;
+        });
+        return calcType?.Name?.toLowerCase().includes("percent") || false;
+    };
+
     const updateCharge = (index: number, field: keyof ChargeRow, value: string) => {
-        setCharges((prev) => prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+        setCharges((prev) => prev.map((row, i) => {
+            if (i !== index) return row;
+
+            const updatedRow = { ...row, [field]: value };
+
+            // Show warning if CalculationType is Percentage and Amount > 100
+            if (field === "Amount" || field === "CalculationType") {
+                const calcTypeId = field === "CalculationType" ? value : row.CalculationType;
+                const amountValue = field === "Amount" ? value : row.Amount;
+
+                if (isPercentageCalcType(calcTypeId) && Number(amountValue) > 100) {
+                    toast.warning("Amount cannot exceed 100 when Calculation Type is Percentage", { toastId: `charge-${index}` });
+                }
+            }
+
+            return updatedRow;
+        }));
     };
 
     // ─── Form Value Mapping ──────────────────────────────────────────────────
@@ -248,6 +328,16 @@ const AccountTypeScheme = () => {
 
     const handleSubmit = async (values: FormValues, { setSubmitting }: FormikHelpers<FormValues>) => {
         try {
+            // Validate charges: Amount cannot exceed 100 when CalculationType is Percentage
+            const invalidCharge = charges.find((row) => 
+                isPercentageCalcType(row.CalculationType) && Number(row.Amount) > 100
+            );
+            if (invalidCharge) {
+                toast.error("Charges validation failed: Amount cannot exceed 100 when Calculation Type is Percentage");
+                setSubmitting(false);
+                return;
+            }
+
             const formData = new FormData();
             formData.append("Id", String(schemeState.id ?? 0));
 
@@ -270,7 +360,6 @@ const AccountTypeScheme = () => {
             formData.append("GracePeriod", values.GracePeriod || "");
             formData.append("Moratorium", values.Moratorium || "");
             formData.append("PreMaturityAfter", values.PreMaturityAfter || "");
-            formData.append("F_CollateralType", values.F_CollateralType || "");
 
             formData.append("IsFixedTerm", String(values.IsFixedTerm));
             formData.append("IsInterestBased", String(values.IsInterestBased));
@@ -281,13 +370,24 @@ const AccountTypeScheme = () => {
             formData.append("IsGracePeriodAllowed", String(values.IsGracePeriodAllowed));
             formData.append("IsMoratoriumAllowed", String(values.IsMoratoriumAllowed));
 
+            // CollateralJSON
+            if (values.F_CollateralType) {
+                const collateralPayload = [{
+                    F_CollateralType: Number(values.F_CollateralType),
+                    F_AccountTypeScheme: schemeState.id
+                }];
+                formData.append("CollateralJSON", JSON.stringify(collateralPayload));
+            } else {
+                formData.append("CollateralJSON", "[]");
+            }
+
             // ChargesJSON - send as array of number values
             const chargesPayload = charges.map((row) => ({
-                ChargeType: Number(row.ChargeType) || 0,
-                CalculationType: Number(row.CalculationType) || 0,
+                F_ChargeType: Number(row.ChargeType) || 0,
+                F_CalculationType: Number(row.CalculationType) || 0,
                 Amount: Number(row.Amount) || 0,
-                Ledger: Number(row.Ledger) || 0,
-                IsDeductFromLoan: Number(row.IsDeductFromLoan) || 0,
+                F_Ledger: Number(row.Ledger) || 0,
+                IsDeductFromLoan: row.IsDeductFromLoan === "1",
             }));
             formData.append("ChargesJSON", JSON.stringify(chargesPayload));
 
@@ -314,38 +414,6 @@ const AccountTypeScheme = () => {
     };
 
     // ─── Render Helpers ──────────────────────────────────────────────────────
-
-    const renderSelect = (
-        name: string,
-        label: string,
-        options: DropdownOption[],
-        values: FormValues,
-        handleChange: FormikProps<FormValues>["handleChange"],
-        handleBlur: FormikProps<FormValues>["handleBlur"],
-        touched: FormikProps<FormValues>["touched"],
-        errors: FormikProps<FormValues>["errors"],
-        required = false
-    ) => (
-        <Col md="4">
-            <FormGroup className="mb-0">
-                <Label>{label} {required && <span className="text-danger">*</span>}</Label>
-                <Input
-                    type="select"
-                    name={name}
-                    value={(values as unknown as Record<string, string>)[name]}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    invalid={!!(touched as unknown as Record<string, boolean>)[name] && !!(errors as unknown as Record<string, string>)[name]}
-                >
-                    <option value="">-- Select --</option>
-                    {options.map((opt) => (
-                        <option key={opt.Id} value={String(opt.Id)}>{opt.Name}</option>
-                    ))}
-                </Input>
-                <ErrorMessage name={name} component="div" className="text-danger small mt-1" />
-            </FormGroup>
-        </Col>
-    );
 
     const renderNumber = (
         name: string,
@@ -404,12 +472,119 @@ const AccountTypeScheme = () => {
                                                         <ErrorMessage name="Name" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
-                                                {renderSelect("F_AccountType", "Account Type", dropdowns.accountTypes, values, handleChange, handleBlur, touched, errors, true)}
-                                                {renderSelect("F_LoanType", "Loan Type", dropdowns.loanTypes, values, handleChange, handleBlur, touched, errors, true)}
-                                                {renderSelect("F_EMIType", "EMI Type", dropdowns.emiTypes, values, handleChange, handleBlur, touched, errors, true)}
-                                                {renderSelect("F_Periodicity", "Periodicity", dropdowns.periodicities, values, handleChange, handleBlur, touched, errors, true)}
-                                                {renderSelect("F_InterestLedger", "Interest Ledger", dropdowns.interestLedgers, values, handleChange, handleBlur, touched, errors)}
-                                                {renderSelect("F_InterestCalculationType", "Interest Calculation Type", dropdowns.interestCalculationTypes, values, handleChange, handleBlur, touched, errors, true)}
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Account Type <span className="text-danger">*</span></Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_AccountType"
+                                                            value={values.F_AccountType}
+                                                            onChange={(e) => setFieldValue("F_AccountType", e.target.value)}
+                                                            invalid={touched.F_AccountType && !!errors.F_AccountType}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.accountTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `at-${id}` : `at-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_AccountType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Loan Type <span className="text-danger">*</span></Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_LoanType"
+                                                            value={values.F_LoanType}
+                                                            onChange={(e) => setFieldValue("F_LoanType", e.target.value)}
+                                                            invalid={touched.F_LoanType && !!errors.F_LoanType}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.loanTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `lt-${id}` : `lt-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_LoanType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>EMI Type <span className="text-danger">*</span></Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_EMIType"
+                                                            value={values.F_EMIType}
+                                                            onChange={(e) => setFieldValue("F_EMIType", e.target.value)}
+                                                            invalid={touched.F_EMIType && !!errors.F_EMIType}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.emiTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `emi-${id}` : `emi-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_EMIType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Periodicity <span className="text-danger">*</span></Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_Periodicity"
+                                                            value={values.F_Periodicity}
+                                                            onChange={(e) => setFieldValue("F_Periodicity", e.target.value)}
+                                                            invalid={touched.F_Periodicity && !!errors.F_Periodicity}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.periodicities.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `per-${id}` : `per-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_Periodicity" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Interest Ledger</Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_InterestLedger"
+                                                            value={values.F_InterestLedger}
+                                                            onChange={(e) => setFieldValue("F_InterestLedger", e.target.value)}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.interestLedgers.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `il-${id}` : `il-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_InterestLedger" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Interest Calculation Type <span className="text-danger">*</span></Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_InterestCalculationType"
+                                                            value={values.F_InterestCalculationType}
+                                                            onChange={(e) => setFieldValue("F_InterestCalculationType", e.target.value)}
+                                                            invalid={touched.F_InterestCalculationType && !!errors.F_InterestCalculationType}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.interestCalculationTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `ict-${id}` : `ict-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_InterestCalculationType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
 
                                                 {renderNumber("MinAmount", "Min Amount", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("MaxAmount", "Max Amount", values, handleChange, handleBlur, touched, errors, true)}
@@ -458,7 +633,24 @@ const AccountTypeScheme = () => {
                                         <CardHeader><h5>Collateral & Charges</h5></CardHeader>
                                         <CardBody>
                                             <Row className="gy-2 mb-3">
-                                                {renderSelect("F_CollateralType", "Collateral Type", dropdowns.collateralTypes, values, handleChange, handleBlur, touched, errors)}
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Collateral Type</Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_CollateralType"
+                                                            value={values.F_CollateralType}
+                                                            onChange={(e) => setFieldValue("F_CollateralType", e.target.value)}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.collateralTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `ct-${id}` : `ct-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_CollateralType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
                                             </Row>
 
                                             <h6 className="mt-3 mb-2">Charges</h6>
@@ -477,31 +669,65 @@ const AccountTypeScheme = () => {
                                                     {charges.map((row, idx) => (
                                                         <tr key={idx}>
                                                             <td>
-                                                                <Input type="select" value={row.ChargeType} onChange={(e) => updateCharge(idx, "ChargeType", e.target.value)}>
+                                                                <select 
+                                                                    className="form-control form-select"
+                                                                    value={row.ChargeType || ""} 
+                                                                    onChange={(e) => updateCharge(idx, "ChargeType", e.target.value)}
+                                                                >
                                                                     <option value="">-- Select --</option>
-                                                                    {dropdowns.chargeTypes.map((o) => <option key={o.Id} value={String(o.Id)}>{o.Name}</option>)}
-                                                                </Input>
+                                                                    {dropdowns.chargeTypes.map((o, i) => {
+                                                                        const id = getOptionId(o);
+                                                                        return <option key={i} value={id != null ? String(id) : ""}>{o.Name || ""}</option>;
+                                                                    })}
+                                                                </select>
                                                             </td>
                                                             <td>
-                                                                <Input type="select" value={row.CalculationType} onChange={(e) => updateCharge(idx, "CalculationType", e.target.value)}>
+                                                                <select 
+                                                                    className="form-control form-select"
+                                                                    value={row.CalculationType || ""} 
+                                                                    onChange={(e) => updateCharge(idx, "CalculationType", e.target.value)}
+                                                                >
                                                                     <option value="">-- Select --</option>
-                                                                    {dropdowns.calcTypes.map((o) => <option key={o.Id} value={String(o.Id)}>{o.Name}</option>)}
-                                                                </Input>
+                                                                    {dropdowns.calcTypes.map((o, i) => {
+                                                                        const id = getOptionId(o);
+                                                                        return <option key={i} value={id != null ? String(id) : ""}>{o.Name || ""}</option>;
+                                                                    })}
+                                                                </select>
                                                             </td>
                                                             <td>
-                                                                <Input type="number" value={row.Amount} onChange={(e) => updateCharge(idx, "Amount", e.target.value)} />
+                                                                <Input 
+                                                                    type="number" 
+                                                                    value={row.Amount} 
+                                                                    onChange={(e) => updateCharge(idx, "Amount", e.target.value)}
+                                                                    invalid={isPercentageCalcType(row.CalculationType) && Number(row.Amount) > 100}
+                                                                    max={isPercentageCalcType(row.CalculationType) ? 100 : undefined}
+                                                                />
+                                                                {isPercentageCalcType(row.CalculationType) && Number(row.Amount) > 100 && (
+                                                                    <small className="text-danger">Max 100 for percentage</small>
+                                                                )}
                                                             </td>
                                                             <td>
-                                                                <Input type="select" value={row.Ledger} onChange={(e) => updateCharge(idx, "Ledger", e.target.value)}>
+                                                                <select 
+                                                                    className="form-control form-select"
+                                                                    value={row.Ledger || ""} 
+                                                                    onChange={(e) => updateCharge(idx, "Ledger", e.target.value)}
+                                                                >
                                                                     <option value="">-- Select --</option>
-                                                                    {dropdowns.ledgers.map((o) => <option key={o.Id} value={String(o.Id)}>{o.Name}</option>)}
-                                                                </Input>
+                                                                    {dropdowns.ledgers.map((o, i) => {
+                                                                        const id = getOptionId(o);
+                                                                        return <option key={i} value={id != null ? String(id) : ""}>{o.Name || ""}</option>;
+                                                                    })}
+                                                                </select>
                                                             </td>
                                                             <td>
-                                                                <Input type="select" value={row.IsDeductFromLoan} onChange={(e) => updateCharge(idx, "IsDeductFromLoan", e.target.value)}>
+                                                                <select 
+                                                                    className="form-control form-select"
+                                                                    value={row.IsDeductFromLoan || "1"} 
+                                                                    onChange={(e) => updateCharge(idx, "IsDeductFromLoan", e.target.value)}
+                                                                >
                                                                     <option value="1">Yes</option>
                                                                     <option value="0">No</option>
-                                                                </Input>
+                                                                </select>
                                                             </td>
                                                             <td>
                                                                 <Btn color="danger" type="button" size="sm" onClick={() => removeCharge(idx)}>X</Btn>

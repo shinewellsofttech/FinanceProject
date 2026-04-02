@@ -2,6 +2,7 @@ export const API_WEB_URLS = {
 
   // BASE: "https://apiaccountingmain.shinewellinnovation.com/api/V1/",
   BASE: "http://192.168.31.70:4554/api/V1/",
+    // BASE: "https://06b8-2402-3a80-2f2-3d02-55a6-c2b1-d185-8185.ngrok-free.app/api/V1/",
 
 
   // BASE: "http://192.168.31.151:5062/api/V1/",
