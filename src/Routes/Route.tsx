@@ -37,6 +37,7 @@ import RepaymentForm from "../Pages/Operations/RepaymentForm";
 import Receipt from "../Pages/Transactions/Receipt";
 import Payment from "../Pages/Transactions/Payment";
 import PageList_Payment from "../Pages/Transactions/PageList_Payment";
+import PageList_Receipt from "../Pages/Transactions/PageList_Receipt";
 import PageList_ModuleMaster from "../Pages/Masters/PageList_ModuleMaster";
 import AddEdit_ModuleMaster from "../Pages/Masters/AddEdit_ModuleMaster";
 import PageList_MemberAccount from "../Pages/Masters/PageList_MemberAccount";
@@ -81,6 +82,7 @@ export const routes = [
 
   // Transactions
   { path: `${process.env.PUBLIC_URL}/receipt`, Component: <Receipt /> },
+  { path: `${process.env.PUBLIC_URL}/receiptList`, Component: <PageList_Receipt /> },
   { path: `${process.env.PUBLIC_URL}/paymentList`, Component: <PageList_Payment /> },
   { path: `${process.env.PUBLIC_URL}/payment`, Component: <Payment /> },
 

@@ -22,6 +22,8 @@ interface FormValues {
     F_Periodicity: string;
     F_InterestLedger: string;
     F_InterestCalculationType: string;
+    F_PenaltyCalculationType: string;
+    F_PenaltyLedger: string;
     MinAmount: string;
     MaxAmount: string;
     MultipleAmount: string;
@@ -61,6 +63,8 @@ const initialValues: FormValues = {
     F_Periodicity: "",
     F_InterestLedger: "",
     F_InterestCalculationType: "",
+    F_PenaltyCalculationType: "",
+    F_PenaltyLedger: "",
     MinAmount: "",
     MaxAmount: "",
     MultipleAmount: "",
@@ -206,13 +210,15 @@ const AccountTypeScheme = () => {
                     
                     if (Array.isArray(collateralData) && collateralData.length > 0) {
                         const collateralType = collateralData[0].F_CollateralType;
-                        setSchemeState((prev) => ({
-                            ...prev,
-                            formData: {
-                                ...prev.formData,
-                                F_CollateralType: String(collateralType || "")
-                            }
-                        }));
+                        if (collateralType) {
+                            setSchemeState((prev) => ({
+                                ...prev,
+                                formData: {
+                                    ...prev.formData,
+                                    F_CollateralType: String(collateralType)
+                                }
+                            }));
+                        }
                     }
                 } catch (error) {
                     console.error("Error parsing CollateralJson:", error);
@@ -226,13 +232,13 @@ const AccountTypeScheme = () => {
                         ? JSON.parse(schemeState.formData.ChargesJson)
                         : schemeState.formData.ChargesJson;
                     
-                    if (Array.isArray(chargesData)) {
+                    if (Array.isArray(chargesData) && chargesData.length > 0) {
                         const mappedCharges: ChargeRow[] = chargesData.map((charge: any) => ({
-                            ChargeType: String(charge.F_ChargeType || ""),
-                            CalculationType: String(charge.F_CalculationType || ""),
+                            ChargeType: String(charge.F_ChargeType || charge.ChargeType || ""),
+                            CalculationType: String(charge.F_CalculationType || charge.CalculationType || ""),
                             Amount: String(charge.Amount || ""),
-                            Ledger: String(charge.F_Ledger || ""),
-                            IsDeductFromLoan: charge.IsDeductFromLoan ? "1" : "0",
+                            Ledger: String(charge.F_Ledger || charge.Ledger || ""),
+                            IsDeductFromLoan: charge.IsDeductFromLoan === true || charge.IsDeductFromLoan === "1" || charge.IsDeductFromLoan === 1 ? "1" : "0",
                         }));
                         setCharges(mappedCharges);
                     }
@@ -301,6 +307,8 @@ const AccountTypeScheme = () => {
         F_Periodicity: toStringOrEmpty(schemeState.formData.F_Periodicity),
         F_InterestLedger: toStringOrEmpty(schemeState.formData.F_InterestLedger),
         F_InterestCalculationType: toStringOrEmpty(schemeState.formData.F_InterestCalculationType),
+        F_PenaltyCalculationType: toStringOrEmpty(schemeState.formData.F_PenaltyCalculationType),
+        F_PenaltyLedger: toStringOrEmpty(schemeState.formData.F_PenaltyLedger),
         MinAmount: toStringOrEmpty(schemeState.formData.MinAmount),
         MaxAmount: toStringOrEmpty(schemeState.formData.MaxAmount),
         MultipleAmount: toStringOrEmpty(schemeState.formData.MultipleAmount),
@@ -348,6 +356,8 @@ const AccountTypeScheme = () => {
             formData.append("F_Periodicity", values.F_Periodicity || "");
             formData.append("F_InterestLedger", values.F_InterestLedger || "");
             formData.append("F_InterestCalculationType", values.F_InterestCalculationType || "");
+            formData.append("F_PenaltyCalculationType", values.F_PenaltyCalculationType || "");
+            formData.append("F_PenaltyLedger", values.F_PenaltyLedger || "");
             formData.append("MinAmount", values.MinAmount || "");
             formData.append("MaxAmount", values.MaxAmount || "");
             formData.append("MultipleAmount", values.MultipleAmount || "");
@@ -370,16 +380,8 @@ const AccountTypeScheme = () => {
             formData.append("IsGracePeriodAllowed", String(values.IsGracePeriodAllowed));
             formData.append("IsMoratoriumAllowed", String(values.IsMoratoriumAllowed));
 
-            // CollateralJSON
-            if (values.F_CollateralType) {
-                const collateralPayload = [{
-                    F_CollateralType: Number(values.F_CollateralType),
-                    F_AccountTypeScheme: schemeState.id
-                }];
-                formData.append("CollateralJSON", JSON.stringify(collateralPayload));
-            } else {
-                formData.append("CollateralJSON", "[]");
-            }
+            // F_CollateralType - send only the ID
+            formData.append("F_CollateralType", values.F_CollateralType || "");
 
             // ChargesJSON - send as array of number values
             const chargesPayload = charges.map((row) => ({
@@ -595,6 +597,42 @@ const AccountTypeScheme = () => {
                                                 {renderNumber("MaxTenure", "Max Tenure", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("InterestRate", "Interest Rate", values, handleChange, handleBlur, touched, errors, true, "0.01")}
                                                 {renderNumber("PenaltyRate", "Penalty Rate", values, handleChange, handleBlur, touched, errors, false, "0.01")}
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Penalty Calculation Type</Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_PenaltyCalculationType"
+                                                            value={values.F_PenaltyCalculationType}
+                                                            onChange={(e) => setFieldValue("F_PenaltyCalculationType", e.target.value)}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.interestCalculationTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `pct-${id}` : `pct-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_PenaltyCalculationType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Penalty Ledger</Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_PenaltyLedger"
+                                                            value={values.F_PenaltyLedger}
+                                                            onChange={(e) => setFieldValue("F_PenaltyLedger", e.target.value)}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.interestLedgers.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `pl-${id}` : `pl-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_PenaltyLedger" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
                                                 {renderNumber("GracePeriod", "Grace Period", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("Moratorium", "Moratorium", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("PreMaturityAfter", "Prematurity After", values, handleChange, handleBlur, touched, errors)}
