@@ -64,7 +64,6 @@ const PageList_StateMaster = () => {
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setState((prev) => ({ ...prev, filterText: e.target.value }));
   };
-
   const filteredList = useMemo(() => {
     const list = Array.isArray(state.dataList) ? state.dataList : [];
     const search = state.filterText.trim().toLowerCase();
@@ -73,7 +72,8 @@ const PageList_StateMaster = () => {
       (item: any) =>
         String(item?.Name ?? "").toLowerCase().includes(search) ||
         String(item?.CountryName ?? "").toLowerCase().includes(search)
-    );
+)
+
   }, [state.dataList, state.filterText]);
 
   return (

@@ -19,10 +19,10 @@ import DateInput from "../../../CommonElements/DateInput/DateInput";
 import { Fn_FillListData, Fn_GetReport } from "../../../store/Functions";
 import { API_WEB_URLS } from "../../../constants/constAPI";
 
-const LEDGER_MASTER_API = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.LedgerMaster}/Id/0`;
+const LEDGER_MASTER_API = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.LedgerMaster}/ID/0`;
 
 interface LedgerOption {
-  Id?: number;
+  ID?: number;
   Name?: string;
 }
 
@@ -152,8 +152,8 @@ const LedgerReport = () => {
                       >
                         <option value="">-- Select Ledger --</option>
                         {dropdowns.ledgerMasters.map((opt) => (
-                          <option key={opt?.Id} value={opt?.Id ?? ""}>
-                            {opt?.Name ?? `Ledger ${opt?.Id ?? ""}`}
+                          <option key={opt?.ID} value={opt?.ID ?? ""}>
+                            {opt?.Name ?? `Ledger ${opt?.ID ?? ""}`}
                           </option>
                         ))}
                       </Input>
