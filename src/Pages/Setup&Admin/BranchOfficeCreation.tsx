@@ -155,7 +155,7 @@ const BranchOfficeCreation = () => {
             setBoState((prev) => ({
                 ...prev,
                 id: recordId,
-                isEditingOpen: false,
+                isEditingOpen: true, // Fixed: Enable editing when in edit mode
             }));
             Fn_DisplayData(dispatch, setBoState, recordId, API_URL_EDIT);
         } else {

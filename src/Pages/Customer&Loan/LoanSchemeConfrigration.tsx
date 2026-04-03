@@ -368,7 +368,7 @@ const AccountTypeScheme = () => {
             formData.append("InterestRate", values.InterestRate || "");
             formData.append("PenaltyRate", values.PenaltyRate || "");
             formData.append("GracePeriod", values.GracePeriod || "");
-            formData.append("Moratorium", values.Moratorium || "");
+            formData.append("Moratorium", "0");
             formData.append("PreMaturityAfter", values.PreMaturityAfter || "");
 
             formData.append("IsFixedTerm", String(values.IsFixedTerm));
@@ -378,7 +378,7 @@ const AccountTypeScheme = () => {
             formData.append("IsPaymentAllowed", String(values.IsPaymentAllowed));
             formData.append("IsBlockScheme", String(values.IsBlockScheme));
             formData.append("IsGracePeriodAllowed", String(values.IsGracePeriodAllowed));
-            formData.append("IsMoratoriumAllowed", String(values.IsMoratoriumAllowed));
+            formData.append("IsMoratoriumAllowed", "false");
 
             // F_CollateralType - send only the ID
             formData.append("F_CollateralType", values.F_CollateralType || "");
@@ -591,8 +591,8 @@ const AccountTypeScheme = () => {
                                                 {renderNumber("MinAmount", "Min Amount", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("MaxAmount", "Max Amount", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("MultipleAmount", "Multiple Amount", values, handleChange, handleBlur, touched, errors)}
-                                                {renderNumber("MinMemberValue", "Min Member Value", values, handleChange, handleBlur, touched, errors)}
-                                                {renderNumber("MaxMemberValue", "Max Member Value", values, handleChange, handleBlur, touched, errors)}
+                                                {renderNumber("MinMemberValue", "Min Member ", values, handleChange, handleBlur, touched, errors)}
+                                                {renderNumber("MaxMemberValue", "Max Member ", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("MinTenure", "Min Tenure", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("MaxTenure", "Max Tenure", values, handleChange, handleBlur, touched, errors, true)}
                                                 {renderNumber("InterestRate", "Interest Rate", values, handleChange, handleBlur, touched, errors, true, "0.01")}
@@ -607,7 +607,7 @@ const AccountTypeScheme = () => {
                                                             onChange={(e) => setFieldValue("F_PenaltyCalculationType", e.target.value)}
                                                         >
                                                             <option value="">-- Select --</option>
-                                                            {dropdowns.interestCalculationTypes.map((opt, idx) => {
+                                                            {dropdowns.calcTypes.map((opt, idx) => {
                                                                 const id = getOptionId(opt);
                                                                 return <option key={id != null ? `pct-${id}` : `pct-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
                                                             })}
@@ -634,20 +634,15 @@ const AccountTypeScheme = () => {
                                                     </FormGroup>
                                                 </Col>
                                                 {renderNumber("GracePeriod", "Grace Period", values, handleChange, handleBlur, touched, errors)}
-                                                {renderNumber("Moratorium", "Moratorium", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("PreMaturityAfter", "Prematurity After", values, handleChange, handleBlur, touched, errors)}
                                             </Row>
 
                                             <Row className="mt-3">
                                                 {[
                                                     { name: "IsFixedTerm", label: "Fixed Term" },
-                                                    { name: "IsInterestBased", label: "Interest Based" },
-                                                    { name: "IsInterestVariable", label: "Variable Interest" },
                                                     { name: "IsPrematurityAllowed", label: "Prematurity Allowed" },
-                                                    { name: "IsPaymentAllowed", label: "Payment Allowed" },
                                                     { name: "IsBlockScheme", label: "Block Scheme" },
                                                     { name: "IsGracePeriodAllowed", label: "Grace Period Allowed" },
-                                                    { name: "IsMoratoriumAllowed", label: "Moratorium Allowed" },
                                                 ].map((chk) => (
                                                     <Col md="3" key={chk.name}>
                                                         <FormGroup check className="mb-2">
@@ -699,7 +694,6 @@ const AccountTypeScheme = () => {
                                                         <th>Calculation Type</th>
                                                         <th>Amount</th>
                                                         <th>Ledger</th>
-                                                        <th>Deduct From Loan</th>
                                                         <th></th>
                                                     </tr>
                                                 </thead>
@@ -755,16 +749,6 @@ const AccountTypeScheme = () => {
                                                                         const id = getOptionId(o);
                                                                         return <option key={i} value={id != null ? String(id) : ""}>{o.Name || ""}</option>;
                                                                     })}
-                                                                </select>
-                                                            </td>
-                                                            <td>
-                                                                <select 
-                                                                    className="form-control form-select"
-                                                                    value={row.IsDeductFromLoan || "1"} 
-                                                                    onChange={(e) => updateCharge(idx, "IsDeductFromLoan", e.target.value)}
-                                                                >
-                                                                    <option value="1">Yes</option>
-                                                                    <option value="0">No</option>
                                                                 </select>
                                                             </td>
                                                             <td>

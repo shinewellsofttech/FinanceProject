@@ -52,14 +52,14 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
-      {
-        id: 7,
-        title: "Maker-Checker",
-        path: `${process.env.PUBLIC_URL}/makerCheckerConfig`,
-        icon: "CheckSquare",
-        type: "link",
-        bookmark: true,
-      },
+      // {
+      //   id: 7,
+      //   title: "Maker-Checker",
+      //   path: `${process.env.PUBLIC_URL}/makerCheckerConfig`,
+      //   icon: "CheckSquare",
+      //   type: "link",
+      //   bookmark: true,
+      // },
       {
         id: 8,
         title: "Financial Year Setup",
@@ -130,7 +130,7 @@ export const MenuList: MenuItem[] = [
 
       {
         id: 1,
-        title: "Receipt LIst",
+        title: "Receipt",
         path: `${process.env.PUBLIC_URL}/receiptList`,
         icon: "FileText",
         type: "link",
@@ -138,20 +138,20 @@ export const MenuList: MenuItem[] = [
       },
       {
         id: 2,
-        title: "Payment List",
+        title: "Payment",
         path: `${process.env.PUBLIC_URL}/paymentList`,
         icon: "CreditCard",
         type: "link",
         bookmark: true,
       },
-      {
-        id: 3,
-        title: "Payment",
-        path: `${process.env.PUBLIC_URL}/payment`,
-        icon: "CreditCard",
-        type: "link",
-        bookmark: true,
-      },
+      // {
+      //   id: 3,
+      //   title: "Payment",
+      //   path: `${process.env.PUBLIC_URL}/payment`,
+      //   icon: "CreditCard",
+      //   type: "link",
+      //   bookmark: true,
+      // },
     ],
   },
   {

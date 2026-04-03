@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData, Fn_GetReport } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
+import { formatDateDisplay } from "../../helpers/dateUtils";
 import * as Yup from "yup";
 import {
     Card, CardBody, CardFooter, Col, Container,
@@ -613,7 +614,36 @@ const AddEdit_MemberAccount = () => {
                                                                     value={values.F_AccountTypeScheme}
                                                                     onChange={(e) => {
                                                                         handleChange(e);
-                                                                        autoCalculateEMI(values.LoanAmount, values.InterestRate, values.PeriodCount, e.target.value);
+                                                                        const selectedSchemeId = e.target.value;
+                                                                        // Auto-fill scheme details
+                                                                        const selectedScheme = schemeState.dataList.find((s: any) => String(s.Id) === selectedSchemeId);
+                                                                        if (selectedScheme) {
+                                                                            // Auto-fill fields from scheme
+                                                                            if (selectedScheme.F_LoanType) {
+                                                                                setFieldValue("F_LoanType", String(selectedScheme.F_LoanType));
+                                                                            }
+                                                                            if (selectedScheme.InterestRate !== undefined && selectedScheme.InterestRate !== null) {
+                                                                                setFieldValue("InterestRate", String(selectedScheme.InterestRate));
+                                                                            }
+                                                                            if (selectedScheme.F_InterestCalculationType) {
+                                                                                setFieldValue("F_InterestCalculationType", String(selectedScheme.F_InterestCalculationType));
+                                                                            }
+                                                                            if (selectedScheme.F_Periodicity) {
+                                                                                setFieldValue("F_RepaymentMode", String(selectedScheme.F_Periodicity));
+                                                                            }
+                                                                            if (selectedScheme.F_CollateralType) {
+                                                                                setFieldValue("F_CollateralType", String(selectedScheme.F_CollateralType));
+                                                                            }
+                                                                            // Calculate EMI with auto-filled values
+                                                                            autoCalculateEMI(
+                                                                                values.LoanAmount, 
+                                                                                String(selectedScheme.InterestRate ?? values.InterestRate), 
+                                                                                values.PeriodCount, 
+                                                                                selectedSchemeId
+                                                                            );
+                                                                        } else {
+                                                                            autoCalculateEMI(values.LoanAmount, values.InterestRate, values.PeriodCount, selectedSchemeId);
+                                                                        }
                                                                     }}
                                                                     onBlur={handleBlur}
                                                                     invalid={touched.F_AccountTypeScheme && !!errors.F_AccountTypeScheme}
@@ -1185,7 +1215,7 @@ const AddEdit_MemberAccount = () => {
                                                                 {emiSchedule.map((item, idx) => (
                                                                     <tr key={idx} className={item.IsPaid ? "table-success" : ""}>
                                                                         <td className="text-center">{item.InstallmentNo}</td>
-                                                                        <td>{new Date(item.DueDate).toLocaleDateString("en-IN")}</td>
+                                                                        <td>{formatDateDisplay(item.DueDate)}</td>
                                                                         <td className="text-end">₹ {item.OpeningPrincipal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                                                                         <td className="text-end">₹ {item.EMIAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                                                                         <td className="text-end">₹ {item.PrincipalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>

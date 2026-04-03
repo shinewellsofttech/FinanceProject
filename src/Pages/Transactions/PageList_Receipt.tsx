@@ -8,6 +8,7 @@ import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCo
 import { Fn_FillListData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { API_HELPER } from "../../helpers/ApiHelper";
+import { formatDateDisplay } from "../../helpers/dateUtils";
 
 interface DropdownOption {
     Id?: number;
@@ -125,14 +126,7 @@ const PageList_Receipt = () => {
         );
     }, [state.dataList, state.filterText]);
 
-    const formatDate = (dateStr: string | null | undefined) => {
-        if (!dateStr) return "-";
-        try {
-            return new Date(dateStr).toLocaleDateString("en-IN");
-        } catch {
-            return dateStr;
-        }
-    };
+    const formatDate = formatDateDisplay;
 
     const formatAmount = (amount: number | null | undefined) => {
         if (amount == null) return "-";

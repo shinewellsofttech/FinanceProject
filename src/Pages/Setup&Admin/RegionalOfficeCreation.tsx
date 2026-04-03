@@ -348,9 +348,9 @@ const RegionalOfficeCreation = () => {
                                             <Btn color="primary" type="submit" disabled={isSubmitting}>
                                                 <i className="fa fa-plus me-1"></i> {isEditMode ? "Update Regional Office" : "Create Regional Office"}
                                             </Btn>
-                                            <Btn color="light" type="button" className="text-dark">
+                                            {/* <Btn color="light" type="button" className="text-dark">
                                                 <i className="fa fa-pencil me-1"></i> Edit
-                                            </Btn>
+                                            </Btn> */}
                                         </CardFooter>
                                     </Card>
                                 </Form>

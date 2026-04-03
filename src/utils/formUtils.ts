@@ -56,3 +56,80 @@ export function handleEnterToNextField(e: React.KeyboardEvent<HTMLFormElement>):
     }
   }
 }
+
+/**
+ * Global Enter key handler - attaches to document level
+ * Moves focus to next field on Enter, or to Save button if on last field
+ */
+export function initGlobalEnterNavigation(): () => void {
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key !== "Enter") return;
+    
+    const target = e.target as HTMLElement;
+    const tagName = target.tagName.toUpperCase();
+    
+    // Skip if target is textarea, button, or not an input element
+    if (tagName === "TEXTAREA" || tagName === "BUTTON") return;
+    if (tagName !== "INPUT" && tagName !== "SELECT") return;
+    
+    // Skip if input type is submit
+    if (tagName === "INPUT" && (target as HTMLInputElement).type === "submit") return;
+    
+    // Find parent form
+    const form = target.closest("form");
+    if (!form) return;
+    
+    e.preventDefault();
+    
+    // Get all focusable elements in form
+    const focusableSelector =
+      'input:not([type="hidden"]):not([type="submit"]):not([disabled]):not([readonly]), ' +
+      'select:not([disabled]), ' +
+      'textarea:not([disabled]):not([readonly])';
+    
+    const inputs = Array.from(form.querySelectorAll<HTMLElement>(focusableSelector));
+    
+    // Find save/submit button - use valid CSS selectors only
+    let saveBtn: HTMLButtonElement | null = null;
+    
+    // Try standard selectors first
+    saveBtn = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+    
+    if (!saveBtn) {
+      saveBtn = form.querySelector<HTMLButtonElement>('button.btn-primary');
+    }
+    
+    // If still not found, look for button with save/update/add text or icon
+    if (!saveBtn) {
+      const allButtons = Array.from(form.querySelectorAll<HTMLButtonElement>('button'));
+      saveBtn = allButtons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        const hasIcon = btn.querySelector('.fa-save, .fa-plus') !== null;
+        return hasIcon || text.includes('save') || text.includes('update') || text.includes('add') || text.includes('create');
+      }) || null;
+    }
+    
+    const focusables = saveBtn ? [...inputs, saveBtn] : inputs;
+    
+    if (focusables.length === 0) return;
+    
+    const currentIdx = focusables.indexOf(target);
+    
+    if (currentIdx >= 0 && currentIdx < focusables.length - 1) {
+      // Move to next field
+      focusables[currentIdx + 1].focus();
+    } else if (currentIdx === focusables.length - 1 || currentIdx === inputs.length - 1) {
+      // On last input field - focus save button if exists
+      if (saveBtn && !saveBtn.disabled) {
+        saveBtn.focus();
+      }
+    }
+  };
+  
+  document.addEventListener("keydown", handleKeyDown);
+  
+  // Return cleanup function
+  return () => {
+    document.removeEventListener("keydown", handleKeyDown);
+  };
+}

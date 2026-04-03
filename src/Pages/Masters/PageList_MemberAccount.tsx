@@ -7,6 +7,7 @@ import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import CardHeaderCommon from "../../CommonElements/CardHeaderCommon/CardHeaderCommon";
 import { Fn_FillListData, Fn_DisplayData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
+import { formatDateDisplay } from "../../helpers/dateUtils";
 
 const LIST_API_URL = `${API_WEB_URLS.MASTER}/0/token/MemberAccountData/Id/0`;
 
@@ -254,7 +255,7 @@ const PageList_MemberAccount = () => {
                                     {emiModal.schedule.map((item, idx) => (
                                         <tr key={idx} className={item.IsPaid ? "table-success" : ""}>
                                             <td className="text-center">{item.InstallmentNo}</td>
-                                            <td>{new Date(item.DueDate).toLocaleDateString("en-IN")}</td>
+                                            <td>{formatDateDisplay(item.DueDate)}</td>
                                             <td className="text-end">₹ {item.OpeningPrincipal.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                                             <td className="text-end">₹ {item.EMIAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
                                             <td className="text-end">₹ {item.PrincipalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>

@@ -18,6 +18,7 @@ import CardHeaderCommon from "../../../CommonElements/CardHeaderCommon/CardHeade
 import DateInput from "../../../CommonElements/DateInput/DateInput";
 import { Fn_FillListData, Fn_GetReport } from "../../../store/Functions";
 import { API_WEB_URLS } from "../../../constants/constAPI";
+import { formatDateDisplay } from "../../../helpers/dateUtils";
 
 const LEDGER_MASTER_API = `${API_WEB_URLS.MASTER}/0/token/${API_WEB_URLS.LedgerMaster}/ID/0`;
 
@@ -91,14 +92,7 @@ const LedgerReport = () => {
     return Array.isArray(reportState.reportData) ? reportState.reportData : [];
   }, [reportState.reportData]);
 
-  const formatDate = (val: string | null | undefined) => {
-    if (!val) return "-";
-    try {
-      return new Date(val).toLocaleDateString("en-IN");
-    } catch {
-      return val;
-    }
-  };
+  const formatDate = formatDateDisplay;
 
   // Group rows by "Ledger Name"
   const groupedData = useMemo(() => {

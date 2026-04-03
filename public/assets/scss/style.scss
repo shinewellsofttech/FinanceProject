@@ -328,3 +328,503 @@
 @import "layout/rtl";
 @import "layout/box-layout";
 @import "responsive";
+
+/* ===============================================
+   COMPACT UI - Reduced Y-Axis Spacing Globally
+   =============================================== */
+
+// Page body
+.page-body {
+  padding-top: 10px !important;
+  margin-top: 50px !important;
+}
+
+// Cards
+.card {
+  margin-bottom: 10px !important;
+  
+  .card-header {
+    padding: 8px 15px !important;
+    
+    h4, h5, h6, .card-title {
+      margin-bottom: 0 !important;
+      font-size: 14px !important;
+    }
+  }
+  
+  .card-body {
+    padding: 10px 15px !important;
+  }
+  
+  .card-footer {
+    padding: 8px 15px !important;
+  }
+}
+
+// Tables
+.table {
+  margin-bottom: 0 !important;
+  
+  th, td {
+    padding: 5px 8px !important;
+    font-size: 13px !important;
+    vertical-align: middle !important;
+  }
+  
+  thead th {
+    padding: 6px 8px !important;
+  }
+}
+
+.table-sm {
+  th, td {
+    padding: 3px 6px !important;
+  }
+}
+
+// Forms
+.form-group, .mb-3 {
+  margin-bottom: 8px !important;
+}
+
+.form-label, label {
+  margin-bottom: 2px !important;
+  font-size: 13px !important;
+}
+
+.form-control, .form-select {
+  padding: 5px 10px !important;
+  font-size: 13px !important;
+  height: auto !important;
+  min-height: 32px !important;
+}
+
+.form-control-sm, .form-select-sm {
+  padding: 3px 8px !important;
+  font-size: 12px !important;
+  min-height: 28px !important;
+}
+
+// Buttons
+.btn {
+  padding: 5px 12px !important;
+  font-size: 13px !important;
+}
+
+.btn-sm {
+  padding: 3px 10px !important;
+  font-size: 12px !important;
+}
+
+// Breadcrumb
+.breadcrumb-item {
+  font-size: 13px !important;
+}
+
+.page-title {
+  padding-bottom: 8px !important;
+  
+  h3 {
+    font-size: 18px !important;
+    margin-bottom: 0 !important;
+  }
+}
+
+// Row gaps
+.row {
+  --bs-gutter-y: 8px;
+}
+
+.g-3, .gy-3 {
+  --bs-gutter-y: 8px !important;
+}
+
+.g-2, .gy-2 {
+  --bs-gutter-y: 6px !important;
+}
+
+// Margins/Paddings
+.mb-3 {
+  margin-bottom: 8px !important;
+}
+
+.mb-4 {
+  margin-bottom: 10px !important;
+}
+
+.py-3 {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.py-4 {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+.mt-3 {
+  margin-top: 10px !important;
+}
+
+// Container
+.container-fluid {
+  padding-left: 15px !important;
+  padding-right: 15px !important;
+}
+
+// Modal  
+.modal-body {
+  padding: 12px 15px !important;
+}
+
+.modal-header, .modal-footer {
+  padding: 8px 15px !important;
+}
+
+// Alerts
+.alert {
+  padding: 8px 12px !important;
+  margin-bottom: 10px !important;
+}
+
+// Badge
+.badge {
+  padding: 3px 8px !important;
+  font-size: 11px !important;
+}
+
+// List group  
+.list-group-item {
+  padding: 6px 12px !important;
+}
+
+// Dropdown
+.dropdown-item {
+  padding: 5px 12px !important;
+  font-size: 13px !important;
+}
+
+// Input Group
+.input-group-text {
+  padding: 5px 10px !important;
+  font-size: 13px !important;
+}
+
+// Nav tabs
+.nav-tabs .nav-link, .nav-pills .nav-link {
+  padding: 6px 12px !important;
+  font-size: 13px !important;
+}
+
+// Spinner loader for reports
+.spinner-border-sm {
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+// DataTable specific
+.dataTables_wrapper {
+  .dataTables_filter, .dataTables_length {
+    margin-bottom: 8px !important;
+  }
+  
+  .dataTables_info, .dataTables_paginate {
+    margin-top: 8px !important;
+  }
+}
+
+// Sidebar compact spacing
+.page-wrapper .page-body-wrapper .sidebar-wrapper {
+  .sidebar-main .sidebar-links {
+    .simplebar-wrapper .simplebar-mask .simplebar-content-wrapper .simplebar-content {
+      > li {
+        padding: 4px 10px !important;
+        
+        .sidebar-link {
+          padding: 6px 10px !important;
+          
+          svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
+        }
+        
+        .sidebar-submenu li a {
+          padding: 4px 10px 4px 45px !important;
+        }
+      }
+    }
+  }
+}
+
+// Compact header/navbar - FIXED
+.page-header {
+  padding: 0 !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  
+  .header-wrapper {
+    padding: 0 15px !important;
+    height: 50px !important;
+    min-height: 50px !important;
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    
+    // Left section - Logo/toggle
+    .header-logo-wrapper {
+      padding: 5px 10px !important;
+      flex-shrink: 0 !important;
+      height: 50px !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+    
+    // Search section - left header
+    .left-header {
+      flex: 0 0 auto !important;
+      max-width: 220px !important;
+      height: 50px !important;
+      display: flex !important;
+      align-items: center !important;
+      padding: 0 !important;
+      
+      .left-menu-header {
+        width: 100% !important;
+        
+        .header-left {
+          margin: 0 !important;
+          padding: 0 !important;
+          
+          li {
+            padding: 0 !important;
+            list-style: none !important;
+          }
+          
+          .form-group {
+            margin: 0 !important;
+            
+            .u-posRelative {
+              height: 32px !important;
+              align-items: center !important;
+              background: #f5f6f9 !important;
+              border-radius: 6px !important;
+              padding: 0 10px !important;
+              
+              svg {
+                width: 16px !important;
+                height: 16px !important;
+                flex-shrink: 0 !important;
+              }
+              
+              input {
+                height: 32px !important;
+                font-size: 13px !important;
+                background: transparent !important;
+                border: none !important;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Right section
+    .nav-right, .right-header {
+      flex: 1 !important;
+      justify-content: flex-end !important;
+      height: 50px !important;
+      display: flex !important;
+      align-items: center !important;
+      margin-left: auto !important;
+      padding: 0 !important;
+      
+      > ul {
+        display: flex !important;
+        align-items: center !important;
+        height: 100% !important;
+        margin: 0 !important;
+        
+        > li {
+          padding: 0 6px !important;
+          display: flex !important;
+          align-items: center !important;
+          height: 100% !important;
+          
+          svg {
+            width: 18px !important;
+            height: 18px !important;
+          }
+          
+          // Profile section
+          .profile-media {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            
+            img {
+              width: 32px !important;
+              height: 32px !important;
+            }
+            
+            .flex-grow-1 {
+              span {
+                font-size: 13px !important;
+                line-height: 1.2 !important;
+              }
+              
+              p {
+                font-size: 11px !important;
+                line-height: 1.2 !important;
+                margin: 0 !important;
+              }
+            }
+          }
+        }
+      }
+      
+      .profile-dropdown {
+        li {
+          padding: 5px 15px !important;
+          font-size: 13px !important;
+        }
+      }
+      
+      // Onhover dropdown 
+      .onhover-dropdown {
+        .onhover-show-div {
+          top: 45px !important;
+        }
+      }
+    }
+    
+    // Toggle button
+    .toggle-sidebar {
+      padding: 0 !important;
+      
+      svg {
+        width: 20px !important;
+        height: 20px !important;
+      }
+    }
+    
+    // Right header with breadcrumb
+    &.right-header, .right-header {
+      height: 50px !important;
+      display: flex !important;
+      align-items: center !important;
+      
+      .nav-menus {
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: nowrap !important;
+        height: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        list-style: none !important;
+        
+        > li {
+          padding: 6px 8px !important;
+          margin-right: 6px !important;
+          height: auto !important;
+          background-color: #f5f6f9 !important;
+          border-radius: 4px !important;
+          display: flex !important;
+          align-items: center !important;
+          
+          svg {
+            width: 16px !important;
+            height: 16px !important;
+          }
+          
+          // Last item (profile) - no bg
+          &:last-child {
+            margin-right: 0 !important;
+            background-color: transparent !important;
+            padding: 0 !important;
+          }
+        }
+      }
+      
+      .breadcrumb {
+        margin: 0 !important;
+        padding: 0 !important;
+        font-size: 12px !important;
+        
+        .breadcrumb-item {
+          font-size: 12px !important;
+          padding-left: 6px !important;
+          
+          &::before {
+            padding-right: 6px !important;
+          }
+          
+          a {
+            font-size: 12px !important;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Logo wrapper compact - fix duplicate sidebar logo
+.page-wrapper .page-body-wrapper {
+  .sidebar-wrapper {
+    // When sidebar is open - show full logo, hide icon
+    .logo-wrapper {
+      padding: 8px 15px !important;
+      height: 50px !important;
+      display: flex !important;
+      align-items: center !important;
+      
+      img {
+        height: 28px !important;
+      }
+    }
+    
+    .logo-icon-wrapper {
+      display: none !important;
+    }
+    
+    // When sidebar is collapsed - hide full logo, show icon
+    &.close_icon {
+      .logo-wrapper {
+        display: none !important;
+      }
+      
+      .logo-icon-wrapper {
+        display: flex !important;
+        padding: 8px 15px !important;
+        height: 50px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        
+        img {
+          height: 28px !important;
+          width: auto !important;
+        }
+      }
+    }
+  }
+}
+
+// Hide header logo wrapper to prevent duplicate
+.page-wrapper {
+  .page-header {
+    .header-wrapper {
+      .header-logo-wrapper {
+        display: none !important;
+      }
+    }
+  }
+}
+
+// Pagination compact
+.pagination {
+  .page-link {
+    padding: 4px 10px !important;
+    font-size: 13px !important;
+  }
+}

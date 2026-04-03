@@ -120,12 +120,17 @@ interface DropdownState {
 const CustomerRegistration = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
     const nameRef = useRef<HTMLInputElement | null>(null);
 
     const [activeTab, setActiveTab] = useState("1");
+    const [customerId, setCustomerId] = useState<number>(0);
+    const [isMapped, setIsMapped] = useState(false);
     // State to hold any fetched form data later for edit support
     const [savedData, setSavedData] = useState<Partial<CustomerFormValues>>({});
     const [savedKYCData, setSavedKYCData] = useState<Partial<KYCFormValues>>({});
+    // State for Fn_DisplayData - it needs a setter that accepts prevState => ({ ...prevState, formData: record })
+    const [customerState, setCustomerState] = useState<{ id: number; formData: any }>({ id: 0, formData: {} });
 
     const [dropdowns, setDropdowns] = useState<DropdownState>({
         genders: [],
@@ -141,6 +146,7 @@ const CustomerRegistration = () => {
     });
 
     const API_URL_SAVE = `${API_WEB_URLS.BASE}Masters/0/token/CustomerMaster/Id/0`;
+    const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/CustomerMaster/Id`;
 
     const validationSchema = useMemo(
         () =>
@@ -194,6 +200,103 @@ const CustomerRegistration = () => {
         Fn_FillListData(dispatch, setDropdowns, "idProofTypes", `Masters/0/token/ProofTypeMaster/Id/0`);
         Fn_FillListData(dispatch, setDropdowns, "addressProofTypes", `Masters/0/token/AddressProofTypeMaster/Id/0`);
     }, [dispatch]);
+
+    // Handle Edit Mode - Load customer data from list page
+    useEffect(() => {
+        const locationState = location.state as { Id?: number } | undefined;
+        const recordId = (locationState?.Id && locationState.Id > 0) ? locationState.Id : 0;
+
+        if (recordId > 0) {
+            setCustomerId(recordId);
+            setCustomerState(prev => ({ ...prev, id: recordId }));
+            // Fn_DisplayData expects a setState function, it will call setState(prev => ({ ...prev, formData: data }))
+            Fn_DisplayData(dispatch, setCustomerState, recordId, API_URL_EDIT);
+        } else {
+            // New customer - reset states
+            setCustomerId(0);
+            setCustomerState({ id: 0, formData: {} });
+            setSavedData({});
+            setSavedKYCData({});
+            setIsMapped(false);
+        }
+    }, [dispatch, location.state, API_URL_EDIT]);
+
+    // Map the fetched formData to savedData when Fn_DisplayData completes
+    useEffect(() => {
+        const fetchedData = customerState.formData;
+        
+        // Check if formData has data (at least has Id or Name)
+        if (!fetchedData || (!fetchedData.Id && !fetchedData.Name)) {
+            return;
+        }
+        
+        console.log("Mapping fetched customer data:", fetchedData);
+        
+        // Parse BankJson if it's a string
+        let bankAccounts: BankAccount[] = [];
+        if (fetchedData.BankJson) {
+            try {
+                bankAccounts = typeof fetchedData.BankJson === 'string' 
+                    ? JSON.parse(fetchedData.BankJson) 
+                    : fetchedData.BankJson;
+                
+                // Map to match our interface
+                bankAccounts = bankAccounts.map((acc: any) => ({
+                    BankName: acc.BankName || "",
+                    AccountNumber: acc.AccountNumber || "",
+                    IFSCCode: acc.IFSCCode || "",
+                    F_AccountTypeMaster: String(acc.F_BankAccountTypeMaster || acc.F_AccountTypeMaster || "")
+                }));
+            } catch (e) {
+                console.error("Failed to parse BankJson:", e);
+                bankAccounts = [{ BankName: "", AccountNumber: "", IFSCCode: "", F_AccountTypeMaster: "" }];
+            }
+        }
+
+        if (bankAccounts.length === 0) {
+            bankAccounts = [{ BankName: "", AccountNumber: "", IFSCCode: "", F_AccountTypeMaster: "" }];
+        }
+
+        const mappedData: Partial<CustomerFormValues> = {
+            Name: fetchedData.Name || "",
+            DateOfBirth: fetchedData.DateOfBirth ? String(fetchedData.DateOfBirth).split("T")[0] : "",
+            Gender: fetchedData.Gender || "",
+            MobileNo: fetchedData.MobileNo || "",
+            AlternateMobile: fetchedData.AlternateMobile || "",
+            Email: fetchedData.Email || "",
+            AadhaarNo: fetchedData.AadhaarNo || "",
+            PAN: fetchedData.PAN || "",
+            CurrentAddress: fetchedData.CurrentAddress || "",
+            F_CityMaster: String(fetchedData.F_CityMaster || ""),
+            F_StateMaster: String(fetchedData.F_StateMaster || ""),
+            Pincode: fetchedData.Pincode || "",
+            F_OccupationTypeMaster: String(fetchedData.F_OccupationTypeMaster || ""),
+            YearsInBusinessOrJob: String(fetchedData.YearsInBusinessOrJob || ""),
+            MonthlyIncome: String(fetchedData.MonthlyIncome || ""),
+            BusinessAddress: fetchedData.BusinessAddress || "",
+            IsITRAvailable: fetchedData.IsITRAvailable === true ? "true" : "false",
+            F_FieldUnitCentre: String(fetchedData.F_FieldUnitCentre || ""),
+            F_MemberGroup: String(fetchedData.F_MemberGroup || ""),
+            F_Branch: String(fetchedData.F_Branch || fetchedData.F_BranchOffice || ""),
+            BankAccounts: bankAccounts
+        };
+        
+        // Also map KYC fields if present
+        const mappedKYCData: Partial<KYCFormValues> = {
+            F_ProofTypeMaster: String(fetchedData.F_ProofTypeMaster || ""),
+            F_AddressProofTypeMaster: String(fetchedData.F_AddressProofTypeMaster || ""),
+        };
+
+        setSavedData(mappedData);
+        setSavedKYCData(mappedKYCData);
+        
+        // Load cities based on state
+        if (fetchedData.F_StateMaster && !isMapped) {
+            Fn_FillListData(dispatch, setDropdowns, "cities", `Masters/0/token/CityMasterByState/Id/${fetchedData.F_StateMaster}`)
+                .catch((err) => console.error("Failed to fetch cities for edit:", err));
+            setIsMapped(true);
+        }
+    }, [customerState.formData, dispatch, isMapped]);
 
     const initialFormValues: CustomerFormValues = {
         ...initialValues,
@@ -281,6 +384,9 @@ const CustomerRegistration = () => {
             // Combine Basic Info (savedData from Tab 1) + KYC data
             const formData = new FormData();
             
+            // Add ID for edit mode
+            formData.append("Id", String(customerId || 0));
+            
             // --- Basic Info fields from Tab 1 ---
             formData.append("Name", String(savedData.Name || ""));
             formData.append("DateOfBirth", String(savedData.DateOfBirth || ""));
@@ -341,20 +447,25 @@ const CustomerRegistration = () => {
                 formData.append("ITRProofFile", kycValues.ITRProofFile);
             }
             
-            // UserId
-            formData.append("UserId", "0");
+            // Get current user info
+            const storedUser = localStorage.getItem("user");
+            const currentUser = storedUser ? JSON.parse(storedUser) : null;
+            const userId = currentUser?.uid ?? currentUser?.id ?? "0";
+            
+            formData.append("UserId", userId);
             formData.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
             
-            const API_URL_KYC_SAVE = `CustomerMaster/0/token`;
+            const API_URL_KYC_SAVE = `CustomerMaster/${userId}/token`;
             
             console.log("Saving Customer + KYC payload to API:", API_URL_KYC_SAVE);
+            console.log("Customer ID:", customerId);
             console.log("BankJson:", JSON.stringify(bankJson, null, 2));
             
             // Make the actual API call
             await Fn_AddEditData(
                 dispatch,
                 () => undefined,
-                { arguList: { id: 0, formData } },
+                { arguList: { id: customerId || 0, formData } },
                 API_URL_KYC_SAVE,
                 true,
                 "memberid",
