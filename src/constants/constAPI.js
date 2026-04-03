@@ -87,6 +87,7 @@ export const API_WEB_URLS = {
   UserMasterNew: "UserMasterNew",
   UserTypeMaster: "UserTypeMaster",
   LedgerMaster: "LedgerMaster",
+  LedgerReport: "LedgerReport",
   TaxPayerTypeMaster: "TaxPayerTypeMaster",
   AddLessMaster: "AddLessMaster",
   LedgerGroupMaster: "LedgerGroupMaster",

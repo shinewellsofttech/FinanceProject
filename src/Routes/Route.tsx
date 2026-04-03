@@ -44,6 +44,7 @@ import PageList_MemberAccount from "../Pages/Masters/PageList_MemberAccount";
 import AddEdit_MemberAccount from "../Pages/Masters/AddEdit_MemberAccount";
 import PageList_LedgerMaster from "../Pages/Masters/PageList_LedgerMaster";
 import AddEdit_LedgerMaster from "../Pages/Masters/AddEdit_LedgerMaster";
+import LedgerReport from "../Pages/Transactions/Reports/LedgerReport";
 
 export const routes = [
 
@@ -99,6 +100,9 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/addEditMemberAccount`, Component: <AddEdit_MemberAccount /> }, 
   { path: `${process.env.PUBLIC_URL}/ledgerMasterList`, Component: <PageList_LedgerMaster /> },
   { path: `${process.env.PUBLIC_URL}/addEditLedgerMaster`, Component: <AddEdit_LedgerMaster /> },
+
+  // Reports
+  { path: `${process.env.PUBLIC_URL}/ledgerReport`, Component: <LedgerReport /> },
 
   // Tools
   { path: `${process.env.PUBLIC_URL}/changePassword`, Component: <ChangePassword /> },

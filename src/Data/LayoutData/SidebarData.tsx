@@ -277,6 +277,19 @@ export const MenuList: MenuItem[] = [
     ],
   },
   {
+    title: "Reporting",
+    Items: [
+      {
+        id: 1,
+        title: "Ledger Report",
+        path: `${process.env.PUBLIC_URL}/ledgerReport`,
+        icon: "BarChart2",
+        type: "link",
+        bookmark: true,
+      },
+    ],
+  },
+  {
     title: "Tools",
     Items: [
       {
