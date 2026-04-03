@@ -24,6 +24,7 @@ import CustomerRegistration from "../Pages/Customer&Loan/CustomerRegistration";
 import PageList_LoanApplication from "../Pages/Customer&Loan/PageList_LoanApplication";
 import LoanApplication from "../Pages/Customer&Loan/LoanApplication";
 import EligibilityCheck from "../Pages/Customer&Loan/EligibilityCheck";
+import LoanApproval from "../Pages/Customer&Loan/LoanApproval";
 import EMISchedule from "../Pages/Operations/EMISchedule";
 import EMICollection from "../Pages/Operations/EMICollection";
 import LoanDisbursement from "../Pages/Operations/LoanDisbursement";
@@ -68,6 +69,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/loanApplicationList`, Component: <PageList_LoanApplication /> },
   { path: `${process.env.PUBLIC_URL}/loanApplication`, Component: <LoanApplication /> },
   { path: `${process.env.PUBLIC_URL}/eligibilityCheck`, Component: <EligibilityCheck /> },
+  { path: `${process.env.PUBLIC_URL}/loanApproval`, Component: <LoanApproval /> },
 
   // Operations
   { path: `${process.env.PUBLIC_URL}/emiSchedule`, Component: <EMISchedule /> },

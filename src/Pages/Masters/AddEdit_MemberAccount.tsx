@@ -487,7 +487,7 @@ const AddEdit_MemberAccount = () => {
             fd.append("MonthlyIncome",             values.MonthlyIncome || "0");
             fd.append("EmployerName",              values.EmployerName || "");
             fd.append("IsSalaryAccount",           values.IsSalaryAccount ? "true" : "false");
-            fd.append("F_BranchOffice", localStorage.getItem("F_BranchOffice") || "");
+            fd.append("F_BranchOffice", String(currentUser?.F_BranchOffice ?? currentUser?.BranchId ?? localStorage.getItem("F_BranchOffice") ?? ""));
 
             await Fn_AddEditData(
                 dispatch,
