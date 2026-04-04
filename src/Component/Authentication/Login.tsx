@@ -38,6 +38,13 @@ const Login = () => {
     try {
       const response = await API_HELPER.apiPOST_Multipart(LOGIN_URL, formData);
       const userData = response?.data?.response?.[0] || response?.data?.dataList?.[0] || response?.data?.[0] || response?.data;
+      
+      // Check if Id is -1 (invalid login)
+      if (userData?.Id === -1) {
+        toast.warning(userData?.Message || "Invalid credentials. Please try again.");
+        return;
+      }
+      
       const isSuccess = response?.success === true && response?.status === 200 && (userData?.Id || userData?.UserId || userData?.LoginStatus === 1);
       const loginMessage = userData?.Message || response?.message;
       if (isSuccess && (loginMessage === "Login Successful" || userData?.LoginStatus === 1 || userData?.Id)) {
@@ -138,7 +145,7 @@ const Login = () => {
                 <Link className="logo text-center" to={Href}>
                   {/* <Image className="img-fluid for-light" src={dynamicImage("logo/logo-1.png")} alt="looginpage" /> */}
                   {/* <Image className="img-fluid for-dark" src={dynamicImage("logo/logo.png")} alt="looginpage" /> */}
-                  <h1>Task Management</h1>
+                  <h1>Finance Software</h1>
                   
                 </Link>
               </div>

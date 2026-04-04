@@ -15,7 +15,7 @@ const RightHeaderIcon = () => {
   return (
     <Col xxl="7" xl="8" className="nav-right col-auto box-col-6 pull-right right-header p-0 ms-auto">
       <UL className="nav-menus flex-row">
-        <ResponsiveSearchInput />
+        {/* <ResponsiveSearchInput /> */}
         <ZoomInOut />
         {/* <Language /> */}
         {/* <Notifications /> */}
