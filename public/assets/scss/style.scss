@@ -769,6 +769,40 @@
   }
 }
 
+// Desktop header fixes (≥992px)
+@media (min-width: 992px) {
+  .page-header {
+    .header-wrapper {
+      display: flex !important;
+      align-items: center !important;
+      flex-wrap: nowrap !important;
+      width: 100% !important;
+      
+      .header-logo-wrapper {
+        flex: 0 0 auto !important;
+        display: flex !important;
+        align-items: center !important;
+        min-width: 50px !important;
+      }
+      
+      .header-search-wrapper {
+        flex: 1 1 auto !important;
+        max-width: 800px !important;
+        margin: 0 15px !important;
+      }
+      
+      .nav-right,
+      .right-header {
+        flex: 1 1 auto !important;
+        display: flex !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        margin-left: auto !important;
+      }
+    }
+  }
+}
+
 // Logo wrapper compact - fix duplicate sidebar logo
 .page-wrapper .page-body-wrapper {
   .sidebar-wrapper {
@@ -810,12 +844,18 @@
   }
 }
 
-// Hide header logo wrapper to prevent duplicate
-.page-wrapper {
-  .page-header {
-    .header-wrapper {
-      .header-logo-wrapper {
-        display: none !important;
+// Hide header logo on desktop (sidebar already has logo), but keep on mobile/tablet
+@media (min-width: 992px) {
+  .page-wrapper {
+    .page-header {
+      .header-wrapper {
+        .header-logo-wrapper {
+          .logo-wrapper {
+            display: none !important;
+          }
+          // Keep toggle button and wrapper visible
+          display: flex !important;
+        }
       }
     }
   }

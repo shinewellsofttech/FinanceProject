@@ -185,6 +185,18 @@ const Receipt = () => {
     const [cashLedgerState, setCashLedgerState] = useState<DropState>({ dataList: [], isProgress: false });
     const [bankLedgerState, setBankLedgerState] = useState<DropState>({ dataList: [], isProgress: false });
     const [currentReceiveMode, setCurrentReceiveMode] = useState("");
+    const [showPrint, setShowPrint] = useState(false);
+    const [printData, setPrintData] = useState<FormValues | null>(null);
+    const [showPrintPreview, setShowPrintPreview] = useState(false);
+    const printRef = useRef<HTMLDivElement>(null);
+    const [branchInfo, setBranchInfo] = useState<any>(null);
+    
+    // Organization Info (can be fetched from API or config)
+    const organizationInfo = {
+        name: "MUDRANSH CREDIT AND THRIFT COOPERATIVE SOCIETY LIMITED AJMER",
+        headOffice: "Head Office",
+        address: "CENTRAL NAGAR, ARJUN, RAJASTHAN, PIN 305004"
+    };
 
     // Edit mode states
     const [editId, setEditId] = useState<number>(0);
@@ -215,6 +227,33 @@ const Receipt = () => {
         } else {
             setAccountState({ dataList: [], isProgress: false });
         }
+    };
+
+    /* ── Print Handlers ── */
+    const handlePrintPreview = (values: FormValues) => {
+        if (!values.F_MemberAccountMaster || !values.ReceiptAmount) {
+            toast.error("Please fill receipt details before printing");
+            return;
+        }
+        setPrintData(values);
+        setShowPrintPreview(true);
+    };
+
+    const handlePrint = () => {
+        setShowPrintPreview(false);
+        setShowPrint(true);
+        setTimeout(() => {
+            window.print();
+            // Reset print state after printing
+            setTimeout(() => {
+                setShowPrint(false);
+            }, 1000);
+        }, 300);
+    };
+
+    const handleClosePrintPreview = () => {
+        setShowPrintPreview(false);
+        setPrintData(null);
     };
 
     /* ── Convert number to words ── */
@@ -480,6 +519,21 @@ const Receipt = () => {
         Fn_FillListData(dispatch, setMemberAccountState, "dataList", `${API_WEB_URLS.MASTER}/0/token/MemberAccountData/Id/0`).catch(console.error);
         Fn_FillListData(dispatch, setAccountTypeState, "dataList", `${API_WEB_URLS.MASTER}/0/token/accountType/Id/0`).catch(console.error);
         Fn_FillListData(dispatch, setPaymentMethodState, "dataList", `${API_WEB_URLS.MASTER}/0/token/PaymentMethodMaster/Id/0`).catch(console.error);
+        
+        // Fetch branch info for logged-in user
+        const branchId = localStorage.getItem("F_BranchOffice") || "0";
+        if (branchId && branchId !== "0") {
+            API_HELPER.apiGET(`${API_WEB_URLS.BASE}Masters/0/token/BranchOfficeMaster/Id/${branchId}`)
+                .then((response) => {
+                    const branchData = response?.data?.dataList?.[0] || response?.data?.response?.[0] || response?.data?.[0] || response?.data;
+                    if (branchData) {
+                        setBranchInfo(branchData);
+                    }
+                })
+                .catch((error) => {
+                    console.error("Failed to fetch branch info:", error);
+                });
+        }
     }, [dispatch]);
 
     /* ── Fetch Ledger based on Receive Mode ── */
@@ -1187,7 +1241,7 @@ const Receipt = () => {
                                         </CardBody>
                                         <CardFooter className="d-flex align-items-center gap-2">
                                             <Btn color="success" type="submit" disabled={isSubmitting} className="text-white">
-                                                <i className="fa fa-save me-1" />
+                                                  <i className="fa fa-save me-1" />
                                                 {isSubmitting ? (isEditMode ? "Updating..." : "Saving...") : (isEditMode ? "Update" : "Save")}
                                             </Btn>
                                             <Btn 
@@ -1198,15 +1252,25 @@ const Receipt = () => {
                                                 <i className="fa fa-times me-1" /> Cancel
                                             </Btn>
                                             {!isEditMode && (
-                                                <>
-                                                    <Btn color="info" type="button" className="text-white">
-                                                        <i className="fa fa-eye me-1" /> View Status
-                                                    </Btn>
-                                                    <Btn color="warning" type="button">
-                                                        <i className="fa fa-print me-1" /> Print
-                                                    </Btn>
-                                                </>
+                                                <Btn color="info" type="button" className="text-white">
+                                                    <i className="fa fa-eye me-1" /> View Status
+                                                </Btn>
                                             )}
+                                            <Btn 
+                                                color="warning" 
+                                                type="button" 
+                                                onClick={() => {
+                                                    if (!values.F_MemberAccountMaster || !values.ReceiptAmount) {
+                                                        toast.error("Please fill account and receipt amount before printing");
+                                                        return;
+                                                    }
+                                                    handlePrintPreview(values);
+                                                }}
+                                                className="text-white"
+                                                title={!values.F_MemberAccountMaster || !values.ReceiptAmount ? "Please fill account and amount first" : "Print Receipt"}
+                                            >
+                                                <i className="fa fa-print me-1" /> Print Receipt
+                                            </Btn>
                                         </CardFooter>
                                     </Card>
                                 </Form>
@@ -1216,6 +1280,479 @@ const Receipt = () => {
                 </Row>
                 )}
             </Container>
+
+            {/* ─── Print Receipt ─── */}
+            {showPrint && printData && (
+                <div ref={printRef} className="print-only" style={{ display: showPrint ? 'block' : 'none' }}>
+                    <style>{`
+                        @media print {
+                            body * {
+                                visibility: hidden;
+                            }
+                            .print-only, .print-only * {
+                                visibility: visible;
+                            }
+                            .print-only {
+                                position: absolute;
+                                left: 0;
+                                top: 0;
+                                width: 100%;
+                            }
+                            .no-print {
+                                display: none !important;
+                            }
+                        }
+                        .receipt-print {
+                            font-family: Arial, sans-serif;
+                            font-size: 12px;
+                            padding: 20px;
+                            max-width: 800px;
+                            margin: 0 auto;
+                        }
+                        .receipt-copy {
+                            border: 2px solid #000;
+                            padding: 15px;
+                            margin-bottom: 20px;
+                            page-break-after: always;
+                        }
+                        .receipt-copy:last-child {
+                            page-break-after: auto;
+                        }
+                        .receipt-header {
+                            text-align: center;
+                            border-bottom: 2px solid #000;
+                            padding-bottom: 10px;
+                            margin-bottom: 15px;
+                        }
+                        .receipt-header h3 {
+                            margin: 0;
+                            font-size: 16px;
+                            font-weight: bold;
+                        }
+                        .receipt-header h4 {
+                            margin: 5px 0;
+                            font-size: 14px;
+                            font-weight: normal;
+                        }
+                        .receipt-header p {
+                            margin: 5px 0;
+                            font-size: 11px;
+                        }
+                        .receipt-type {
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            margin-bottom: 15px;
+                            padding: 8px;
+                            background-color: #f0f0f0;
+                            border: 1px solid #000;
+                        }
+                        .receipt-type-left {
+                            font-weight: bold;
+                        }
+                        .receipt-type-right {
+                            text-align: right;
+                        }
+                        .receipt-info {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-bottom: 10px;
+                        }
+                        .info-left {
+                            width: 60%;
+                        }
+                        .info-right {
+                            width: 38%;
+                            border-left: 1px solid #000;
+                            padding-left: 10px;
+                        }
+                        .info-row {
+                            margin-bottom: 8px;
+                            display: flex;
+                        }
+                        .info-label {
+                            font-weight: bold;
+                            min-width: 150px;
+                        }
+                        .info-value {
+                            flex: 1;
+                        }
+                        .amount-words {
+                            margin: 15px 0;
+                            padding: 10px;
+                            border: 1px solid #000;
+                            background-color: #f9f9f9;
+                        }
+                        .signature-section {
+                            display: flex;
+                            justify-content: space-between;
+                            margin-top: 40px;
+                            padding-top: 20px;
+                            border-top: 1px solid #000;
+                        }
+                        .signature-box {
+                            text-align: center;
+                            width: 30%;
+                        }
+                        .signature-line {
+                            border-top: 1px solid #000;
+                            margin-bottom: 5px;
+                            padding-top: 30px;
+                        }
+                    `}</style>
+                    
+                    <div className="receipt-print">
+                        {/* Office Copy */}
+                        <div className="receipt-copy">
+                            <div className="receipt-header">
+                                <h3>{organizationInfo.headOffice}</h3>
+                                {branchInfo && <h4 style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'normal' }}>({branchInfo.Name || branchInfo.BranchName})</h4>}
+                                <p>{organizationInfo.address}</p>
+                            </div>
+                            
+                            <div className="receipt-type">
+                                <div className="receipt-type-left">CASH RECEIPT - OFFICE COPY</div>
+                                <div className="receipt-type-right">
+                                    <strong>Bag No.</strong> {printData.ReceiptNo || 'N/A'}
+                                </div>
+                            </div>
+                            
+                            <div className="receipt-info">
+                                <div className="info-left">
+                                    <div className="info-row">
+                                        <span className="info-label">Customer ID Name, Age & Address:</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-value">
+                                            <strong>{printData.MemberName || 'N/A'}</strong><br/>
+                                            {printData.Address || 'N/A'}
+                                        </span>
+                                    </div>
+                                    <div className="info-row" style={{marginTop: '15px'}}>
+                                        <span className="info-label">Amount Received (In Words):</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-value"><strong>{printData.AmountInWords || 'N/A'}</strong></span>
+                                    </div>
+                                </div>
+                                
+                                <div className="info-right">
+                                    <div className="info-row">
+                                        <span className="info-label">A/c No.</span>
+                                        <span className="info-value">{printData.AccountNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">Receipt Date</span>
+                                        <span className="info-value">{printData.ReceiptDate || printData.VoucherDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">Branch Code</span>
+                                        <span className="info-value">{localStorage.getItem('F_BranchOffice') || '0'}</span>
+                                    </div>
+                                    <div className="info-row" style={{marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ccc'}}>
+                                        <span className="info-label">1. Voucher No.</span>
+                                        <span className="info-value">{printData.ReceiptNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">2. Voucher Date</span>
+                                        <span className="info-value">{printData.VoucherDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">3. Scheme Name</span>
+                                        <span className="info-value">{printData.SchemeName || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">4. Rate Of Interest</span>
+                                        <span className="info-value">{printData.InterestRate ? `${printData.InterestRate}%` : 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">5. Amount Of Installment Received Rs.</span>
+                                        <span className="info-value"><strong>{printData.ReceiptAmount || '0'}</strong></span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">6. Installment No.</span>
+                                        <span className="info-value">{printData.InstallmentNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">7. Opening Date</span>
+                                        <span className="info-value">{printData.OpeningDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">8. Date Of Maturity</span>
+                                        <span className="info-value">{printData.MaturityDate || 'N/A'}</span>
+                                    </div>
+                                    {printData.ChequeNo && (
+                                        <>
+                                            <div className="info-row">
+                                                <span className="info-label">10. Cheque No</span>
+                                                <span className="info-value">{printData.ChequeNo}</span>
+                                            </div>
+                                            <div className="info-row">
+                                                <span className="info-label">11. Cheque Amount</span>
+                                                <span className="info-value">{printData.ReceiptAmount}</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    {printData.UTRNo && (
+                                        <div className="info-row">
+                                            <span className="info-label">UTR No.</span>
+                                            <span className="info-value">{printData.UTRNo}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div className="signature-section">
+                                <div className="signature-box">
+                                    <div className="signature-line"></div>
+                                    <strong>Customer Signature</strong>
+                                </div>
+                                <div className="signature-box">
+                                    <div className="signature-line"></div>
+                                    <strong>B.M. Signature</strong>
+                                </div>
+                                <div className="signature-box">
+                                    <div className="signature-line"></div>
+                                    <strong>Authorise Signature</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Customer Copy */}
+                        <div className="receipt-copy">
+                            <div className="receipt-header">
+                                <h3>{organizationInfo.headOffice}</h3>
+                                {branchInfo && <h4 style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'normal' }}>({branchInfo.Name || branchInfo.BranchName})</h4>}
+                                <p>{organizationInfo.address}</p>
+                            </div>
+                            
+                            <div className="receipt-type">
+                                <div className="receipt-type-left">CASH RECEIPT - CUSTOMER COPY</div>
+                                <div className="receipt-type-right">
+                                    <strong>Bag No.</strong> {printData.ReceiptNo || 'N/A'}
+                                </div>
+                            </div>
+                            
+                            <div className="receipt-info">
+                                <div className="info-left">
+                                    <div className="info-row">
+                                        <span className="info-label">Customer ID Name, Age & Address:</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-value">
+                                            <strong>{printData.MemberName || 'N/A'}</strong><br/>
+                                            {printData.Address || 'N/A'}
+                                        </span>
+                                    </div>
+                                    <div className="info-row" style={{marginTop: '15px'}}>
+                                        <span className="info-label">Amount Received (In Words):</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-value"><strong>{printData.AmountInWords || 'N/A'}</strong></span>
+                                    </div>
+                                </div>
+                                
+                                <div className="info-right">
+                                    <div className="info-row">
+                                        <span className="info-label">A/c No.</span>
+                                        <span className="info-value">{printData.AccountNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">Receipt Date</span>
+                                        <span className="info-value">{printData.ReceiptDate || printData.VoucherDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">Branch Code</span>
+                                        <span className="info-value">{localStorage.getItem('F_BranchOffice') || '0'}</span>
+                                    </div>
+                                    <div className="info-row" style={{marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ccc'}}>
+                                        <span className="info-label">1. Voucher No.</span>
+                                        <span className="info-value">{printData.ReceiptNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">2. Voucher Date</span>
+                                        <span className="info-value">{printData.VoucherDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">3. Scheme Name</span>
+                                        <span className="info-value">{printData.SchemeName || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">4. Rate Of Interest</span>
+                                        <span className="info-value">{printData.InterestRate ? `${printData.InterestRate}%` : 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">5. Amount Of Installment Received Rs.</span>
+                                        <span className="info-value"><strong>{printData.ReceiptAmount || '0'}</strong></span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">6. Installment No.</span>
+                                        <span className="info-value">{printData.InstallmentNo || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">7. Opening Date</span>
+                                        <span className="info-value">{printData.OpeningDate || 'N/A'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span className="info-label">8. Date Of Maturity</span>
+                                        <span className="info-value">{printData.MaturityDate || 'N/A'}</span>
+                                    </div>
+                                    {printData.ChequeNo && (
+                                        <>
+                                            <div className="info-row">
+                                                <span className="info-label">10. Cheque No</span>
+                                                <span className="info-value">{printData.ChequeNo}</span>
+                                            </div>
+                                            <div className="info-row">
+                                                <span className="info-label">11. Cheque Amount</span>
+                                                <span className="info-value">{printData.ReceiptAmount}</span>
+                                            </div>
+                                        </>
+                                    )}
+                                    {printData.UTRNo && (
+                                        <div className="info-row">
+                                            <span className="info-label">UTR No.</span>
+                                            <span className="info-value">{printData.UTRNo}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            
+                            <div className="signature-section">
+                                <div className="signature-box">
+                                    <div className="signature-line"></div>
+                                    <strong>Customer Signature</strong>
+                                </div>
+                                <div className="signature-box">
+                                    <div className="signature-line"></div>
+                                    <strong>B.M. Signature</strong>
+                                </div>
+                                <div className="signature-box">
+                                    <div className="signature-line"></div>
+                                    <strong>Authorise Signature</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ─── Print Preview Modal ─── */}
+            <Modal isOpen={showPrintPreview} toggle={handleClosePrintPreview} size="xl" style={{ maxWidth: '90%' }}>
+                <ModalHeader toggle={handleClosePrintPreview}>
+                    <i className="fa fa-print me-2" />
+                    Print Receipt Preview
+                </ModalHeader>
+                <ModalBody style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                    {printData && (
+                        <div className="receipt-print" style={{ 
+                            fontFamily: 'Arial, sans-serif',
+                            fontSize: '12px',
+                            padding: '20px',
+                            maxWidth: '800px',
+                            margin: '0 auto'
+                        }}>
+                            {/* Preview of Office Copy */}
+                            <div style={{
+                                border: '2px solid #000',
+                                padding: '15px',
+                                marginBottom: '20px'
+                            }}>
+                                <div style={{
+                                    textAlign: 'center',
+                                    borderBottom: '2px solid #000',
+                                    paddingBottom: '10px',
+                                    marginBottom: '15px'
+                                }}>
+                                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{organizationInfo.headOffice}</h3>
+                                    {branchInfo && <h4 style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'normal' }}>({branchInfo.Name || branchInfo.BranchName})</h4>}
+                                    <p style={{ margin: '5px 0', fontSize: '11px' }}>{organizationInfo.address}</p>
+                                </div>
+                                
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    marginBottom: '15px',
+                                    padding: '8px',
+                                    backgroundColor: '#f0f0f0',
+                                    border: '1px solid #000'
+                                }}>
+                                    <div style={{ fontWeight: 'bold' }}>CASH RECEIPT - OFFICE COPY</div>
+                                    <div><strong>Bag No.</strong> {printData.ReceiptNo || 'N/A'}</div>
+                                </div>
+                                
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <div style={{ width: '60%' }}>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <strong>Customer Name & Address:</strong>
+                                        </div>
+                                        <div style={{ marginBottom: '8px' }}>
+                                            <strong>{printData.MemberName || 'N/A'}</strong><br/>
+                                            {printData.Address || 'N/A'}
+                                        </div>
+                                        <div style={{ marginTop: '15px', marginBottom: '8px' }}>
+                                            <strong>Amount Received (In Words):</strong>
+                                        </div>
+                                        <div style={{ fontWeight: 'bold' }}>{printData.AmountInWords || 'N/A'}</div>
+                                    </div>
+                                    
+                                    <div style={{ width: '38%', borderLeft: '1px solid #000', paddingLeft: '10px' }}>
+                                        <div style={{ marginBottom: '6px' }}><strong>A/c No:</strong> {printData.AccountNo || 'N/A'}</div>
+                                        <div style={{ marginBottom: '6px' }}><strong>Receipt Date:</strong> {printData.ReceiptDate || printData.VoucherDate || 'N/A'}</div>
+                                        <div style={{ marginBottom: '6px' }}><strong>Branch Code:</strong> {localStorage.getItem('F_BranchOffice') || '0'}</div>
+                                        <div style={{ marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #ccc' }}>
+                                            <div style={{ marginBottom: '6px' }}><strong>1. Voucher No:</strong> {printData.ReceiptNo || 'N/A'}</div>
+                                            <div style={{ marginBottom: '6px' }}><strong>2. Voucher Date:</strong> {printData.VoucherDate || 'N/A'}</div>
+                                            <div style={{ marginBottom: '6px' }}><strong>3. Scheme Name:</strong> {printData.SchemeName || 'N/A'}</div>
+                                            <div style={{ marginBottom: '6px' }}><strong>4. Rate Of Interest:</strong> {printData.InterestRate ? `${printData.InterestRate}%` : 'N/A'}</div>
+                                            <div style={{ marginBottom: '6px' }}><strong>5. Amount Received Rs:</strong> <strong>{printData.ReceiptAmount || '0'}</strong></div>
+                                            <div style={{ marginBottom: '6px' }}><strong>6. Installment No:</strong> {printData.InstallmentNo || 'N/A'}</div>
+                                            <div style={{ marginBottom: '6px' }}><strong>7. Opening Date:</strong> {printData.OpeningDate || 'N/A'}</div>
+                                            <div style={{ marginBottom: '6px' }}><strong>8. Maturity Date:</strong> {printData.MaturityDate || 'N/A'}</div>
+                                            {printData.ChequeNo && (
+                                                <><div style={{ marginBottom: '6px' }}><strong>Cheque No:</strong> {printData.ChequeNo}</div>
+                                                <div style={{ marginBottom: '6px' }}><strong>Cheque Date:</strong> {printData.ChequeDate}</div></>
+                                            )}
+                                            {printData.UTRNo && (
+                                                <><div style={{ marginBottom: '6px' }}><strong>UTR No:</strong> {printData.UTRNo}</div>
+                                                <div style={{ marginBottom: '6px' }}><strong>Transaction Date:</strong> {printData.TransactionDate}</div></>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #000' }}>
+                                    <div style={{ textAlign: 'center', width: '30%' }}>
+                                        <div style={{ borderTop: '1px solid #000', marginBottom: '5px', paddingTop: '30px' }}></div>
+                                        <strong>Customer Signature</strong>
+                                    </div>
+                                    <div style={{ textAlign: 'center', width: '30%' }}>
+                                        <div style={{ borderTop: '1px solid #000', marginBottom: '5px', paddingTop: '30px' }}></div>
+                                        <strong>B.M. Signature</strong>
+                                    </div>
+                                    <div style={{ textAlign: 'center', width: '30%' }}>
+                                        <div style={{ borderTop: '1px solid #000', marginBottom: '5px', paddingTop: '30px' }}></div>
+                                        <strong>Authorise Signature</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="text-center text-muted my-3">
+                                <small>Both Office Copy and Customer Copy will be printed</small>
+                            </div>
+                        </div>
+                    )}
+                </ModalBody>
+                <div className="modal-footer">
+                    <Btn color="secondary" onClick={handleClosePrintPreview}>
+                        <i className="fa fa-times me-1" /> Close
+                    </Btn>
+                    <Btn color="primary" onClick={handlePrint}>
+                        <i className="fa fa-print me-1" /> Print Now
+                    </Btn>
+                </div>
+            </Modal>
 
             {/* ─── Account Search Modal ─── */}
             <Modal isOpen={accountSearchModal} toggle={() => setAccountSearchModal(false)} size="lg">
