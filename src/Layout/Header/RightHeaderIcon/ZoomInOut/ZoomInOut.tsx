@@ -16,7 +16,7 @@ const ZoomInOut = () => {
     };
    
     return (
-        <LI>
+        <LI className="maximize">
             <Link className="text-dark" onClick={() => fullScreenHandler(!fullScreen)} to={Href}>
                 <Maximize />
             </Link>

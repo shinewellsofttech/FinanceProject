@@ -107,36 +107,6 @@ const Login = () => {
 
   return (
     <Container fluid className="p-0">
-      <style>{`
-        @media (max-width: 991.98px) {
-          .login-card {
-            align-items: flex-start !important;
-            overflow-y: auto !important;
-            padding-top: 24px !important;
-            padding-bottom: 24px !important;
-            min-height: 100vh !important;
-          }
-          .login-card .login-main {
-            margin-top: 0 !important;
-          }
-          .login-card .theme-form .btn,
-          .login-card .theme-form button[type="submit"],
-          .login-card .theme-form .btn-primary,
-          .login-card .login-submit-btn,
-          .login-card .login-submit-wrap .btn {
-            display: block !important;
-            width: 100% !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-            max-width: 100% !important;
-          }
-          .login-card .login-submit-wrap {
-            display: block !important;
-            width: 100% !important;
-            margin-top: 1rem !important;
-          }
-        }
-      `}</style>
       <Row className="m-0">
         <Col xs="12" className="p-0">
           <div className="login-card login-dark">

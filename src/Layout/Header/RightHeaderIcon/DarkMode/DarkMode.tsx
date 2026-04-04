@@ -16,7 +16,7 @@ const DarkMode = () => {
     }
   };
   return (
-    <LI onClick={()=>handleDarkMode(mix_background_layout)}> 
+    <LI className="dark-mode-toggle" onClick={()=>handleDarkMode(mix_background_layout)}> 
       <div className={`mode ${mix_background_layout === "dark-only" ? "active" : ""}`}>
         <SVG iconId="fill-dark" />
       </div>

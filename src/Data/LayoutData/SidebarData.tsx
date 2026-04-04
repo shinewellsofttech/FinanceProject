@@ -60,14 +60,14 @@ export const MenuList: MenuItem[] = [
       //   type: "link",
       //   bookmark: true,
       // },
-      {
-        id: 8,
-        title: "Financial Year Setup",
-        path: `${process.env.PUBLIC_URL}/financialYearSetup`,
-        icon: "Calendar",
-        type: "link",
-        bookmark: true,
-      },
+      // {
+      //   id: 8,
+      //   title: "Financial Year Setup",
+      //   path: `${process.env.PUBLIC_URL}/financialYearSetup`,
+      //   icon: "Calendar",
+      //   type: "link",
+      //   bookmark: true,
+      // },
     ],
   },
   {

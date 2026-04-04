@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../ReduxToolkit/Hooks";
 import { Link, useLocation } from "react-router-dom";
 import { MenuListType, SidebarItemTypes } from "../../Types/Layout/SidebarType";
-import { handlePined } from "../../ReduxToolkit/Reducers/LayoutSlice";
+import { handlePined, setToggleSidebar } from "../../ReduxToolkit/Reducers/LayoutSlice";
 import { LI, UL } from "../../AbstractElements";
 import { Href } from "../../utils/Constant";
 import { useTranslation } from "react-i18next";
@@ -29,10 +29,14 @@ const Menulist: React.FC<MenuListType> = ({ menu,setActiveMenu,activeMenu,level,
     }
     return returnValue;
   };
-  const handleClick = ((item: string) => {
+  const handleClick = ((item: string, hasChildren?: boolean) => {
     const temp = activeMenu;
     temp[level] = item !== temp[level] ? item : "";
     setActiveMenu([...temp]);
+    // Auto-close sidebar on mobile when clicking a leaf (no children) link
+    if (!hasChildren && window.innerWidth < 992) {
+      dispatch(setToggleSidebar(true));
+    }
   })
   useEffect(() => {
     menu?.forEach((item: any) => {
@@ -66,7 +70,7 @@ const Menulist: React.FC<MenuListType> = ({ menu,setActiveMenu,activeMenu,level,
                   : ActiveNavLinkUrl(item.path)) || activeMenu[level] === item.title ? "active" : ""
               }`}
               to={item.path ? item.path : Href }
-              onClick={() => handleClick(item.title)}
+              onClick={() => handleClick(item.title, !!item.children)}
             >
               <span className={item.lanClass && item.lanClass}>{t(item.title)}</span>
               {item.children && (activeMenu[level] === item.title ? (

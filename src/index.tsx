@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import './index.scss';
+import './mobile-responsive.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Provider } from 'react-redux';
