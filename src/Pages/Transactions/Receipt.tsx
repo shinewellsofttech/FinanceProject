@@ -1224,6 +1224,7 @@ const Receipt = () => {
                                                         />
                                                     </FormGroup>
                                                 </Col>
+                                                
                                                 <Col md="5">
                                                     <FormGroup className="mb-0">
                                                         <Label>Remarks</Label>
