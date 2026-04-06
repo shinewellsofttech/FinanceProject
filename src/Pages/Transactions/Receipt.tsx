@@ -12,7 +12,7 @@ import {
     Container,
     FormGroup,
     Input,
-    Label,
+    Label,  
     Row,
     InputGroup,
     InputGroupText,
@@ -190,13 +190,7 @@ const Receipt = () => {
     const [showPrintPreview, setShowPrintPreview] = useState(false);
     const printRef = useRef<HTMLDivElement>(null);
     const [branchInfo, setBranchInfo] = useState<any>(null);
-    
-    // Organization Info (can be fetched from API or config)
-    const organizationInfo = {
-        name: "MUDRANSH CREDIT AND THRIFT COOPERATIVE SOCIETY LIMITED AJMER",
-        headOffice: "Head Office",
-        address: "CENTRAL NAGAR, ARJUN, RAJASTHAN, PIN 305004"
-    };
+    const [headOfficeInfo, setHeadOfficeInfo] = useState<any>(null);
 
     // Edit mode states
     const [editId, setEditId] = useState<number>(0);
@@ -520,12 +514,29 @@ const Receipt = () => {
         Fn_FillListData(dispatch, setAccountTypeState, "dataList", `${API_WEB_URLS.MASTER}/0/token/accountType/Id/0`).catch(console.error);
         Fn_FillListData(dispatch, setPaymentMethodState, "dataList", `${API_WEB_URLS.MASTER}/0/token/PaymentMethodMaster/Id/0`).catch(console.error);
         
+        // Fetch head office details
+        API_HELPER.apiGET(`${API_WEB_URLS.BASE}Masters/0/token/HeadOfficeEdit/Id/0`)
+            .then((response) => {
+                const headOfficeData = response?.data?.dataList?.[0] || response?.data?.response?.[0] || response?.data?.[0] || response?.data;
+                if (headOfficeData) {
+                    setHeadOfficeInfo(headOfficeData);
+                }
+            })
+            .catch((error) => {
+                console.error("Failed to fetch head office info:", error);
+            });
+        
         // Fetch branch info for logged-in user
         const branchId = localStorage.getItem("F_BranchOffice") || "0";
+        console.log("Branch ID from localStorage:", branchId); // Debug log
+        
         if (branchId && branchId !== "0") {
             API_HELPER.apiGET(`${API_WEB_URLS.BASE}Masters/0/token/BranchOfficeMaster/Id/${branchId}`)
                 .then((response) => {
+                    console.log("Branch API Response:", response); // Debug log
                     const branchData = response?.data?.dataList?.[0] || response?.data?.response?.[0] || response?.data?.[0] || response?.data;
+                    console.log("Extracted Branch Data:", branchData); // Debug log
+                    
                     if (branchData) {
                         setBranchInfo(branchData);
                     }
@@ -1287,6 +1298,10 @@ const Receipt = () => {
                 <div ref={printRef} className="print-only" style={{ display: showPrint ? 'block' : 'none' }}>
                     <style>{`
                         @media print {
+                            @page {
+                                margin: 0;
+                                size: A4;
+                            }
                             body * {
                                 visibility: hidden;
                             }
@@ -1302,62 +1317,75 @@ const Receipt = () => {
                             .no-print {
                                 display: none !important;
                             }
+                            @page :first {
+                                margin-top: 0;
+                            }
+                            @page :left {
+                                margin-left: 0;
+                            }
+                            @page :right {
+                                margin-right: 0;
+                            }
                         }
                         .receipt-print {
                             font-family: Arial, sans-serif;
-                            font-size: 12px;
-                            padding: 20px;
+                            font-size: 11px;
+                            padding: 10px;
                             max-width: 800px;
                             margin: 0 auto;
                         }
                         .receipt-copy {
                             border: 2px solid #000;
-                            padding: 15px;
-                            margin-bottom: 20px;
-                            page-break-after: always;
+                            padding: 8px;
+                            margin-bottom: 8px;
                         }
                         .receipt-copy:last-child {
-                            page-break-after: auto;
+                            margin-bottom: 0;
                         }
                         .receipt-header {
                             text-align: center;
                             border-bottom: 2px solid #000;
-                            padding-bottom: 10px;
-                            margin-bottom: 15px;
+                            padding-bottom: 5px;
+                            margin-bottom: 8px;
                         }
                         .receipt-header h3 {
                             margin: 0;
-                            font-size: 16px;
+                            font-size: 14px;
                             font-weight: bold;
+                            line-height: 1.2;
                         }
                         .receipt-header h4 {
-                            margin: 5px 0;
-                            font-size: 14px;
+                            margin: 2px 0;
+                            font-size: 12px;
                             font-weight: normal;
+                            line-height: 1.1;
                         }
                         .receipt-header p {
-                            margin: 5px 0;
-                            font-size: 11px;
+                            margin: 2px 0;
+                            font-size: 10px;
+                            line-height: 1.1;
                         }
                         .receipt-type {
                             display: flex;
                             justify-content: space-between;
                             align-items: center;
-                            margin-bottom: 15px;
-                            padding: 8px;
+                            margin-bottom: 8px;
+                            padding: 4px 6px;
                             background-color: #f0f0f0;
                             border: 1px solid #000;
                         }
                         .receipt-type-left {
                             font-weight: bold;
+                            font-size: 10px;
                         }
                         .receipt-type-right {
                             text-align: right;
+                            font-size: 10px;
                         }
                         .receipt-info {
                             display: flex;
                             justify-content: space-between;
-                            margin-bottom: 10px;
+                            margin-bottom: 5px;
                         }
                         .info-left {
                             width: 60%;
@@ -1365,40 +1393,43 @@ const Receipt = () => {
                         .info-right {
                             width: 38%;
                             border-left: 1px solid #000;
-                            padding-left: 10px;
+                            padding-left: 8px;
                         }
                         .info-row {
-                            margin-bottom: 8px;
+                            margin-bottom: 4px;
                             display: flex;
+                            font-size: 10px;
                         }
                         .info-label {
                             font-weight: bold;
-                            min-width: 150px;
+                            min-width: 120px;
                         }
                         .info-value {
                             flex: 1;
                         }
                         .amount-words {
-                            margin: 15px 0;
-                            padding: 10px;
+                            margin: 8px 0;
+                            padding: 5px;
                             border: 1px solid #000;
                             background-color: #f9f9f9;
+                            font-size: 10px;
                         }
                         .signature-section {
                             display: flex;
                             justify-content: space-between;
-                            margin-top: 40px;
-                            padding-top: 20px;
+                            margin-top: 15px;
+                            padding-top: 8px;
                             border-top: 1px solid #000;
                         }
                         .signature-box {
                             text-align: center;
                             width: 30%;
+                            font-size: 9px;
                         }
                         .signature-line {
                             border-top: 1px solid #000;
-                            margin-bottom: 5px;
-                            padding-top: 30px;
+                            margin-bottom: 3px;
+                            padding-top: 15px;
                         }
                     `}</style>
                     
@@ -1406,9 +1437,24 @@ const Receipt = () => {
                         {/* Office Copy */}
                         <div className="receipt-copy">
                             <div className="receipt-header">
-                                <h3>{organizationInfo.headOffice}</h3>
-                                {branchInfo && <h4 style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'normal' }}>({branchInfo.Name || branchInfo.BranchName})</h4>}
-                                <p>{organizationInfo.address}</p>
+                                <h3>{headOfficeInfo?.CompanyName || headOfficeInfo?.Name || "HEAD OFFICE"}</h3>
+                                <p>{headOfficeInfo?.Address || headOfficeInfo?.CompanyAddress || ""}</p>
+                                {branchInfo ? (
+                                    <div style={{ marginTop: '5px', borderTop: '1px solid #ccc', paddingTop: '3px' }}>
+                                        <h4 style={{ margin: '2px 0', fontSize: '12px', fontWeight: 'bold' }}>
+                                            Branch Office: {branchInfo.Name || branchInfo.BranchName || branchInfo.OfficeName || "Branch Office"}
+                                        </h4>
+                                        <p style={{ margin: '1px 0', fontSize: '10px' }}>
+                                            {branchInfo.Address || branchInfo.BranchAddress || branchInfo.OfficeAddress || ""}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div style={{ marginTop: '5px', borderTop: '1px solid #ccc', paddingTop: '3px' }}>
+                                        <h4 style={{ margin: '2px 0', fontSize: '12px', fontWeight: 'bold' }}>
+                                            Branch Office: {localStorage.getItem("F_BranchOffice") || "Main Branch"}
+                                        </h4>
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="receipt-type">
@@ -1522,9 +1568,24 @@ const Receipt = () => {
                         {/* Customer Copy */}
                         <div className="receipt-copy">
                             <div className="receipt-header">
-                                <h3>{organizationInfo.headOffice}</h3>
-                                {branchInfo && <h4 style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'normal' }}>({branchInfo.Name || branchInfo.BranchName})</h4>}
-                                <p>{organizationInfo.address}</p>
+                                <h3>{headOfficeInfo?.CompanyName || headOfficeInfo?.Name || "HEAD OFFICE"}</h3>
+                                <p>{headOfficeInfo?.Address || headOfficeInfo?.CompanyAddress || ""}</p>
+                                {branchInfo ? (
+                                    <div style={{ marginTop: '5px', borderTop: '1px solid #ccc', paddingTop: '3px' }}>
+                                        <h4 style={{ margin: '2px 0', fontSize: '12px', fontWeight: 'bold' }}>
+                                            Branch Office: {branchInfo.Name || branchInfo.BranchName || branchInfo.OfficeName || "Branch Office"}
+                                        </h4>
+                                        <p style={{ margin: '1px 0', fontSize: '10px' }}>
+                                            {branchInfo.Address || branchInfo.BranchAddress || branchInfo.OfficeAddress || ""}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div style={{ marginTop: '5px', borderTop: '1px solid #ccc', paddingTop: '3px' }}>
+                                        <h4 style={{ margin: '2px 0', fontSize: '12px', fontWeight: 'bold' }}>
+                                            Branch Office: {localStorage.getItem("F_BranchOffice") || "Main Branch"}
+                                        </h4>
+                                    </div>
+                                )}
                             </div>
                             
                             <div className="receipt-type">
@@ -1665,9 +1726,24 @@ const Receipt = () => {
                                     paddingBottom: '10px',
                                     marginBottom: '15px'
                                 }}>
-                                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{organizationInfo.headOffice}</h3>
-                                    {branchInfo && <h4 style={{ margin: '5px 0', fontSize: '14px', fontWeight: 'normal' }}>({branchInfo.Name || branchInfo.BranchName})</h4>}
-                                    <p style={{ margin: '5px 0', fontSize: '11px' }}>{organizationInfo.address}</p>
+                                    <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 'bold' }}>{headOfficeInfo?.CompanyName || headOfficeInfo?.Name || "HEAD OFFICE"}</h3>
+                                    <p style={{ margin: '3px 0', fontSize: '11px' }}>{headOfficeInfo?.Address || headOfficeInfo?.CompanyAddress || ""}</p>
+                                    {branchInfo ? (
+                                        <div style={{ marginTop: '8px', borderTop: '1px solid #ccc', paddingTop: '5px' }}>
+                                            <h4 style={{ margin: '3px 0', fontSize: '14px', fontWeight: 'bold' }}>
+                                                Branch Office: {branchInfo.Name || branchInfo.BranchName || branchInfo.OfficeName || "Branch Office"}
+                                            </h4>
+                                            <p style={{ margin: '2px 0', fontSize: '11px', color: '#666' }}>
+                                                {branchInfo.Address || branchInfo.BranchAddress || branchInfo.OfficeAddress || ""}
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ marginTop: '8px', borderTop: '1px solid #ccc', paddingTop: '5px' }}>
+                                            <h4 style={{ margin: '3px 0', fontSize: '14px', fontWeight: 'bold' }}>
+                                                Branch Office: {localStorage.getItem("F_BranchOffice") || "Main Branch"}
+                                            </h4>
+                                        </div>
+                                    )}
                                 </div>
                                 
                                 <div style={{
