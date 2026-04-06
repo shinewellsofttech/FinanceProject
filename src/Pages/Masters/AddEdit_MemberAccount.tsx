@@ -79,6 +79,28 @@ interface FormValues {
     PropertyAddress: string;
     PropertyValue: string;
     PropertyType: string;
+    // Guarantor 1
+    Guarantor1_Name: string;
+    Guarantor1_AadharNo: string;
+    Guarantor1_PanNo: string;
+    Guarantor1_MobileNo: string;
+    Guarantor1_PermanentAddress: string;
+    Guarantor1_PermanentAddress_Latitude: string;
+    Guarantor1_PermanentAddress_Longitude: string;
+    Guarantor1_PresentAddress: string;
+    Guarantor1_PresentAddress_Latitude: string;
+    Guarantor1_PresentAddress_Longitude: string;
+    // Guarantor 2
+    Guarantor2_Name: string;
+    Guarantor2_AadharNo: string;
+    Guarantor2_PanNo: string;
+    Guarantor2_MobileNo: string;
+    Guarantor2_PermanentAddress: string;
+    Guarantor2_PermanentAddress_Latitude: string;
+    Guarantor2_PermanentAddress_Longitude: string;
+    Guarantor2_PresentAddress: string;
+    Guarantor2_PresentAddress_Latitude: string;
+    Guarantor2_PresentAddress_Longitude: string;
     // API JSON fields (for parsing)
     EMIScheduleJson?: string;
     CollateralJson?: string;
@@ -123,6 +145,26 @@ const initialValues: FormValues = {
     PropertyAddress: "",
     PropertyValue: "",
     PropertyType: "",
+    Guarantor1_Name: "",
+    Guarantor1_AadharNo: "",
+    Guarantor1_PanNo: "",
+    Guarantor1_MobileNo: "",
+    Guarantor1_PermanentAddress: "",
+    Guarantor1_PermanentAddress_Latitude: "",
+    Guarantor1_PermanentAddress_Longitude: "",
+    Guarantor1_PresentAddress: "",
+    Guarantor1_PresentAddress_Latitude: "",
+    Guarantor1_PresentAddress_Longitude: "",
+    Guarantor2_Name: "",
+    Guarantor2_AadharNo: "",
+    Guarantor2_PanNo: "",
+    Guarantor2_MobileNo: "",
+    Guarantor2_PermanentAddress: "",
+    Guarantor2_PermanentAddress_Latitude: "",
+    Guarantor2_PermanentAddress_Longitude: "",
+    Guarantor2_PresentAddress: "",
+    Guarantor2_PresentAddress_Latitude: "",
+    Guarantor2_PresentAddress_Longitude: "",
 };
 
 interface AccountState {
@@ -444,6 +486,26 @@ const AddEdit_MemberAccount = () => {
         PropertyAddress:          ts(accountState.formData.PropertyAddress),
         PropertyValue:            ts(accountState.formData.PropertyValue),
         PropertyType:             ts(accountState.formData.PropertyType),
+        Guarantor1_Name:          ts(accountState.formData.Guarantor1_Name),
+        Guarantor1_AadharNo:      ts(accountState.formData.Guarantor1_AadharNo),
+        Guarantor1_PanNo:         ts(accountState.formData.Guarantor1_PanNo),
+        Guarantor1_MobileNo:      ts(accountState.formData.Guarantor1_MobileNo),
+        Guarantor1_PermanentAddress: ts(accountState.formData.Guarantor1_PermanentAddress),
+        Guarantor1_PermanentAddress_Latitude: ts(accountState.formData.Guarantor1_PermanentAddress_Latitude),
+        Guarantor1_PermanentAddress_Longitude: ts(accountState.formData.Guarantor1_PermanentAddress_Longitude),
+        Guarantor1_PresentAddress: ts(accountState.formData.Guarantor1_PresentAddress),
+        Guarantor1_PresentAddress_Latitude: ts(accountState.formData.Guarantor1_PresentAddress_Latitude),
+        Guarantor1_PresentAddress_Longitude: ts(accountState.formData.Guarantor1_PresentAddress_Longitude),
+        Guarantor2_Name:          ts(accountState.formData.Guarantor2_Name),
+        Guarantor2_AadharNo:      ts(accountState.formData.Guarantor2_AadharNo),
+        Guarantor2_PanNo:         ts(accountState.formData.Guarantor2_PanNo),
+        Guarantor2_MobileNo:      ts(accountState.formData.Guarantor2_MobileNo),
+        Guarantor2_PermanentAddress: ts(accountState.formData.Guarantor2_PermanentAddress),
+        Guarantor2_PermanentAddress_Latitude: ts(accountState.formData.Guarantor2_PermanentAddress_Latitude),
+        Guarantor2_PermanentAddress_Longitude: ts(accountState.formData.Guarantor2_PermanentAddress_Longitude),
+        Guarantor2_PresentAddress: ts(accountState.formData.Guarantor2_PresentAddress),
+        Guarantor2_PresentAddress_Latitude: ts(accountState.formData.Guarantor2_PresentAddress_Latitude),
+        Guarantor2_PresentAddress_Longitude: ts(accountState.formData.Guarantor2_PresentAddress_Longitude),
     };
 
     /* ── Submit ── */
@@ -488,6 +550,28 @@ const AddEdit_MemberAccount = () => {
             fd.append("MonthlyIncome",             values.MonthlyIncome || "0");
             fd.append("EmployerName",              values.EmployerName || "");
             fd.append("IsSalaryAccount",           values.IsSalaryAccount ? "true" : "false");
+            // Guarantor 1
+            fd.append("Guarantor1_Name",           values.Guarantor1_Name || "");
+            fd.append("Guarantor1_AadharNo",       values.Guarantor1_AadharNo || "");
+            fd.append("Guarantor1_PanNo",          values.Guarantor1_PanNo || "");
+            fd.append("Guarantor1_MobileNo",       values.Guarantor1_MobileNo || "");
+            fd.append("Guarantor1_PermanentAddress", values.Guarantor1_PermanentAddress || "");
+            fd.append("Guarantor1_PermanentAddress_Latitude", values.Guarantor1_PermanentAddress_Latitude || "");
+            fd.append("Guarantor1_PermanentAddress_Longitude", values.Guarantor1_PermanentAddress_Longitude || "");
+            fd.append("Guarantor1_PresentAddress", values.Guarantor1_PresentAddress || "");
+            fd.append("Guarantor1_PresentAddress_Latitude", values.Guarantor1_PresentAddress_Latitude || "");
+            fd.append("Guarantor1_PresentAddress_Longitude", values.Guarantor1_PresentAddress_Longitude || "");
+            // Guarantor 2
+            fd.append("Guarantor2_Name",           values.Guarantor2_Name || "");
+            fd.append("Guarantor2_AadharNo",       values.Guarantor2_AadharNo || "");
+            fd.append("Guarantor2_PanNo",          values.Guarantor2_PanNo || "");
+            fd.append("Guarantor2_MobileNo",       values.Guarantor2_MobileNo || "");
+            fd.append("Guarantor2_PermanentAddress", values.Guarantor2_PermanentAddress || "");
+            fd.append("Guarantor2_PermanentAddress_Latitude", values.Guarantor2_PermanentAddress_Latitude || "");
+            fd.append("Guarantor2_PermanentAddress_Longitude", values.Guarantor2_PermanentAddress_Longitude || "");
+            fd.append("Guarantor2_PresentAddress", values.Guarantor2_PresentAddress || "");
+            fd.append("Guarantor2_PresentAddress_Latitude", values.Guarantor2_PresentAddress_Latitude || "");
+            fd.append("Guarantor2_PresentAddress_Longitude", values.Guarantor2_PresentAddress_Longitude || "");
             fd.append("F_BranchOffice", String(currentUser?.F_BranchOffice ?? currentUser?.BranchId ?? localStorage.getItem("F_BranchOffice") ?? ""));
 
             await Fn_AddEditData(
@@ -1191,6 +1275,310 @@ const AddEdit_MemberAccount = () => {
                                                 </CardBody>
                                             </Card>
                                         )}
+
+                                        {/* ── GUARANTOR INFORMATION ── */}
+                                        <Card className="mt-3">
+                                            <CardBody>
+                                                <h6 className="mb-3 fw-semibold text-secondary">Guarantor Information</h6>
+                                                <fieldset disabled={!accountState.isEditingOpen}>
+                                                    {/* Guarantor 1 */}
+                                                    <div className="mb-4">
+                                                        <h6 className="text-primary mb-3">Guarantor 1</h6>
+                                                        <Row className="gy-2 mb-2">
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Full Name</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_Name"
+                                                                        placeholder="Enter full name"
+                                                                        value={values.Guarantor1_Name}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Aadhar Number</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_AadharNo"
+                                                                        placeholder="12-digit Aadhar"
+                                                                        maxLength={12}
+                                                                        value={values.Guarantor1_AadharNo}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>PAN Number</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_PanNo"
+                                                                        placeholder="10-character PAN"
+                                                                        maxLength={10}
+                                                                        value={values.Guarantor1_PanNo}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                        style={{ textTransform: 'uppercase' }}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Mobile Number</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_MobileNo"
+                                                                        placeholder="10-digit mobile"
+                                                                        maxLength={15}
+                                                                        value={values.Guarantor1_MobileNo}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                        </Row>
+                                                        <Row className="gy-2 mb-2">
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Permanent Address</Label>
+                                                                    <Input
+                                                                        type="textarea"
+                                                                        name="Guarantor1_PermanentAddress"
+                                                                        placeholder="Enter permanent address"
+                                                                        rows={2}
+                                                                        value={values.Guarantor1_PermanentAddress}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Permanent Address Latitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_PermanentAddress_Latitude"
+                                                                        placeholder="e.g. 19.0760"
+                                                                        value={values.Guarantor1_PermanentAddress_Latitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Permanent Address Longitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_PermanentAddress_Longitude"
+                                                                        placeholder="e.g. 72.8777"
+                                                                        value={values.Guarantor1_PermanentAddress_Longitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                        </Row>
+                                                        <Row className="gy-2">
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Present Address</Label>
+                                                                    <Input
+                                                                        type="textarea"
+                                                                        name="Guarantor1_PresentAddress"
+                                                                        placeholder="Enter present address"
+                                                                        rows={2}
+                                                                        value={values.Guarantor1_PresentAddress}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Present Address Latitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_PresentAddress_Latitude"
+                                                                        placeholder="e.g. 19.0760"
+                                                                        value={values.Guarantor1_PresentAddress_Latitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Present Address Longitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor1_PresentAddress_Longitude"
+                                                                        placeholder="e.g. 72.8777"
+                                                                        value={values.Guarantor1_PresentAddress_Longitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+
+                                                    <hr className="my-4" />
+
+                                                    {/* Guarantor 2 */}
+                                                    <div>
+                                                        <h6 className="text-primary mb-3">Guarantor 2</h6>
+                                                        <Row className="gy-2 mb-2">
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Full Name</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_Name"
+                                                                        placeholder="Enter full name"
+                                                                        value={values.Guarantor2_Name}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Aadhar Number</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_AadharNo"
+                                                                        placeholder="12-digit Aadhar"
+                                                                        maxLength={12}
+                                                                        value={values.Guarantor2_AadharNo}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>PAN Number</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_PanNo"
+                                                                        placeholder="10-character PAN"
+                                                                        maxLength={10}
+                                                                        value={values.Guarantor2_PanNo}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                        style={{ textTransform: 'uppercase' }}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="3">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Mobile Number</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_MobileNo"
+                                                                        placeholder="10-digit mobile"
+                                                                        maxLength={15}
+                                                                        value={values.Guarantor2_MobileNo}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                        </Row>
+                                                        <Row className="gy-2 mb-2">
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Permanent Address</Label>
+                                                                    <Input
+                                                                        type="textarea"
+                                                                        name="Guarantor2_PermanentAddress"
+                                                                        placeholder="Enter permanent address"
+                                                                        rows={2}
+                                                                        value={values.Guarantor2_PermanentAddress}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Permanent Address Latitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_PermanentAddress_Latitude"
+                                                                        placeholder="e.g. 19.0760"
+                                                                        value={values.Guarantor2_PermanentAddress_Latitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Permanent Address Longitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_PermanentAddress_Longitude"
+                                                                        placeholder="e.g. 72.8777"
+                                                                        value={values.Guarantor2_PermanentAddress_Longitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                        </Row>
+                                                        <Row className="gy-2">
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Present Address</Label>
+                                                                    <Input
+                                                                        type="textarea"
+                                                                        name="Guarantor2_PresentAddress"
+                                                                        placeholder="Enter present address"
+                                                                        rows={2}
+                                                                        value={values.Guarantor2_PresentAddress}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Present Address Latitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_PresentAddress_Latitude"
+                                                                        placeholder="e.g. 19.0760"
+                                                                        value={values.Guarantor2_PresentAddress_Latitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>Present Address Longitude</Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="Guarantor2_PresentAddress_Longitude"
+                                                                        placeholder="e.g. 72.8777"
+                                                                        value={values.Guarantor2_PresentAddress_Longitude}
+                                                                        onChange={handleChange}
+                                                                        onBlur={handleBlur}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                        </Row>
+                                                    </div>
+                                                </fieldset>
+                                            </CardBody>
+                                        </Card>
 
                                         {/* ── EMI SCHEDULE TABLE (only in edit mode) ── */}
                                         {isEditMode && emiSchedule.length > 0 && (
