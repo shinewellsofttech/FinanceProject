@@ -46,6 +46,9 @@ import AddEdit_MemberAccount from "../Pages/Masters/AddEdit_MemberAccount";
 import PageList_LedgerMaster from "../Pages/Masters/PageList_LedgerMaster";
 import AddEdit_LedgerMaster from "../Pages/Masters/AddEdit_LedgerMaster";
 import LedgerReport from "../Pages/Transactions/Reports/LedgerReport";
+import LoanCloser from "../Pages/Customer&Loan/LoanCloser";
+import path from "path";
+import ForCloser from "../Pages/Customer&Loan/ForCloser";
 
 export const routes = [
 
@@ -70,6 +73,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/loanApplication`, Component: <LoanApplication /> },
   { path: `${process.env.PUBLIC_URL}/eligibilityCheck`, Component: <EligibilityCheck /> },
   { path: `${process.env.PUBLIC_URL}/loanApproval`, Component: <LoanApproval /> },
+  { path: `${process.env.PUBLIC_URL}/forCloser`, Component: <ForCloser /> },
 
   // Operations
   { path: `${process.env.PUBLIC_URL}/emiSchedule`, Component: <EMISchedule /> },
@@ -82,6 +86,7 @@ export const routes = [
   { path: `${process.env.PUBLIC_URL}/foreclosure`, Component: <Foreclosure /> },
   { path: `${process.env.PUBLIC_URL}/auctionManagement`, Component: <AuctionManagement /> },
   { path: `${process.env.PUBLIC_URL}/repaymentForm`, Component: <RepaymentForm /> },
+  { path: `${process.env.PUBLIC_URL}/loanCloser`, Component: <LoanCloser /> },
 
   // Transactions
   { path: `${process.env.PUBLIC_URL}/receipt`, Component: <Receipt /> },

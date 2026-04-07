@@ -24,6 +24,9 @@ interface FormValues {
     F_InterestCalculationType: string;
     F_PenaltyCalculationType: string;
     F_PenaltyLedger: string;
+    F_ForeclosureLedger: string;
+    F_ForeclosureCalculationType: string;
+    ForeclosureCharges: string;
     MinAmount: string;
     MaxAmount: string;
     MultipleAmount: string;
@@ -65,6 +68,9 @@ const initialValues: FormValues = {
     F_InterestCalculationType: "",
     F_PenaltyCalculationType: "",
     F_PenaltyLedger: "",
+    F_ForeclosureLedger: "",
+    F_ForeclosureCalculationType: "",
+    ForeclosureCharges: "",
     MinAmount: "",
     MaxAmount: "",
     MultipleAmount: "",
@@ -309,6 +315,9 @@ const AccountTypeScheme = () => {
         F_InterestCalculationType: toStringOrEmpty(schemeState.formData.F_InterestCalculationType),
         F_PenaltyCalculationType: toStringOrEmpty(schemeState.formData.F_PenaltyCalculationType),
         F_PenaltyLedger: toStringOrEmpty(schemeState.formData.F_PenaltyLedger),
+        F_ForeclosureLedger: toStringOrEmpty(schemeState.formData.F_ForeclosureLedger),
+        F_ForeclosureCalculationType: toStringOrEmpty(schemeState.formData.F_ForeclosureCalculationType),
+        ForeclosureCharges: toStringOrEmpty(schemeState.formData.ForeclosureCharges),
         MinAmount: toStringOrEmpty(schemeState.formData.MinAmount),
         MaxAmount: toStringOrEmpty(schemeState.formData.MaxAmount),
         MultipleAmount: toStringOrEmpty(schemeState.formData.MultipleAmount),
@@ -358,6 +367,9 @@ const AccountTypeScheme = () => {
             formData.append("F_InterestCalculationType", values.F_InterestCalculationType || "");
             formData.append("F_PenaltyCalculationType", values.F_PenaltyCalculationType || "");
             formData.append("F_PenaltyLedger", values.F_PenaltyLedger || "");
+            formData.append("F_ForeclosureLedger", values.F_ForeclosureLedger || "");
+            formData.append("F_ForeclosureCalculationType", values.F_ForeclosureCalculationType || "");
+            formData.append("ForeclosureCharges", values.ForeclosureCharges || "");
             formData.append("MinAmount", values.MinAmount || "");
             formData.append("MaxAmount", values.MaxAmount || "");
             formData.append("MultipleAmount", values.MultipleAmount || "");
@@ -633,6 +645,43 @@ const AccountTypeScheme = () => {
                                                         <ErrorMessage name="F_PenaltyLedger" component="div" className="text-danger small mt-1" />
                                                     </FormGroup>
                                                 </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Foreclosure Calculation Type</Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_ForeclosureCalculationType"
+                                                            value={values.F_ForeclosureCalculationType}
+                                                            onChange={(e) => setFieldValue("F_ForeclosureCalculationType", e.target.value)}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.calcTypes.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `fct-${id}` : `fct-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_ForeclosureCalculationType" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                <Col md="4">
+                                                    <FormGroup className="mb-0">
+                                                        <Label>Foreclosure Ledger</Label>
+                                                        <Input
+                                                            type="select"
+                                                            name="F_ForeclosureLedger"
+                                                            value={values.F_ForeclosureLedger}
+                                                            onChange={(e) => setFieldValue("F_ForeclosureLedger", e.target.value)}
+                                                        >
+                                                            <option value="">-- Select --</option>
+                                                            {dropdowns.interestLedgers.map((opt, idx) => {
+                                                                const id = getOptionId(opt);
+                                                                return <option key={id != null ? `fl-${id}` : `fl-idx-${idx}`} value={id != null ? String(id) : ""}>{opt.Name || ""}</option>;
+                                                            })}
+                                                        </Input>
+                                                        <ErrorMessage name="F_ForeclosureLedger" component="div" className="text-danger small mt-1" />
+                                                    </FormGroup>
+                                                </Col>
+                                                {renderNumber("ForeclosureCharges", "Foreclosure Charges", values, handleChange, handleBlur, touched, errors, false, "0.01")}
                                                 {renderNumber("GracePeriod", "Grace Period", values, handleChange, handleBlur, touched, errors)}
                                                 {renderNumber("PreMaturityAfter", "Prematurity After", values, handleChange, handleBlur, touched, errors)}
                                             </Row>

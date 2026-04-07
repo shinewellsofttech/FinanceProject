@@ -189,6 +189,24 @@ export const MenuList: MenuItem[] = [
         type: "link",
         bookmark: true,
       },
+      {
+        id: 5,
+        title: "Loan Closer",
+        path: `${process.env.PUBLIC_URL}/loanCloser`,
+        icon: "CheckCircle",
+        type: "link",
+        bookmark: true,
+
+      },
+      {
+        id: 6,
+        title: "For Closer",
+        path: `${process.env.PUBLIC_URL}/forCloser`,
+        icon: "CheckCircle",
+        type: "link",
+        bookmark: true,
+
+      }
       // {
       //   id: 5,
       //   title: "Eligibility Check",
