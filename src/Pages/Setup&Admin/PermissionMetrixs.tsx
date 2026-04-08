@@ -162,7 +162,7 @@ const PermissionMetrixs = () => {
 
         const formData = new FormData();
         formData.append("F_RoleMaster", selectedRole);
-        formData.append("F_BranchMaster", selectedBranch);
+        formData.append("F_BranchMaster", selectedBranch ? selectedBranch : "0");
         formData.append("DataJSON", JSON.stringify(dataJsonArray));
 
         const storedUser = localStorage.getItem("user");

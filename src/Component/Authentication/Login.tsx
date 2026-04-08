@@ -8,6 +8,7 @@ import { toast } from "react-toastify";
 import SocialApp from "./SocialApp";
 import { API_HELPER } from "../../helpers/ApiHelper";
 import { API_WEB_URLS } from "../../constants/constAPI";
+import { fetchUserPermissions } from "../../helpers/permissionsHelper";
 
 const LOGIN_URL = `${API_WEB_URLS.BASE}AdminLogin/0/token`;
 
@@ -68,14 +69,23 @@ const Login = () => {
           toast.success("Please select a branch to continue.");
         } else {
           localStorage.setItem("authUser", JSON.stringify(userData));
+          let branchId = "";
           if (branches.length === 1) {
             localStorage.setItem("selectedBranch", JSON.stringify(branches[0]));
             localStorage.setItem("F_BranchOffice", branches[0].id);
+            branchId = branches[0].id;
           } else {
             localStorage.setItem("selectedBranch", JSON.stringify({ id: "", name: "Default Branch" }));
             localStorage.setItem("F_BranchOffice", "");
           }
           localStorage.setItem("login", JSON.stringify(true));
+          
+          // Fetch user permissions based on role and branch
+          const roleId = userData?.F_UserRole || userData?.RoleId || userData?.F_RoleMaster || "0";
+          console.log("Login - userData:", userData);
+          console.log("Login - roleId:", roleId, "branchId:", branchId);
+          await fetchUserPermissions(roleId, branchId);
+          
           toast.success(loginMessage || "Login Successful");
           navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
         }
@@ -88,7 +98,7 @@ const Login = () => {
     }
   };
 
-  const handleBranchSelect = () => {
+  const handleBranchSelect = async () => {
     if (!selectedBranchId) {
       toast.error("Please select a branch.");
       return;
@@ -100,6 +110,13 @@ const Login = () => {
     localStorage.setItem("selectedBranch", JSON.stringify(selectedBranch));
     localStorage.setItem("F_BranchOffice", selectedBranch.id);
     localStorage.setItem("login", JSON.stringify(true));
+    
+    // Fetch user permissions based on role and selected branch
+    const roleId = tempUserData?.F_UserRole || tempUserData?.RoleId || tempUserData?.F_RoleMaster || "0";
+    console.log("Branch Select - tempUserData:", tempUserData);
+    console.log("Branch Select - roleId:", roleId, "branchId:", selectedBranch.id);
+    await fetchUserPermissions(roleId, selectedBranch.id);
+    
     setShowBranchModal(false);
     toast.success("Login Successful");
     navigate(`${process.env.PUBLIC_URL}/voucherEntry`);

@@ -1,12 +1,16 @@
 import { Link } from "react-router-dom";
 import { FeatherIcons, LI, UL } from "../../../../AbstractElements";
 import { profilesMessage } from "../../../../Data/LayoutData/HeaderData";
+import { clearUserPermissions } from "../../../../helpers/permissionsHelper";
 
 const ProfileBox = () => {
   const handleClick = (name: string) => {
     if (name === "Log Out") {
       localStorage.removeItem("login");
       localStorage.removeItem("authUser");
+      localStorage.removeItem("selectedBranch");
+      localStorage.removeItem("F_BranchOffice");
+      clearUserPermissions(); // Clear permissions from Redux and localStorage
     }
   };
 

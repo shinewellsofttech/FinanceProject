@@ -1,0 +1,310 @@
+{
+    "time": null,
+    "success": true,
+    "status": 200,
+    "message": "Found",
+    "data": {
+        "dataList": [
+            {
+                "Id": 1,
+                "Name": "HOCreation",
+                "Path": "/hoCreation",
+                "IsActive": true
+            },
+            {
+                "Id": 2,
+                "Name": "RegionalOfficeList",
+                "Path": "/regionalOfficeList",
+                "IsActive": true
+            },
+            {
+                "Id": 3,
+                "Name": "RegionalOfficeCreation",
+                "Path": "/regionalOfficeCreation",
+                "IsActive": true
+            },
+            {
+                "Id": 4,
+                "Name": "BranchOfficeList",
+                "Path": "/branchOfficeList",
+                "IsActive": true
+            },
+            {
+                "Id": 5,
+                "Name": "BranchOfficeCreation",
+                "Path": "/branchOfficeCreation",
+                "IsActive": true
+            },
+            {
+                "Id": 6,
+                "Name": "UserRoleList",
+                "Path": "/userRoleList",
+                "IsActive": true
+            },
+            {
+                "Id": 7,
+                "Name": "UserRoleCreation",
+                "Path": "/userRoleCreation",
+                "IsActive": true
+            },
+            {
+                "Id": 8,
+                "Name": "UserCreationList",
+                "Path": "/userCreationList",
+                "IsActive": true
+            },
+            {
+                "Id": 9,
+                "Name": "UserCreation",
+                "Path": "/userCreation",
+                "IsActive": true
+            },
+            {
+                "Id": 10,
+                "Name": "PermissionMetrixs",
+                "Path": "/permissionMetrixs",
+                "IsActive": true
+            },
+            {
+                "Id": 11,
+                "Name": "MakerCheckerConfig",
+                "Path": "/makerCheckerConfig",
+                "IsActive": true
+            },
+            {
+                "Id": 12,
+                "Name": "FinancialYearSetup",
+                "Path": "/financialYearSetup",
+                "IsActive": true
+            },
+            {
+                "Id": 13,
+                "Name": "LoanSchemeList",
+                "Path": "/loanSchemeList",
+                "IsActive": true
+            },
+            {
+                "Id": 14,
+                "Name": "AccountTypeScheme",
+                "Path": "/accountTypeScheme",
+                "IsActive": true
+            },
+            {
+                "Id": 15,
+                "Name": "CustomerList",
+                "Path": "/customerList",
+                "IsActive": true
+            },
+            {
+                "Id": 16,
+                "Name": "CustomerRegistration",
+                "Path": "/customerRegistration",
+                "IsActive": true
+            },
+            {
+                "Id": 17,
+                "Name": "LoanApplicationList",
+                "Path": "/loanApplicationList",
+                "IsActive": true
+            },
+            {
+                "Id": 18,
+                "Name": "LoanApplication",
+                "Path": "/loanApplication",
+                "IsActive": true
+            },
+            {
+                "Id": 19,
+                "Name": "EligibilityCheck",
+                "Path": "/eligibilityCheck",
+                "IsActive": true
+            },
+            {
+                "Id": 20,
+                "Name": "LoanApproval",
+                "Path": "/loanApproval",
+                "IsActive": true
+            },
+            {
+                "Id": 21,
+                "Name": "ForCloser",
+                "Path": "/forCloser",
+                "IsActive": true
+            },
+            {
+                "Id": 22,
+                "Name": "EMISchedule",
+                "Path": "/emiSchedule",
+                "IsActive": true
+            },
+            {
+                "Id": 23,
+                "Name": "EMICollection",
+                "Path": "/emiCollection",
+                "IsActive": true
+            },
+            {
+                "Id": 24,
+                "Name": "LoanDisbursement",
+                "Path": "/loanDisbursement",
+                "IsActive": true
+            },
+            {
+                "Id": 25,
+                "Name": "OverdueTrackingNPAClassification",
+                "Path": "/overdueTrackingNPAClassification",
+                "IsActive": true
+            },
+            {
+                "Id": 26,
+                "Name": "COAManualGLEntry",
+                "Path": "/coaManualGLEntry",
+                "IsActive": true
+            },
+            {
+                "Id": 27,
+                "Name": "DayClosing",
+                "Path": "/dayClosing",
+                "IsActive": true
+            },
+            {
+                "Id": 28,
+                "Name": "LoanClosing",
+                "Path": "/loanClosing",
+                "IsActive": true
+            },
+            {
+                "Id": 29,
+                "Name": "Foreclosure",
+                "Path": "/foreclosure",
+                "IsActive": true
+            },
+            {
+                "Id": 30,
+                "Name": "AuctionManagement",
+                "Path": "/auctionManagement",
+                "IsActive": true
+            },
+            {
+                "Id": 31,
+                "Name": "RepaymentForm",
+                "Path": "/repaymentForm",
+                "IsActive": true
+            },
+            {
+                "Id": 32,
+                "Name": "LoanCloser",
+                "Path": "/loanCloser",
+                "IsActive": true
+            },
+            {
+                "Id": 33,
+                "Name": "Receipt",
+                "Path": "/receipt",
+                "IsActive": true
+            },
+            {
+                "Id": 34,
+                "Name": "ReceiptList",
+                "Path": "/receiptList",
+                "IsActive": true
+            },
+            {
+                "Id": 35,
+                "Name": "PaymentList",
+                "Path": "/paymentList",
+                "IsActive": true
+            },
+            {
+                "Id": 36,
+                "Name": "Payment",
+                "Path": "/payment",
+                "IsActive": true
+            },
+            {
+                "Id": 37,
+                "Name": "CountryMaster",
+                "Path": "/countryMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 38,
+                "Name": "AddEditCountryMaster",
+                "Path": "/addEditCountryMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 39,
+                "Name": "StateMaster",
+                "Path": "/stateMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 40,
+                "Name": "AddEditStateMaster",
+                "Path": "/addEditStateMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 41,
+                "Name": "CityMaster",
+                "Path": "/cityMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 42,
+                "Name": "AddEditCityMaster",
+                "Path": "/addEditCityMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 43,
+                "Name": "ModuleMaster",
+                "Path": "/moduleMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 44,
+                "Name": "AddEditModuleMaster",
+                "Path": "/addEditModuleMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 45,
+                "Name": "MemberAccountList",
+                "Path": "/memberAccountList",
+                "IsActive": true
+            },
+            {
+                "Id": 46,
+                "Name": "AddEditMemberAccount",
+                "Path": "/addEditMemberAccount",
+                "IsActive": true
+            },
+            {
+                "Id": 47,
+                "Name": "LedgerMasterList",
+                "Path": "/ledgerMasterList",
+                "IsActive": true
+            },
+            {
+                "Id": 48,
+                "Name": "AddEditLedgerMaster",
+                "Path": "/addEditLedgerMaster",
+                "IsActive": true
+            },
+            {
+                "Id": 49,
+                "Name": "LedgerReport",
+                "Path": "/ledgerReport",
+                "IsActive": true
+            },
+            {
+                "Id": 50,
+                "Name": "ChangePassword",
+                "Path": "/changePassword",
+                "IsActive": true
+            }
+        ]
+    }
+}

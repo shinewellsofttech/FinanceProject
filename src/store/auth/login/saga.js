@@ -47,6 +47,10 @@ function* loginUser({ payload: { user, history } }) {
 function* logoutUser({ payload: { history } }) {
   try {
     localStorage.removeItem("authUser");
+    localStorage.removeItem("login");
+    localStorage.removeItem("selectedBranch");
+    localStorage.removeItem("F_BranchOffice");
+    localStorage.removeItem("userPermissions"); // Clear permissions
 
     if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
       const response = yield call(fireBaseBackend.logout);

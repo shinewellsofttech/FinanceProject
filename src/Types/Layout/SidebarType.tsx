@@ -61,6 +61,7 @@ export interface HeaderTabContentType {
     menucontent?: string;
     Items?: MenuItem[];
     id?: number;
+    moduleId?: number; // Maps to ModuleMaster Id for permission checking
     icon?: string;
     type?: string;
     active?: boolean;

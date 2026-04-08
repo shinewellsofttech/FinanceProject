@@ -1,18 +1,88 @@
-import { Fragment, useState } from 'react'
+import { Fragment, useState, useMemo, useEffect } from 'react'
 import { useAppSelector } from '../../ReduxToolkit/Hooks';
 import { MenuList } from '../../Data/LayoutData/SidebarData';
 import Menulist from './Menulist';
 import { MenuItem } from '../../Types/Layout/SidebarType';
 import { H6, LI, UL } from '../../AbstractElements';
 import { useTranslation } from 'react-i18next';
+import { usePermissions, loadPermissionsFromStorage, getModuleIdFromPath } from '../../helpers/permissionsHelper';
 
 const SidebarMenuList = () => {
   const [activeMenu, setActiveMenu] = useState<string[]>([]);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const { pinedMenu } = useAppSelector((state) => state.layout);
   const { t } = useTranslation();
+  const { permissions, modules, isLoaded } = usePermissions();
 
-  const shouldHideMenu = (mainMenu: MenuItem) => { return mainMenu?.Items?.map((data) => data.title).every((titles) => pinedMenu.includes(titles || "")); };
+  // Load permissions from localStorage on mount (for page refresh)
+  useEffect(() => {
+    console.log("SidebarMenuList - isLoaded:", isLoaded, "permissions:", permissions?.length, "modules:", modules?.length);
+    if (!isLoaded) {
+      loadPermissionsFromStorage();
+    }
+  }, [isLoaded, permissions, modules]);
+
+  // Filter menu items based on user permissions
+  const filteredMenuList = useMemo(() => {
+    console.log("=== SIDEBAR MENU FILTERING ===");
+    console.log("Permissions count:", permissions?.length || 0);
+    console.log("Modules count:", modules?.length || 0);
+    console.log("All permissions:", permissions);
+    console.log("All modules (first 10):", modules?.slice(0, 10));
+    
+    // If no permissions loaded yet, show all items (for admin/dev mode)
+    if (!permissions || permissions.length === 0) {
+      console.log("⚠️ No permissions found, showing all menu items");
+      return MenuList;
+    }
+    
+    // If no modules loaded, we can't match paths properly
+    if (!modules || modules.length === 0) {
+      console.log("⚠️ No modules found, showing all menu items");
+      return MenuList;
+    }
+
+    const filtered = MenuList.map((mainMenu) => {
+      console.log(`Processing section: ${mainMenu.title}`);
+      
+      // Filter items that user has view access to
+      const filteredItems = mainMenu.Items?.filter((item) => {
+        // Skip items without a path - hide them
+        if (!item.path) {
+          console.log(`  ${item.title}: No path defined, HIDING`);
+          return false;
+        }
+        
+        // Get moduleId by matching path with ModuleMaster
+        const moduleId = getModuleIdFromPath(item.path, modules);
+        
+        // If no moduleId found (path not in ModuleMaster), HIDE it
+        if (!moduleId) {
+          console.log(`  ${item.title}: No moduleId found for path "${item.path}", HIDING`);
+          return false;
+        }
+        
+        // Check if user has view permission for this module
+        const permission = permissions.find(p => p.F_ModuleMaster === moduleId);
+        const hasAccess = permission?.IsView === true;
+        console.log(`  ${item.title}: path="${item.path}", moduleId=${moduleId}, permission found=${!!permission}, IsView=${permission?.IsView}, hasAccess=${hasAccess}`);
+        return hasAccess;
+      });
+
+      return {
+        ...mainMenu,
+        Items: filteredItems,
+      };
+    }).filter((mainMenu) => mainMenu.Items && mainMenu.Items.length > 0); // Remove sections with no items
+    
+    console.log("Filtered sections:", filtered.map(m => `${m.title} (${m.Items?.length} items)`));
+    console.log("=== END SIDEBAR FILTERING ===");
+    return filtered;
+  }, [permissions, modules]);
+
+  const shouldHideMenu = (mainMenu: MenuItem) => { 
+    return mainMenu?.Items?.map((data) => data.title).every((titles) => pinedMenu.includes(titles || "")); 
+  };
 
   const toggleSection = (title: string) => {
     setExpandedSections((prev) => ({ ...prev, [title]: !prev[title] }));
@@ -20,8 +90,8 @@ const SidebarMenuList = () => {
 
   return (
     <>
-      {MenuList &&
-        MenuList.map((mainMenu: MenuItem, index: number) => {
+      {filteredMenuList &&
+        filteredMenuList.map((mainMenu: MenuItem, index: number) => {
           const isExpanded = expandedSections[mainMenu.title || ""] ?? false;
           return (
             <Fragment key={index}>
