@@ -10,8 +10,10 @@ export interface UserPermission {
     IsDelete: boolean;
     IsApprove: boolean;
     IsExport: boolean;
-    F_BranchMaster: number;
+    F_BranchMaster: number | null;
     DateOfCreation?: string;
+    ModuleName?: string;
+    ModulePath?: string;
 }
 
 export interface ModuleMaster {
