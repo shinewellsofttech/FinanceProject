@@ -69,11 +69,15 @@ const PageList_CustomerRegistration = () => {
     const search = state.filterText.trim().toLowerCase();
     if (!search) return list;
     return list.filter(
-      (item: any) =>
-        String(item?.FullName ?? item?.Name ?? "").toLowerCase().includes(search) ||
-        String(item?.MobileNumber ?? "").toLowerCase().includes(search) ||
-        String(item?.PANNumber ?? "").toLowerCase().includes(search) ||
-        String(item?.AadhaarNumber ?? "").toLowerCase().includes(search)
+      (item: any) => {
+        const fullName = `${item?.FirstName ?? ""} ${item?.LastName ?? ""}`.trim();
+        return (
+          fullName.toLowerCase().includes(search) ||
+          String(item?.MobileNo ?? item?.MobileNumber ?? "").toLowerCase().includes(search) ||
+          String(item?.PAN ?? item?.PANNumber ?? "").toLowerCase().includes(search) ||
+          String(item?.AadhaarNo ?? item?.AadhaarNumber ?? "").toLowerCase().includes(search)
+        );
+      }
     );
   }, [state.dataList, state.filterText]);
 
@@ -116,7 +120,8 @@ const PageList_CustomerRegistration = () => {
                       <thead>
                         <tr>
                           <th>#</th>
-                          <th>Full Name</th>
+                          <th>First Name</th>
+                          <th>Last Name</th>
                           <th>Mobile</th>
                           <th>PAN</th>
                           <th>City</th>
@@ -126,7 +131,7 @@ const PageList_CustomerRegistration = () => {
                       <tbody>
                         {filteredList.length === 0 ? (
                           <tr>
-                            <td colSpan={6} className="text-center py-4">
+                            <td colSpan={7} className="text-center py-4">
                               No records found.
                             </td>
                           </tr>
@@ -134,10 +139,11 @@ const PageList_CustomerRegistration = () => {
                           filteredList.map((item: any, index: number) => (
                             <tr key={item?.Id ?? index}>
                               <td>{index + 1}</td>
-                              <td>{item?.FullName ?? item?.Name ?? "-"}</td>
-                              <td>{item?.MobileNumber ?? "-"}</td>
-                              <td>{item?.PANNumber ?? "-"}</td>
-                              <td>{item?.City ?? item?.CityName ?? "-"}</td>
+                              <td>{item?.FirstName ?? "-"}</td>
+                              <td>{item?.LastName ?? "-"}</td>
+                              <td>{item?.MobileNo ?? item?.MobileNumber ?? "-"}</td>
+                              <td>{item?.PAN ?? item?.PANNumber ?? "-"}</td>
+                              <td>{item?.CityName ?? item?.City ?? "-"}</td>
                               <td>
                                 <Btn color="primary" size="sm" className="me-2" onClick={() => handleEdit(item?.Id)}>
                                   <i className="fa fa-edit" />

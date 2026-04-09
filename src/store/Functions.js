@@ -247,6 +247,48 @@ export const Fn_GetReport = (
     dispatch(callAdd_Data_Multipart(request))
   })
 }
+export const Fn_GetReportAPI = (
+  dispatch,
+  setState,
+  gridName,
+  apiURL,
+  data,
+  isMultiPart = false
+) => {
+  return new Promise((resolve, reject) => {
+    const { arguList } = data
+    const request = {
+      arguList: arguList,
+      apiURL: apiURL,
+      callback: response => {
+        try {
+          if (response && response.status === 200 ) {
+            const responseData = response
+            showToastWithCloseButton("success", "Report generated successfully")
+            resolve(responseData)
+          } else {
+            showToastWithCloseButton("warning", "Data not found")
+            setState(prevState => ({ ...prevState, isProgress: false }))
+            resolve(null)
+          }
+        } catch (error) {
+          console.error("Error processing report data:", error)
+          setState(prevState => ({ ...prevState, isProgress: false }))
+          showToastWithCloseButton("error", "Failed to process report data")
+          reject(error)
+        }
+      },
+      errorCallback: error => {
+        console.error("Error fetching report:", error)
+        setState(prevState => ({ ...prevState, isProgress: false }))
+        showToastWithCloseButton("error", "Failed to fetch report")
+        reject(error)
+      },
+    }
+
+    dispatch(callAdd_Data_Multipart(request))
+  })
+}
 
 export const Fn_DeleteData = (
   dispatch,

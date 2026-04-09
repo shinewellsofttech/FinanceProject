@@ -19,7 +19,8 @@ interface BankAccount {
 }
 
 interface CustomerFormValues {
-    Name: string;
+    FirstName: string;
+    LastName: string;
     DateOfBirth: string;
     Gender: string;
     MobileNo: string;
@@ -44,7 +45,8 @@ interface CustomerFormValues {
 }
 
 const initialValues: CustomerFormValues = {
-    Name: "",
+    FirstName: "",
+    LastName: "",
     DateOfBirth: "",
     Gender: "",
     MobileNo: "",
@@ -129,6 +131,7 @@ const CustomerRegistration = () => {
     // State to hold any fetched form data later for edit support
     const [savedData, setSavedData] = useState<Partial<CustomerFormValues>>({});
     const [savedKYCData, setSavedKYCData] = useState<Partial<KYCFormValues>>({});
+    const [existingFiles, setExistingFiles] = useState<any>({});
     // State for Fn_DisplayData - it needs a setter that accepts prevState => ({ ...prevState, formData: record })
     const [customerState, setCustomerState] = useState<{ id: number; formData: any }>({ id: 0, formData: {} });
 
@@ -151,7 +154,8 @@ const CustomerRegistration = () => {
     const validationSchema = useMemo(
         () =>
             Yup.object({
-                Name: Yup.string().trim().required("Name is required"),
+                FirstName: Yup.string().trim().required("First Name is required"),
+                LastName: Yup.string().trim().required("Last Name is required"),
                 DateOfBirth: Yup.date().required("Date of Birth is required").nullable(),
                 Gender: Yup.string().required("Gender is required"),
                 MobileNo: Yup.string().matches(/^[0-9]{10}$/, "Must be a 10-digit number").required("Mobile Number is required"),
@@ -223,10 +227,14 @@ const CustomerRegistration = () => {
 
     // Map the fetched formData to savedData when Fn_DisplayData completes
     useEffect(() => {
-        const fetchedData = customerState.formData;
+        // Handle nested response format: data.dataList[0]
+        let fetchedData = customerState.formData;
+        if (fetchedData?.dataList && Array.isArray(fetchedData.dataList) && fetchedData.dataList.length > 0) {
+            fetchedData = fetchedData.dataList[0];
+        }
         
-        // Check if formData has data (at least has Id or Name)
-        if (!fetchedData || (!fetchedData.Id && !fetchedData.Name)) {
+        // Check if formData has data (at least has Id)
+        if (!fetchedData || !fetchedData.Id) {
             return;
         }
         
@@ -257,8 +265,21 @@ const CustomerRegistration = () => {
             bankAccounts = [{ BankName: "", AccountNumber: "", IFSCCode: "", F_AccountTypeMaster: "" }];
         }
 
+        // Handle FirstName and LastName from response
+        // Prioritize separate FirstName/LastName fields, fallback to splitting Name if available
+        let firstName = fetchedData.FirstName || "";
+        let lastName = fetchedData.LastName || "";
+        
+        // If both are empty/null and there's a Name field, split it
+        if (!firstName && !lastName && fetchedData.Name) {
+            const nameArray = (fetchedData.Name || "").trim().split(" ");
+            firstName = nameArray[0] || "";
+            lastName = nameArray.slice(1).join(" ") || "";
+        }
+
         const mappedData: Partial<CustomerFormValues> = {
-            Name: fetchedData.Name || "",
+            FirstName: firstName,
+            LastName: lastName,
             DateOfBirth: fetchedData.DateOfBirth ? String(fetchedData.DateOfBirth).split("T")[0] : "",
             Gender: fetchedData.Gender || "",
             MobileNo: fetchedData.MobileNo || "",
@@ -287,8 +308,22 @@ const CustomerRegistration = () => {
             F_AddressProofTypeMaster: String(fetchedData.F_AddressProofTypeMaster || ""),
         };
 
+        // Store existing filenames for display (they'll be shown but not pre-filled in file input)
+        const existingFiles = {
+            IDProofFront: fetchedData.IDProofFront || null,
+            IDProofBack: fetchedData.IDProofBack || null,
+            AddressProofFile: fetchedData.AddressProofFile || null,
+            Photograph: fetchedData.Photograph || null,
+            SignatureFile: fetchedData.SignatureFile || null,
+            ITRProofFile: fetchedData.ITRProofFile || null,
+            CustomerPhoto: fetchedData.CustomerPhoto || null,
+        };
+
         setSavedData(mappedData);
         setSavedKYCData(mappedKYCData);
+        
+        // Store existing file names for display purposes
+        setExistingFiles(existingFiles);
         
         // Load cities based on state
         if (fetchedData.F_StateMaster && !isMapped) {
@@ -336,8 +371,13 @@ const CustomerRegistration = () => {
 
             const formData = new FormData();
             
+            // Append FirstName and LastName as separate parameters
+            formData.append("FirstName", values.FirstName);
+            formData.append("LastName", values.LastName);
+            
             // Append all fields
             Object.keys(values).forEach(key => {
+                if (key === 'FirstName' || key === 'LastName') return; // Skip these as we've appended them separately
                 if (key !== 'BankAccounts') {
                     const val = values[key as keyof CustomerFormValues];
                     if (val instanceof File) {
@@ -388,7 +428,8 @@ const CustomerRegistration = () => {
             formData.append("Id", String(customerId || 0));
             
             // --- Basic Info fields from Tab 1 ---
-            formData.append("Name", String(savedData.Name || ""));
+            formData.append("FirstName", String(savedData.FirstName || ""));
+            formData.append("LastName", String(savedData.LastName || ""));
             formData.append("DateOfBirth", String(savedData.DateOfBirth || ""));
             formData.append("Gender", String(savedData.Gender || ""));
             formData.append("MobileNo", String(savedData.MobileNo || ""));
@@ -518,9 +559,16 @@ const CustomerRegistration = () => {
                                                     <Row className="gy-0">
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
-                                                                <Label>Name <span className="text-danger">*</span></Label>
-                                                                <Input type="text" name="Name" placeholder="As per Aadhaar/PAN" value={values.Name} onChange={handleChange} onBlur={handleBlur} invalid={touched.Name && !!errors.Name} innerRef={nameRef} />
-                                                                <ErrorMessage name="Name" component="div" className="text-danger small mt-1" />
+                                                                <Label>First Name <span className="text-danger">*</span></Label>
+                                                                <Input type="text" name="FirstName" placeholder="As per Aadhaar/PAN" value={values.FirstName} onChange={handleChange} onBlur={handleBlur} invalid={touched.FirstName && !!errors.FirstName} innerRef={nameRef} />
+                                                                <ErrorMessage name="FirstName" component="div" className="text-danger small mt-1" />
+                                                            </FormGroup>
+                                                        </Col>
+                                                        <Col md="4">
+                                                            <FormGroup className="mb-0">
+                                                                <Label>Last Name <span className="text-danger">*</span></Label>
+                                                                <Input type="text" name="LastName" placeholder="As per Aadhaar/PAN" value={values.LastName} onChange={handleChange} onBlur={handleBlur} invalid={touched.LastName && !!errors.LastName} />
+                                                                <ErrorMessage name="LastName" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
@@ -656,7 +704,14 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Customer Photo <span className="text-danger">*</span></Label>
+                                                                {existingFiles.CustomerPhoto && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.CustomerPhoto}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="CustomerPhoto" onChange={(e) => setFieldValue('CustomerPhoto', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.CustomerPhoto && !!errors.CustomerPhoto} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="CustomerPhoto" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -817,7 +872,14 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ID Proof Front <span className="text-danger">*</span></Label>
+                                                                {existingFiles.IDProofFront && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.IDProofFront}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="IDProofFront" onChange={(e) => setFieldValue('IDProofFront', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofFront && !!errors.IDProofFront} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="IDProofFront" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -825,7 +887,14 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ID Proof Back Side</Label>
+                                                                {existingFiles.IDProofBack && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.IDProofBack}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="IDProofBack" onChange={(e) => setFieldValue('IDProofBack', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.IDProofBack && !!errors.IDProofBack} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="IDProofBack" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -845,14 +914,28 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Address Proof Upload <span className="text-danger">*</span></Label>
+                                                                {existingFiles.AddressProofFile && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.AddressProofFile}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="AddressProofFile" onChange={(e) => setFieldValue('AddressProofFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.AddressProofFile && !!errors.AddressProofFile} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="AddressProofFile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Photograph <span className="text-danger">*</span></Label>
+                                                                {existingFiles.Photograph && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.Photograph}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="Photograph" onChange={(e) => setFieldValue('Photograph', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.Photograph && !!errors.Photograph} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="Photograph" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -860,14 +943,28 @@ const CustomerRegistration = () => {
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>Signature Upload <span className="text-danger">*</span></Label>
+                                                                {existingFiles.SignatureFile && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.SignatureFile}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="SignatureFile" onChange={(e) => setFieldValue('SignatureFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.SignatureFile && !!errors.SignatureFile} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="SignatureFile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
                                                         <Col md="4">
                                                             <FormGroup className="mb-0">
                                                                 <Label>ITR / Income Proof</Label>
+                                                                {existingFiles.ITRProofFile && (
+                                                                    <div className="alert alert-info alert-sm small mb-2" style={{ padding: '6px 10px' }}>
+                                                                        <i className="fa fa-check-circle text-success me-2"></i>
+                                                                        Already uploaded: <strong>{existingFiles.ITRProofFile}</strong>
+                                                                    </div>
+                                                                )}
                                                                 <Input type="file" name="ITRProofFile" onChange={(e) => setFieldValue('ITRProofFile', e.currentTarget.files?.[0])} onBlur={handleBlur} invalid={touched.ITRProofFile && !!errors.ITRProofFile} />
+                                                                <small className="text-muted">Choose new file to replace existing one</small>
                                                                 <ErrorMessage name="ITRProofFile" component="div" className="text-danger small mt-1" />
                                                             </FormGroup>
                                                         </Col>
@@ -956,7 +1053,7 @@ const CustomerRegistration = () => {
                                             <div>
                                                 <h5 className="mb-4">Customer Preview Summary</h5>
                                                 <Row className="gy-3 mb-4">
-                                                    <Col md="4"><strong>Full Name:</strong> {savedData.Name}</Col>
+                                                    <Col md="4"><strong>Full Name:</strong> {savedData.FirstName} {savedData.LastName}</Col>
                                                     <Col md="4"><strong>Mobile:</strong> {savedData.MobileNo}</Col>
                                                     <Col md="4"><strong>DOB:</strong> {savedData.DateOfBirth}</Col>
                                                     <Col md="4"><strong>Gender:</strong> {savedData.Gender}</Col>

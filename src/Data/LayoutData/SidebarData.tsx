@@ -81,33 +81,33 @@ export const MenuList: MenuItem[] = [
   {
     title: "Masters",
     Items: [
-      {
-        id: 1,
-        moduleId: 37, // CountryMaster
-        title: "Country Master",
-        path: `${process.env.PUBLIC_URL}/countryMaster`,
-        icon: "Map",
-        type: "link",
-        bookmark: true,
-      },
-      {
-        id: 2,
-        moduleId: 39, // StateMaster
-        title: "State Master",
-        path: `${process.env.PUBLIC_URL}/stateMaster`,
-        icon: "MapPin",
-        type: "link",
-        bookmark: true,
-      },
-      {
-        id: 3,
-        moduleId: 41, // CityMaster
-        title: "City Master",
-        path: `${process.env.PUBLIC_URL}/cityMaster`,
-        icon: "MapPin",
-        type: "link",
-        bookmark: true,
-      },
+      // {
+      //   id: 1,
+      //   moduleId: 37, // CountryMaster
+      //   title: "Country Master",
+      //   path: `${process.env.PUBLIC_URL}/countryMaster`,
+      //   icon: "Map",
+      //   type: "link",
+      //   bookmark: true,
+      // },
+      // {
+      //   id: 2,
+      //   moduleId: 39, // StateMaster
+      //   title: "State Master",
+      //   path: `${process.env.PUBLIC_URL}/stateMaster`,
+      //   icon: "MapPin",
+      //   type: "link",
+      //   bookmark: true,
+      // },
+      // {
+      //   id: 3,
+      //   moduleId: 41, // CityMaster
+      //   title: "City Master",
+      //   path: `${process.env.PUBLIC_URL}/cityMaster`,
+      //   icon: "MapPin",
+      //   type: "link",
+      //   bookmark: true,
+      // },
       {
         id: 4,
         moduleId: 43, // ModuleMaster

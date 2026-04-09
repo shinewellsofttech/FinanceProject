@@ -3,14 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Formik, Form, ErrorMessage } from "formik";
 import type { FormikProps, FormikHelpers } from "formik";
 import { useDispatch } from "react-redux";
-import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData, Fn_GetReport } from "../../store/Functions";
+import { Fn_AddEditData, Fn_DisplayData, Fn_FillListData, Fn_GetReport, Fn_GetReportAPI } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { handleEnterToNextField } from "../../utils/formUtils";
 import { formatDateDisplay } from "../../helpers/dateUtils";
 import * as Yup from "yup";
 import {
     Card, CardBody, CardFooter, Col, Container,
-    FormGroup, Input, Label, Row, InputGroup, InputGroupText, Spinner, Table
+    FormGroup, Input, Label, Row, InputGroup, InputGroupText, Spinner, Table, Modal, ModalHeader, ModalBody, ModalFooter
 } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Btn } from "../../AbstractElements";
@@ -162,6 +162,21 @@ const AddEdit_MemberAccount = () => {
     const [totalInterest, setTotalInterest] = useState<string>("");
     const [totalRepaymentAmount, setTotalRepaymentAmount] = useState<string>("");
     const [emiSchedule, setEmiSchedule] = useState<EMIScheduleItem[]>([]);
+    const [cibilCheckInitiated, setCibilCheckInitiated] = useState(false);
+    const [cibilOTP, setCibilOTP] = useState<string>("");
+    const [isCibilLoading, setIsCibilLoading] = useState(false);
+    const [isVerifyingCibil, setIsVerifyingCibil] = useState(false);
+    const [selectedMemberMobile, setSelectedMemberMobile] = useState<string>("");
+    const [selectedMemberFirstName, setSelectedMemberFirstName] = useState<string>("");
+    const [selectedMemberLastName, setSelectedMemberLastName] = useState<string>("");
+    const [selectedMemberId, setSelectedMemberId] = useState<string>("");
+    const [otpRefId, setOtpRefId] = useState<string>("");
+    const [otpMessage, setOtpMessage] = useState<string>("");
+    const [cibilError, setCibilError] = useState(false);
+    const [cibilData, setCibilData] = useState<any>(null);
+    const [cibilPdfLink, setCibilPdfLink] = useState<string>("");
+    const [isPdfLoading, setIsPdfLoading] = useState(false);
+    const [showCibilModal, setShowCibilModal] = useState(false);
 
     const isEditMode = accountState.id > 0;
     const API_URL_EDIT = `${API_WEB_URLS.MASTER}/0/token/MemberAccountData/Id`;
@@ -507,6 +522,210 @@ const AddEdit_MemberAccount = () => {
         }
     };
 
+    /* ───────────────── LocalStorage OTP Management ───────────────── */
+    const saveCibilOtpToLocalStorage = (memberId: string, refId: string) => {
+        const otpData = {
+            memberId: memberId,
+            otpRefId: refId,
+            timestamp: Date.now()
+        };
+        localStorage.setItem('cibil_otp_data', JSON.stringify(otpData));
+        console.log("OTP Ref ID saved to localStorage:", otpData);
+    };
+
+    const getCibilOtpFromLocalStorage = (memberId: string) => {
+        const stored = localStorage.getItem('cibil_otp_data');
+        if (!stored) return null;
+
+        try {
+            const otpData = JSON.parse(stored);
+            const currentTime = Date.now();
+            const tenMinutesInMs = 10 * 60 * 1000; // 10 minutes
+
+            // Check if same member and within 10 minutes
+            if (otpData.memberId === memberId && (currentTime - otpData.timestamp) < tenMinutesInMs) {
+                const remainingTime = Math.ceil((tenMinutesInMs - (currentTime - otpData.timestamp)) / 1000 / 60);
+                console.log(`Valid OTP Ref ID found in localStorage. Valid for ${remainingTime} more minutes.`);
+                return otpData;
+            } else {
+                console.log("OTP Ref ID expired or different member. Clearing localStorage.");
+                localStorage.removeItem('cibil_otp_data');
+                return null;
+            }
+        } catch (error) {
+            console.error("Error parsing localStorage OTP data:", error);
+            localStorage.removeItem('cibil_otp_data');
+            return null;
+        }
+    };
+
+    const clearCibilOtpFromLocalStorage = () => {
+        localStorage.removeItem('cibil_otp_data');
+        console.log("OTP Ref ID cleared from localStorage");
+    };
+
+    /* ── Handle CIBIL Check ── */
+    const handleCheckCibil = async () => {
+        if (!selectedMemberMobile) {
+            alert("Please select a member first");
+            return;
+        }
+
+        // Check localStorage for existing valid OTP ref id
+        const storedOtpData = getCibilOtpFromLocalStorage(selectedMemberId);
+
+        if (storedOtpData) {
+            // Reuse existing OTP ref id
+            setOtpRefId(storedOtpData.otpRefId);
+            setCibilCheckInitiated(true);
+            setCibilError(false);
+            setCibilOTP("");
+            setOtpMessage("Using existing OTP session. Please enter the OTP sent earlier.");
+            alert("OTP session is still valid. Please use the OTP sent earlier.");
+            return;
+        }
+
+        // Reset previous messages
+        setOtpMessage("");
+        setCibilError(false);
+        setIsCibilLoading(true);
+        try {
+            const fd = new FormData();
+            fd.append("MobileNo", selectedMemberMobile);
+
+            const response = await Fn_GetReportAPI(
+                dispatch,
+                () => {},
+                "cibilData",
+                `CIBIL/getOTP`,
+                { arguList: { id: 0, formData: fd } },
+                true
+            );
+            console.log("CIBIL OTP Response:", response);
+            if (response) {
+                // Extract message from response
+                const msg = response?.data?.msg ?? response?.msg ?? "";
+                const responseStatus = response?.data?.status ?? response?.status ?? "";
+                const errorCode = response?.data?.error ?? response?.error ?? 0;
+                
+                setOtpMessage(msg);
+                
+                // Check if OTP was successfully sent
+                if (responseStatus === "Success" || (responseStatus !== "Failed" && errorCode !== 320)) {
+                    // Extract otpRefId for successful OTP
+                    const refId = response?.data?.data?.otpRefId ?? response?.data?.otpRefId ?? response?.otpRefId ?? "";
+                    setOtpRefId(refId);
+                    setCibilCheckInitiated(true);
+                    setCibilError(false);
+                    setCibilOTP("");
+                    
+                    // Save to localStorage for 10 minutes
+                    saveCibilOtpToLocalStorage(selectedMemberId, refId);
+                } else {
+                    // Handle error case (like "cannot try new OTP within 10 mins")
+                    setCibilCheckInitiated(false);
+                    setCibilError(true);
+                    setOtpRefId("");
+                }
+            }
+        } catch (error) {
+            console.error("CIBIL Check failed:", error);
+            alert("Failed to initiate CIBIL check. Please try again.");
+        } finally {
+            setIsCibilLoading(false);
+        }
+    };
+
+    /* ── Handle CIBIL Verify ── */
+    const handleVerifyCibil = async () => {
+        if (!cibilOTP) {
+            alert("Please enter OTP");
+            return;
+        }
+        if (!otpRefId) {
+            alert("OTP Reference ID not found. Please request OTP again.");
+            return;
+        }
+
+        setIsVerifyingCibil(true);
+        try {
+            const fd = new FormData();
+            fd.append("MobileNo", selectedMemberMobile);
+            fd.append("FirstName", selectedMemberFirstName);
+            fd.append("LastName", selectedMemberLastName);
+            fd.append("OTP", cibilOTP);
+            fd.append("OtpRefId", otpRefId);
+
+            const response = await Fn_GetReportAPI(
+                dispatch,
+                () => {},
+                "cibilVerifyData",
+                `CIBIL/VerifyDetails`,
+                { arguList: { id: 0, formData: fd } },
+                true
+            );
+
+            if (response) {
+                // Extract CIBIL data from response
+                const cibilResult = response?.data?.data?.result_json;
+                const pdfLink = response?.data?.data?.pdfLink || "";
+                
+                // Console log PDF link
+                console.log("PDF Link:", pdfLink);
+                console.log("Full Response Data:", response?.data?.data);
+                
+                const bureauScore = cibilResult?.INProfileResponse?.SCORE?.BureauScore || "N/A";
+                const reportNumber = cibilResult?.INProfileResponse?.CreditProfileHeader?.ReportNumber || "";
+                const reportDate = cibilResult?.INProfileResponse?.CreditProfileHeader?.ReportDate || "";
+                const totalAccounts = cibilResult?.INProfileResponse?.CAIS_Account?.CAIS_Summary?.Credit_Account?.CreditAccountTotal || "0";
+                const activeAccounts = cibilResult?.INProfileResponse?.CAIS_Account?.CAIS_Summary?.Credit_Account?.CreditAccountActive || "0";
+                const outstandingBalance = cibilResult?.INProfileResponse?.CAIS_Account?.CAIS_Summary?.Total_Outstanding_Balance?.Outstanding_Balance_All || "0";
+
+                // Save CIBIL data to state
+                const cibilInfo = {
+                    score: bureauScore,
+                    reportNumber: reportNumber,
+                    reportDate: reportDate,
+                    totalAccounts: totalAccounts,
+                    activeAccounts: activeAccounts,
+                    outstandingBalance: outstandingBalance,
+                    charges: response?.data?.data?.charges || 0,
+                    fullData: cibilResult
+                };
+
+                setCibilData(cibilInfo);
+                setCibilPdfLink(pdfLink);
+                
+                alert(`CIBIL verification successful! Score: ${bureauScore}`);
+                
+                // Show modal with details
+                if (pdfLink) {
+                    setShowCibilModal(true);
+                }
+                
+                // Reset OTP states
+                setCibilCheckInitiated(false);
+                setCibilOTP("");
+                setOtpRefId("");
+            }
+        } catch (error) {
+            console.error("CIBIL Verification failed:", error);
+            alert("CIBIL verification failed. Please try again.");
+        } finally {
+            setIsVerifyingCibil(false);
+        }
+    };
+
+    /* ─────────────────── Download PDF ─────────────────── */
+    const downloadPdf = (pdfUrl: string) => {
+        console.log("Opening PDF in new tab:", pdfUrl);
+        if (pdfUrl) {
+            window.open(pdfUrl, "_blank");
+        } else {
+            alert("PDF link not available");
+        }
+    };
+
     /* ─────────────────────────── Render ─────────────────────── */
     return (
         <div className="page-body">
@@ -593,13 +812,33 @@ const AddEdit_MemberAccount = () => {
                                                                     type="select"
                                                                     name="F_Member"
                                                                     value={values.F_Member}
-                                                                    onChange={handleChange}
+                                                                    onChange={(e) => {
+                                                                        handleChange(e);
+                                                                        // Get selected member's details
+                                                                        const selectedMember = memberState.dataList.find((m: any) => m.Id === parseInt(e.target.value));
+                                                                        if (selectedMember) {
+                                                                            setSelectedMemberId(e.target.value);
+                                                                            setSelectedMemberMobile(selectedMember.MobileNo ?? selectedMember.MobileNumber ?? "");
+                                                                            setSelectedMemberFirstName(selectedMember.FirstName ?? "");
+                                                                            setSelectedMemberLastName(selectedMember.LastName ?? "");
+                                                                            // Reset CIBIL states when member changes
+                                                                            setCibilCheckInitiated(false);
+                                                                            setCibilOTP("");
+                                                                            setOtpRefId("");
+                                                                            setOtpMessage("");
+                                                                            setCibilError(false);
+                                                                            setCibilData(null);
+                                                                            setCibilPdfLink("");
+                                                                            setShowCibilModal(false);
+                                                                            clearCibilOtpFromLocalStorage();
+                                                                        }
+                                                                    }}
                                                                     onBlur={handleBlur}
                                                                     invalid={touched.F_Member && !!errors.F_Member}
                                                                 >
                                                                     <option value="">{memberState.isProgress ? "Loading..." : "-- Select Member --"}</option>
                                                                     {memberState.dataList.map((m: any) => (
-                                                                        <option key={m.Id} value={m.Id}>{m.FullName ?? m.Name ?? m.Id}</option>
+                                                                        <option key={m.Id} value={m.Id}>{m.FirstName && m.LastName ? `${m.FirstName} ${m.LastName}` : m.FullName ?? m.Name ?? m.Id}</option>
                                                                     ))}
                                                                 </Input>
                                                                 <ErrorMessage name="F_Member" component="div" className="text-danger small mt-1" />
@@ -657,6 +896,113 @@ const AddEdit_MemberAccount = () => {
                                                             </FormGroup>
                                                         </Col>
                                                     </Row>
+
+                                                    {/* CIBIL Check Section */}
+                                                    {values.F_Member && (
+                                                        <Row className="gy-2 mb-2">
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Btn
+                                                                        color="primary"
+                                                                        onClick={() => handleCheckCibil()}
+                                                                        disabled={isCibilLoading || !selectedMemberMobile}
+                                                                        type="button"
+                                                                        className="w-100"
+                                                                    >
+                                                                        {isCibilLoading ? (
+                                                                            <>
+                                                                                <Spinner size="sm" className="me-2" />
+                                                                                Checking CIBIL...
+                                                                            </>
+                                                                        ) : (
+                                                                            "Check CIBIL"
+                                                                        )}
+                                                                    </Btn>
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>CIBIL OTP <span className="text-danger">*</span></Label>
+                                                                    <Input
+                                                                        type="text"
+                                                                        name="cibilOTP"
+                                                                        placeholder="Enter OTP"
+                                                                        value={cibilOTP}
+                                                                        onChange={(e) => setCibilOTP(e.target.value)}
+                                                                        maxLength={6}
+                                                                    />
+                                                                </FormGroup>
+                                                            </Col>
+                                                            <Col md="4">
+                                                                <FormGroup className="mb-0">
+                                                                    <Label>&nbsp;</Label>
+                                                                    <Btn
+                                                                        color="success"
+                                                                        onClick={() => handleVerifyCibil()}
+                                                                        disabled={isVerifyingCibil || !cibilOTP}
+                                                                        type="button"
+                                                                        className="w-100 d-block"
+                                                                    >
+                                                                        {isVerifyingCibil ? (
+                                                                            <>
+                                                                                <Spinner size="sm" className="me-2" />
+                                                                                Verifying...
+                                                                            </>
+                                                                        ) : (
+                                                                            "Verify OTP"
+                                                                        )}
+                                                                    </Btn>
+                                                                </FormGroup>
+                                                            </Col>
+                                                            {cibilData && (
+                                                                <Col md="12" className="mt-2">
+                                                                    <div className="d-flex align-items-center gap-3 p-3 bg-light rounded border">
+                                                                        <div className="flex-grow-1">
+                                                                            <h6 className="mb-1">
+                                                                                <i className="fa fa-check-circle text-success me-2"></i>
+                                                                                CIBIL Report Retrieved Successfully
+                                                                            </h6>
+                                                                            <small className="text-muted">
+                                                                                Credit Score: <strong className={`${
+                                                                                    parseInt(cibilData.score) >= 750 ? 'text-success' :
+                                                                                    parseInt(cibilData.score) >= 650 ? 'text-warning' :
+                                                                                    'text-danger'
+                                                                                }`}>{cibilData.score}</strong> | 
+                                                                                Report dated: {cibilData.reportDate}
+                                                                            </small>
+                                                                        </div>
+                                                                        <Btn
+                                                                            color="info"
+                                                                            onClick={() => setShowCibilModal(true)}
+                                                                            type="button"
+                                                                            size="sm"
+                                                                        >
+                                                                            <i className="fa fa-file-pdf-o me-2"></i>
+                                                                            View Full Report
+                                                                        </Btn>
+                                                                    </div>
+                                                                </Col>
+                                                            )}
+                                                            {/* Show error message */}
+                                                            {cibilError && otpMessage && (
+                                                                <Col md="12" className="mt-2">
+                                                                    <div className="alert alert-danger py-2 mb-0">
+                                                                        <i className="fa fa-exclamation-circle me-2"></i>
+                                                                        {otpMessage}
+                                                                    </div>
+                                                                </Col>
+                                                            )}
+                                                            {/* Show success message */}
+                                                            {cibilCheckInitiated && otpMessage && (
+                                                                <Col md="12" className="mt-2">
+                                                                    <div className="alert alert-success py-2 mb-0">
+                                                                        <i className="fa fa-check-circle me-2"></i>
+                                                                        {otpMessage}
+                                                                    </div>
+                                                                </Col>
+                                                            )}
+                                                        </Row>
+                                                    )}
 
                                                     <Row className="gy-2 mb-2">
                                                         <Col md="4">
@@ -1271,6 +1617,115 @@ const AddEdit_MemberAccount = () => {
                         </Formik>
                     </Col>
                 </Row>
+
+                {/* CIBIL Report Modal */}
+                <Modal isOpen={showCibilModal} toggle={() => setShowCibilModal(!showCibilModal)} size="xl" centered>
+                    <ModalHeader toggle={() => setShowCibilModal(!showCibilModal)}>
+                        CIBIL Credit Report
+                    </ModalHeader>
+                    <ModalBody>
+                        {cibilData && (
+                            <div className="mb-4">
+                                <Row className="mb-3">
+                                    <Col md="6">
+                                        <Card className="border-primary">
+                                            <CardBody className="text-center">
+                                                <h2 className="mb-2">
+                                                    <span className={`badge ${
+                                                        parseInt(cibilData.score) >= 750 ? 'bg-success' :
+                                                        parseInt(cibilData.score) >= 650 ? 'bg-warning' :
+                                                        'bg-danger'
+                                                    } fs-1`}>
+                                                        {cibilData.score}
+                                                    </span>
+                                                </h2>
+                                                <p className="mb-0 text-muted">Credit Score</p>
+                                            </CardBody>
+                                        </Card>
+                                    </Col>
+                                    <Col md="6">
+                                        <Card className="border-info">
+                                            <CardBody>
+                                                <div className="mb-2">
+                                                    <strong>Report Number:</strong> {cibilData.reportNumber}
+                                                </div>
+                                                <div className="mb-2">
+                                                    <strong>Report Date:</strong> {cibilData.reportDate}
+                                                </div>
+                                                <div className="mb-2">
+                                                    <strong>Charges:</strong> ₹{cibilData.charges}
+                                                </div>
+                                            </CardBody>
+                                        </Card>
+                                    </Col>
+                                </Row>
+
+                                <Row className="mb-3">
+                                    <Col md="4">
+                                        <Card className="border-secondary">
+                                            <CardBody className="text-center">
+                                                <h4 className="mb-1 text-primary">{cibilData.totalAccounts}</h4>
+                                                <p className="mb-0 text-muted">Total Accounts</p>
+                                            </CardBody>
+                                        </Card>
+                                    </Col>
+                                    <Col md="4">
+                                        <Card className="border-secondary">
+                                            <CardBody className="text-center">
+                                                <h4 className="mb-1 text-success">{cibilData.activeAccounts}</h4>
+                                                <p className="mb-0 text-muted">Active Accounts</p>
+                                            </CardBody>
+                                        </Card>
+                                    </Col>
+                                    <Col md="4">
+                                        <Card className="border-secondary">
+                                            <CardBody className="text-center">
+                                                <h4 className="mb-1 text-danger">₹{cibilData.outstandingBalance}</h4>
+                                                <p className="mb-0 text-muted">Outstanding Balance</p>
+                                            </CardBody>
+                                        </Card>
+                                    </Col>
+                                </Row>
+                            </div>
+                        )}
+
+                        {/* Download PDF Section */}
+                        <div className="mt-4">
+                            <Card className="border-primary">
+                                <CardBody className="text-center py-4">
+                                    <i className="fa fa-file-pdf-o fa-4x text-danger mb-3"></i>
+                                    <h5 className="mb-3">Download Credit Report</h5>
+                                    <p className="text-muted mb-3">
+                                        Click the button below to view the complete CIBIL credit report
+                                    </p>
+                                    <Btn 
+                                        color="primary" 
+                                        size="lg"
+                                        onClick={() => {
+                                            console.log("Button clicked. PDF Link:", cibilPdfLink);
+                                            downloadPdf(cibilPdfLink);
+                                        }}
+                                    >
+                                        <i className="fa fa-external-link me-2"></i>
+                                        Open PDF Report
+                                    </Btn>
+                                </CardBody>
+                            </Card>
+                        </div>
+                    </ModalBody>
+                    <ModalFooter>
+                        <Btn color="secondary" onClick={() => setShowCibilModal(false)}>
+                            <i className="fa fa-times me-2"></i>
+                            Close
+                        </Btn>
+                        {cibilPdfLink && (
+                            <Btn color="info" onClick={() => window.open(cibilPdfLink, "_blank")}>
+                                <i className="fa fa-external-link me-2"></i>
+                                Open in Browser
+                            </Btn>
+                        )}
+                    </ModalFooter>
+                </Modal>
             </Container>
         </div>
     );

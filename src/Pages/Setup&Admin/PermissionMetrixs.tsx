@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Card, CardBody, Col, Container, FormGroup, Input, Label, Row, Table, Button } from "reactstrap";
 import Breadcrumbs from "../../CommonElements/Breadcrumbs/Breadcrumbs";
 import { Fn_FillListData, Fn_AddEditData } from "../../store/Functions";
 import { API_WEB_URLS } from "../../constants/constAPI";
+import { toast } from "react-toastify";
 
 interface DropdownState {
     roles: Array<{ Id?: number; Name?: string }>;
@@ -47,6 +48,12 @@ const PermissionMetrixs = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
+    // Refs for focus management
+    const roleSelectRef = useRef<HTMLInputElement>(null);
+    const branchSelectRef = useRef<HTMLInputElement>(null);
+    const moduleSelectRefs = useRef<{ [key: string]: HTMLInputElement | null }>({});
+    const addButtonRefs = useRef<{ [key: string]: HTMLButtonElement | null }>({});
+
     const [selectedRole, setSelectedRole] = useState<string>("");
     const [selectedBranch, setSelectedBranch] = useState<string>("");
     const [permissions, setPermissions] = useState<ModulePermission[]>([]);
@@ -61,6 +68,13 @@ const PermissionMetrixs = () => {
     const ROLE_API_URL = `${API_WEB_URLS.MASTER}/0/token/UserRole/Id/0`;
     const MODULE_API_URL = `${API_WEB_URLS.MASTER}/0/token/ModuleMaster/Id/0`;
     const BRANCH_API_URL = `${API_WEB_URLS.MASTER}/0/token/BranchOffice/Id/0`;
+
+    // Auto-focus on page load
+    useEffect(() => {
+        if (roleSelectRef.current) {
+            roleSelectRef.current.focus();
+        }
+    }, []);
 
     useEffect(() => {
         Fn_FillListData(dispatch, setDropdowns, "roles", ROLE_API_URL)
@@ -139,6 +153,65 @@ const PermissionMetrixs = () => {
         setSelectedBranch(e.target.value);
     };
 
+    // Keyboard navigation handlers
+    const handleRoleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && branchSelectRef.current) {
+            e.preventDefault();
+            branchSelectRef.current.focus();
+        }
+    };
+
+    const handleBranchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" && permissions.length > 0) {
+            e.preventDefault();
+            const firstModuleRef = moduleSelectRefs.current[permissions[0].Id];
+            if (firstModuleRef) {
+                firstModuleRef.focus();
+            }
+        }
+    };
+
+    const handleModuleKeyDown = (rowId: string, rowIndex: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            // Focus on the first checkbox (CanView) of the same row
+            const checkboxes = document.querySelectorAll(`[data-row-id="${rowId}"][data-checkbox]`);
+            if (checkboxes.length > 0) {
+                (checkboxes[0] as HTMLInputElement).focus();
+            }
+        }
+    };
+
+    const handleCheckboxKeyDown = (rowId: string, currentField: string, e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            const checkboxOrder = ["CanView", "CanAdd", "CanEdit", "CanDelete", "CanApprove", "CanExport"];
+            const currentIndex = checkboxOrder.indexOf(currentField);
+            
+            if (currentIndex < checkboxOrder.length - 1) {
+                // Move to next checkbox in the same row
+                const nextField = checkboxOrder[currentIndex + 1];
+                const nextCheckbox = document.querySelector(`[data-row-id="${rowId}"][data-checkbox="${nextField}"]`) as HTMLInputElement;
+                if (nextCheckbox) {
+                    nextCheckbox.focus();
+                }
+            } else {
+                // Last checkbox, move to add button
+                const addButton = addButtonRefs.current[rowId];
+                if (addButton) {
+                    addButton.focus();
+                }
+            }
+        }
+    };
+
+    const handleAddButtonKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            handleAddRow();
+        }
+    };
+
     const handleModuleChange = (rowId: string, selectedModuleId: string) => {
         const moduleId = parseInt(selectedModuleId);
         const module = dropdowns.modules.find(m => m.Id === moduleId);
@@ -164,7 +237,39 @@ const PermissionMetrixs = () => {
         }));
     };
 
+    const handleSelectAllToggle = (rowId: string) => {
+        setPermissions(prev => prev.map(p => {
+            if (p.Id === rowId) {
+                // Check if all are currently selected
+                const allSelected = p.CanView && p.CanAdd && p.CanEdit && p.CanDelete && p.CanApprove && p.CanExport;
+                // Toggle all to opposite of current state
+                const newValue = !allSelected;
+                return {
+                    ...p,
+                    CanView: newValue,
+                    CanAdd: newValue,
+                    CanEdit: newValue,
+                    CanDelete: newValue,
+                    CanApprove: newValue,
+                    CanExport: newValue,
+                };
+            }
+            return p;
+        }));
+    };
+
+    const isRowEmpty = (row: ModulePermission) => {
+        return row.ModuleId === 0 || !row.ModuleId;
+    };
+
     const handleAddRow = () => {
+        // Check if the last row is empty
+        const lastRow = permissions[permissions.length - 1];
+        if (lastRow && isRowEmpty(lastRow)) {
+            toast.warning("Please fill the current row before adding a new one.");
+            return;
+        }
+
         const newRow: ModulePermission = {
             Id: Date.now().toString(),
             ModuleId: 0,
@@ -177,6 +282,14 @@ const PermissionMetrixs = () => {
             CanExport: false,
         };
         setPermissions(prev => [...prev, newRow]);
+        
+        // Focus on the new row's module select after a short delay
+        setTimeout(() => {
+            const newModuleRef = moduleSelectRefs.current[newRow.Id];
+            if (newModuleRef) {
+                newModuleRef.focus();
+            }
+        }, 100);
     };
 
     const handleRemoveRow = (rowId: string) => {
@@ -199,7 +312,7 @@ const PermissionMetrixs = () => {
 
     const handleSavePermissions = async () => {
         if (!selectedRole) {
-            alert("Please select a role first.");
+            toast.error("Please select a role first.");
             return;
         }
 
@@ -207,7 +320,7 @@ const PermissionMetrixs = () => {
         const selectedPermissions = permissions.filter(p => p.ModuleId > 0);
 
         if (selectedPermissions.length === 0) {
-            alert("Please add at least one module permission.");
+            toast.error("Please add at least one module permission.");
             return;
         }
 
@@ -245,8 +358,12 @@ const PermissionMetrixs = () => {
                 navigate,
                 null // null redirect url will stay on page
             );
+            
+            // Show success message
+            toast.success("Permissions saved successfully!");
         } catch (error) {
             console.error("Failed to save permissions", error);
+            toast.error("Failed to save permissions. Please try again.");
         }
     };
 
@@ -270,7 +387,9 @@ const PermissionMetrixs = () => {
                                                 type="select"
                                                 value={selectedRole}
                                                 onChange={handleRoleChange}
+                                                onKeyDown={handleRoleKeyDown}
                                                 className="form-select"
+                                                innerRef={roleSelectRef}
                                             >
                                                 <option value="">-- Select Role --</option>
                                                 {dropdowns.roles.map(role => (
@@ -288,7 +407,9 @@ const PermissionMetrixs = () => {
                                                 type="select"
                                                 value={selectedBranch}
                                                 onChange={handleBranchChange}
+                                                onKeyDown={handleBranchKeyDown}
                                                 className="form-select"
+                                                innerRef={branchSelectRef}
                                             >
                                                 <option value="">-- Select Branch --</option>
                                                 {dropdowns.branches.map(branch => (
@@ -306,6 +427,9 @@ const PermissionMetrixs = () => {
                                                 <tr style={{ backgroundColor: "#1e3d73", color: "white" }}>
                                                     <th className="py-3 px-3 shadow-none border-0" style={{ backgroundColor: "#1e3d73", color: "white", minWidth: "250px" }}>
                                                         Module Name
+                                                    </th>
+                                                    <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white", width: "100px" }}>
+                                                        <i className="fa fa-check-square-o me-1"></i> Select All
                                                     </th>
                                                     <th className="text-center py-3 border-0" style={{ backgroundColor: "#1e3d73", color: "white", width: "80px" }}>
                                                         <i className="fa fa-eye text-white-50 me-1"></i> View
@@ -338,7 +462,13 @@ const PermissionMetrixs = () => {
                                                                 type="select"
                                                                 value={perm.ModuleId}
                                                                 onChange={(e) => handleModuleChange(perm.Id, e.target.value)}
+                                                                onKeyDown={(e) => handleModuleKeyDown(perm.Id, index, e)}
                                                                 className="form-select form-select-sm"
+                                                                innerRef={(el) => {
+                                                                    if (el && 'focus' in el) {
+                                                                        moduleSelectRefs.current[perm.Id] = el as HTMLInputElement;
+                                                                    }
+                                                                }}
                                                             >
                                                                 <option value="0">-- Select Module --</option>
                                                                 {dropdowns.modules.map(module => (
@@ -352,8 +482,20 @@ const PermissionMetrixs = () => {
                                                             <Input
                                                                 type="checkbox"
                                                                 className="checkbox_animated"
+                                                                checked={perm.CanView && perm.CanAdd && perm.CanEdit && perm.CanDelete && perm.CanApprove && perm.CanExport}
+                                                                onChange={() => handleSelectAllToggle(perm.Id)}
+                                                                title="Select/Deselect All Permissions"
+                                                            />
+                                                        </td>
+                                                        <td className="text-center bg-white">
+                                                            <Input
+                                                                type="checkbox"
+                                                                className="checkbox_animated"
                                                                 checked={perm.CanView}
                                                                 onChange={() => handleCheckboxToggle(perm.Id, "CanView")}
+                                                                onKeyDown={(e) => handleCheckboxKeyDown(perm.Id, "CanView", e)}
+                                                                data-row-id={perm.Id}
+                                                                data-checkbox="CanView"
                                                             />
                                                         </td>
                                                         <td className="text-center bg-white">
@@ -362,6 +504,9 @@ const PermissionMetrixs = () => {
                                                                 className="checkbox_animated"
                                                                 checked={perm.CanAdd}
                                                                 onChange={() => handleCheckboxToggle(perm.Id, "CanAdd")}
+                                                                onKeyDown={(e) => handleCheckboxKeyDown(perm.Id, "CanAdd", e)}
+                                                                data-row-id={perm.Id}
+                                                                data-checkbox="CanAdd"
                                                             />
                                                         </td>
                                                         <td className="text-center bg-white">
@@ -370,6 +515,9 @@ const PermissionMetrixs = () => {
                                                                 className="checkbox_animated"
                                                                 checked={perm.CanEdit}
                                                                 onChange={() => handleCheckboxToggle(perm.Id, "CanEdit")}
+                                                                onKeyDown={(e) => handleCheckboxKeyDown(perm.Id, "CanEdit", e)}
+                                                                data-row-id={perm.Id}
+                                                                data-checkbox="CanEdit"
                                                             />
                                                         </td>
                                                         <td className="text-center bg-white">
@@ -378,6 +526,9 @@ const PermissionMetrixs = () => {
                                                                 className="checkbox_animated"
                                                                 checked={perm.CanDelete}
                                                                 onChange={() => handleCheckboxToggle(perm.Id, "CanDelete")}
+                                                                onKeyDown={(e) => handleCheckboxKeyDown(perm.Id, "CanDelete", e)}
+                                                                data-row-id={perm.Id}
+                                                                data-checkbox="CanDelete"
                                                             />
                                                         </td>
                                                         <td className="text-center bg-white">
@@ -386,6 +537,9 @@ const PermissionMetrixs = () => {
                                                                 className="checkbox_animated"
                                                                 checked={perm.CanApprove}
                                                                 onChange={() => handleCheckboxToggle(perm.Id, "CanApprove")}
+                                                                onKeyDown={(e) => handleCheckboxKeyDown(perm.Id, "CanApprove", e)}
+                                                                data-row-id={perm.Id}
+                                                                data-checkbox="CanApprove"
                                                             />
                                                         </td>
                                                         <td className="text-center bg-white">
@@ -394,6 +548,9 @@ const PermissionMetrixs = () => {
                                                                 className="checkbox_animated"
                                                                 checked={perm.CanExport}
                                                                 onChange={() => handleCheckboxToggle(perm.Id, "CanExport")}
+                                                                onKeyDown={(e) => handleCheckboxKeyDown(perm.Id, "CanExport", e)}
+                                                                data-row-id={perm.Id}
+                                                                data-checkbox="CanExport"
                                                             />
                                                         </td>
                                                         <td className="text-center bg-white">
@@ -402,8 +559,12 @@ const PermissionMetrixs = () => {
                                                                     color="success"
                                                                     size="sm"
                                                                     onClick={handleAddRow}
+                                                                    onKeyDown={handleAddButtonKeyDown}
                                                                     title="Add Row"
                                                                     className="btn-sm px-2"
+                                                                    innerRef={(el) => {
+                                                                        addButtonRefs.current[perm.Id] = el;
+                                                                    }}
                                                                 >
                                                                     <i className="fa fa-plus"></i>
                                                                 </Button>
@@ -423,7 +584,7 @@ const PermissionMetrixs = () => {
                                                 ))}
                                                 {permissions.length === 0 && (
                                                     <tr>
-                                                        <td colSpan={8} className="text-center text-muted py-4 bg-white">
+                                                        <td colSpan={9} className="text-center text-muted py-4 bg-white">
                                                             No permissions added yet.
                                                         </td>
                                                     </tr>
