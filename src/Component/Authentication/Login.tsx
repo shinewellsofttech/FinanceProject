@@ -9,10 +9,13 @@ import SocialApp from "./SocialApp";
 import { API_HELPER } from "../../helpers/ApiHelper";
 import { API_WEB_URLS } from "../../constants/constAPI";
 import { fetchUserPermissions } from "../../helpers/permissionsHelper";
+import { Fn_FillListData } from "../../store/Functions";
+import { useDispatch } from "react-redux";
 
 const LOGIN_URL = `${API_WEB_URLS.BASE}AdminLogin/0/token`;
 
 const Login = () => {
+  const [state, setState] = useState();
   const [show, setShow] = useState(false);
   const [userName, setUserName] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +24,7 @@ const Login = () => {
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [tempUserData, setTempUserData] = useState<any>(null);
   const navigate = useNavigate();
-
+  const dispatch = useDispatch();
   const SimpleLoginHandle = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!userName.trim()) {
@@ -84,10 +87,10 @@ const Login = () => {
           const roleId = userData?.F_UserRole || userData?.RoleId || userData?.F_RoleMaster || "0";
           console.log("Login - userData:", userData);
           console.log("Login - roleId:", roleId, "branchId:", branchId);
-          await fetchUserPermissions(roleId, branchId);
           
+
           toast.success(loginMessage || "Login Successful");
-          navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
+          // navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
         }
       } else {
         toast.error(response?.message || loginMessage || "Login failed");
@@ -115,11 +118,14 @@ const Login = () => {
     const roleId = tempUserData?.F_UserRole || tempUserData?.RoleId || tempUserData?.F_RoleMaster || "0";
     console.log("Branch Select - tempUserData:", tempUserData);
     console.log("Branch Select - roleId:", roleId, "branchId:", selectedBranch.id);
-    await fetchUserPermissions(roleId, selectedBranch.id);
+    const res = await    Fn_FillListData(dispatch, setState, "dataList", `${API_WEB_URLS.MASTER}/0/token/RoleWisePermissionByBranchRole/${roleId}/${selectedBranch.id}`)
+
+console.log("Permissions response:", res);
+    // await fetchUserPermissions(roleId, selectedBranch.id);
     
     setShowBranchModal(false);
     toast.success("Login Successful");
-    navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
+    // navigate(`${process.env.PUBLIC_URL}/voucherEntry`);
   };
 
   return (
